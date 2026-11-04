@@ -1,13 +1,20 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: a297a6b · Branch: main
+Updated: 2026-11-04 · Through: e91c590 · Branch: main
 
 ## Current focus
-Phase 1 (Foundation): 2 of 25 tasks done. P1-T02 merged in PR #27. Ready to start, and independent
-of each other: P1-T03 (port core: compare, calendar, theme), P1-T06 (server config module), P1-T09
-(server events module), and P1-T21 (client foundation). Parallel tasks run in separate worktrees, one
-task each. No branch open.
+Phase 1 (Foundation): 3 of 25 tasks done. P1-T06 merged in PR #28. Ready to start, and independent
+of each other: P1-T03 (port core: compare, calendar, theme), P1-T07 (server storage module), P1-T09
+(server events module), P1-T10 (provider types, mock adapter, token estimation), P1-T16 (auth module), and
+P1-T21 (client foundation). Parallel tasks run in separate worktrees, one task each. No branch open.
 
 ## Recent changes
+- 2026-11-04: P1-T06 merged (#28): the config module finds the data directory (flag, then config, then
+  OS default), writes the default machine config, checks it with every issue at a dotted path, saves
+  atomically into a store whose edits apply at once, and keeps inline keys and the PIN hash out of
+  responses. Mike's decision: a saved placeholder takes the key stored for the provider with the same
+  `id` (CON-111 reworded). Rulings, in 05-providers' Decisions: `restartRequired` compares with the
+  running config; PRV-002 also checks unique IDs and media profile kinds; the default file is minimal.
+  05-providers Open: `headers` are not secrets.
 - 2026-11-04: P1-T02 merged (#27): `packages/contracts/src/`, `content-library/`, and
   `content-packs/reference/` are byte-for-byte copies of the spec, and `scripts/check-spec.ts` fails
   `pnpm check` on any difference (OVR-030, OVR-033). `pnpm check` now also runs `spec/reference`'s check
