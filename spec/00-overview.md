@@ -127,8 +127,9 @@ These are explicitly out of scope. Tasks MUST NOT build toward them.
 
 ## 7. Phases
 
-Each phase ends in something playable and testable. Only the current phase has
-detailed task files; later phases are refined when reached.
+Each phase ends in something playable and testable, which the owner signs off feature
+by feature before its release (CONV-139). Only the current phase has detailed task
+files; later phases are refined when reached.
 
 | # | Phase | Deliverable |
 |---|---|---|

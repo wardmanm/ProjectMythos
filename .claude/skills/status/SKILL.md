@@ -32,6 +32,8 @@ git status --short                                            # uncommitted work
 git rev-parse -q --verify origin/main >/dev/null && git log --oneline origin/main..main   # unpushed
 pnpm trace                                                    # task status, tasks ready to start
 gh issue list --label task --state open --limit 200 --json number,title   # task issues still open
+gh issue list --label bug --state open --limit 200 --json number,title,milestone   # open bugs
+gh project item-list 9 --owner wardmanm --format json --limit 500 --jq '.items[] | select((.labels // []) | index("bug")) | "\(.content.number) \(.priority // "none")"'   # each bug's Priority
 ```
 
 Then read:
@@ -79,7 +81,8 @@ Keep it under about 60 lines.
 - **Loose ends:** unfinished work, checked against the code. That includes **Not
   tested** entries worth revisiting, failing or skipped tests, uncommitted or unpushed
   work, unmerged branches, and GitHub drift (CONV-136): a `Done` task whose issue is
-  still open, or a task with no issue. Carry over the old file's items that are still true. A
+  still open, or a task with no issue. Open P0 and P1 bugs are loose ends too, one line
+  each with its number and Priority (CONV-140). Carry over the old file's items that are still true. A
   limitation recorded in a document's **Open** section is not a loose end; leave it
   there.
 - No secrets or credentials. API keys live in machine config, never in the repository.

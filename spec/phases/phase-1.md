@@ -117,24 +117,50 @@ The client foundation (T21) can start as soon as the contracts are installed.
 ## Phase acceptance
 
 Phase 1 is done when P1-T25 is complete (CI green on Windows and macOS, end-to-end
-tests included) and the owner has worked through this checklist on both machines.
+tests included) and the owner has signed off the checks below on both machines
+(CONV-139).
 
-**Owner checklist**, once on Windows and once on macOS:
+**Sign-off checks** (CONV-138). Each names the deliverable item it checks.
 
-- [ ] Fresh clone; follow only the README; `pnpm start` runs.
-- [ ] First start writes the default config and opens Settings.
-- [ ] Add a local model (Ollama), probe it, assign it to the narrator. Repeat with one
-      cloud model.
-- [ ] Create *Arrival*; the opening streams; play ten turns. Wren never learns a name
-      she wasn't told (the innkeeper stays "the innkeeper").
-- [ ] Stop a reply mid-stream; the partial text stays.
-- [ ] Open the inspector on a turn; the prompt's tiers and the raw output are there.
-- [ ] Open the app from a phone on the LAN and play a turn.
-- [ ] Set a PIN; the phone must log in; localhost doesn't (when exempt).
-- [ ] Restart the server during a reply; the turn shows as failed and Retry finishes it.
+- **S1. Install from the README** (deliverable 1). Try: on a fresh clone, follow only
+  the README, then run `pnpm start`. Expect: the server runs.
+- **S2. First start** (deliverable 2). Try: start Mythos for the first time. Expect: it
+  writes the default config and opens Settings.
+- **S3. Local and cloud models** (deliverable 2). Try: add a local model (Ollama),
+  probe it, and assign it to the narrator, then do the same with one cloud model.
+  Expect: each probes and becomes the narrator.
+- **S4. Play *Arrival*** (deliverables 3 and 4). Try: create a campaign from *Arrival*
+  and play ten turns. Expect: the opening streams, and Wren never learns a name she
+  wasn't told (the innkeeper stays "the innkeeper").
+- **S5. Stop a reply** (deliverable 4). Try: press Stop while a reply streams. Expect:
+  the partial text stays.
+- **S6. The inspector** (deliverable 5). Try: open the inspector on a turn. Expect: the
+  prompt's tiers and the raw output are there.
+- **S7. Play from a phone** (deliverable 1). Try: open the app from a phone on the LAN
+  and play a turn. Expect: the turn plays.
+- **S8. PIN** (deliverable 6). Try: set a PIN, then open the app from the phone and from
+  localhost. Expect: the phone must log in, and localhost doesn't when it is exempt
+  (ARCH-111).
+- **S9. Restart during a reply** (deliverable 4). Try: restart the server while a reply
+  streams. Expect: the turn shows as failed, and Retry finishes it.
 
-Record anything rough under Loose ends in `.claude/status.md`, or in the Open section
-of the document it concerns.
+**Sign-off** (CONV-139), filled in at phase close. A cell holds `pass, <commit>`,
+`fail: <what happened> (#N, P1)`, or `skip`. An empty cell has not been run.
+
+| Check | macOS | Windows |
+|---|---|---|
+| S1. Install from the README | | |
+| S2. First start | | |
+| S3. Local and cloud models | | |
+| S4. Play *Arrival* | | |
+| S5. Stop a reply | | |
+| S6. The inspector | | |
+| S7. Play from a phone | | |
+| S8. PIN | | |
+| S9. Restart during a reply | | |
+
+A failed check becomes a bug (CONV-140). Record anything else rough under Loose ends in
+`.claude/status.md`, or in the Open section of the document it concerns.
 
 ## Risks
 

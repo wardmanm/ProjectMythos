@@ -32,7 +32,7 @@ everywhere.
 | Task files | Status and completion notes: the log of what each task did and decided. |
 | `pnpm trace` | What is built: task status, and the requirements done tasks list and tests cite. |
 | `.claude/status.md` | Where things stand: focus, recent changes, pending decisions, loose ends. |
-| GitHub issues, milestones, releases | A mirror for Mike's [Project Mythos board](https://github.com/users/wardmanm/projects/9): one issue per task, one milestone per phase, one release per phase (ADR-018). Never edited to show progress. |
+| GitHub issues, milestones, releases | A mirror for Mike's [Project Mythos board](https://github.com/users/wardmanm/projects/9): one issue per task, one milestone per phase, one release per phase (ADR-018). Never edited to show progress. A bug found at sign-off is an issue of its own, labeled `bug` and `sign-off`, with its Priority on the board (ADR-019). |
 
 The code is the truth for what is built, and the spec for what must be. When they
 disagree, one of them has a defect: find out which.
@@ -62,7 +62,10 @@ disagree, one of them has a defect: find out which.
   written. The task's PR has the same title, and its body starts `Closes #N`; the merge
   closes the issue and the board moves the card. Never move a card or edit an issue by
   hand.
-- Each phase ends in a release, `v0.N.0`, published by `/docs close` (CONV-137).
+- Each phase ends in a release, `v0.N.0`, published by `/docs close` (CONV-137) once
+  Mike has signed off each feature: Claude asks the phase plan's checks one at a time,
+  on macOS and on Windows. A failure is a bug with a Priority: P0 blocks the release,
+  P1 is high but doesn't block, and P2 is deferred (CONV-138 to CONV-140).
 - Done means (CONV-134): `pnpm check` passes; every requirement the task lists is
   implemented, and each behavioral one has a test whose name starts with its ID or an
   `ID: reason` entry under **Not tested**; no runtime dependency outside the approved

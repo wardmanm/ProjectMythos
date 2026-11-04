@@ -243,10 +243,34 @@ ask "how does this work?", rewrite it.
   `Closes #N`, so the merge closes the issue and the board's workflows move its card.
   The issue mirrors the task file and is never edited to show progress (OVR-037,
   ADR-018).
-- **CONV-137** Each phase ends in a release. At phase close, the root `package.json`
-  version is set to `0.N.0` for phase N, and that commit on `main` is tagged `v0.N.0`.
-  A GitHub release for the tag is published with the phase plan's **Retrospective** as
-  its notes, and the phase's milestone is closed (ADR-018).
+- **CONV-137** Each phase ends in a release, once the owner has signed it off
+  (CONV-139). At phase close, the root `package.json` version is set to `0.N.0` for
+  phase N, and that commit on `main` is tagged `v0.N.0`. A GitHub release for the tag
+  is published with the phase plan's **Retrospective** as its notes, followed by the
+  phase's open P1 bugs as known issues, and the phase's milestone is closed (ADR-018,
+  ADR-019).
+- **CONV-138** Each phase plan has **Sign-off checks**, written from its deliverable
+  when the plan is written: one check per feature, naming the deliverable item it
+  checks, what to **Try**, and what to **Expect**. A task that changes what a feature
+  does updates its check. Only the owner drops or rewords a check, and the plan records
+  the reason.
+- **CONV-139** The owner signs off a phase at its close. Claude first proposes a check
+  for any user-visible feature the phase merged without one, and the owner approves the
+  list. Claude then presents the checks one at a time, and the owner answers Pass,
+  Fail, or Skip, once on macOS and once on Windows. Each answer goes into the plan's
+  **Sign-off** table at once, with the commit tested. When `main` changes after a check
+  has passed, the owner chooses which checks to run again. The phase is released only
+  when no P0 bug is open in its milestone, no cell is empty or skipped, and every check
+  has passed on both systems or failed with only P1 or P2 bugs (ADR-019).
+- **CONV-140** A failed check becomes a GitHub issue labeled `bug` and `sign-off`, in
+  the phase's milestone and on the board, with the board's **Priority** set: `P0`
+  blocks the release, `P1` is high but does not block, and `P2` is deferred. Claude
+  drafts it with the check, what happened against its Expect, the OS, and the commit;
+  the owner confirms its title and Priority before it is posted. A P0 is fixed by a new
+  task in the current phase, whose pull request also closes the bug, and its check is
+  run again after the merge. An open P1 becomes a task at the start of the next phase's
+  plan. A P2 stays on the board until a phase takes it on. The issue is the bug's own
+  record, and the Sign-off table links it (ADR-019).
 
 ## Traps
 

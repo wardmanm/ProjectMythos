@@ -10,7 +10,7 @@
 ## Goal
 
 Prove phase 1 works end to end in CI on both operating systems, and write the README
-a newcomer follows. The owner's manual checklist in `phases/phase-1.md` comes after
+a newcomer follows. The owner's sign-off in `phases/phase-1.md` (CONV-139) comes after
 this task.
 
 ## Read
