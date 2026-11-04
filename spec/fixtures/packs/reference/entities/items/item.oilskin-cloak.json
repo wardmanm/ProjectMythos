@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "item.oilskin-cloak",
+  "kind": "item",
+  "name": "oilskin cloak",
+  "description": "A long, much-mended oilskin cloak with a deep inner pocket.",
+  "startingLocation": {"type": "worn", "characterId": "pc.wren", "slot": "torso", "layer": 0},
+  "ownerId": "pc.wren",
+  "size": "medium",
+  "container": {"capacity": 4, "maxItemSize": "small"},
+  "wearable": {"slots": ["torso"], "covers": ["neck"]}
+}

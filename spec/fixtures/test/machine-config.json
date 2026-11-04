@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "server": { "host": "0.0.0.0", "port": 5317, "pin": null },
+  "dataDir": null,
+  "devices": [
+    { "id": "macbook-gpu", "name": "MacBook Pro GPU" },
+    { "id": "gaming-pc-gpu", "name": "Gaming PC GPU" },
+    { "id": "cloud", "name": "Cloud APIs", "concurrency": 4 }
+  ],
+  "providers": [
+    { "id": "ollama-local", "type": "ollama", "baseUrl": "http://localhost:11434", "deviceId": "macbook-gpu" },
+    { "id": "ollama-pc", "type": "ollama", "baseUrl": "http://192.168.1.50:11434", "deviceId": "gaming-pc-gpu" },
+    { "id": "anthropic", "type": "anthropic", "deviceId": "cloud", "apiKey": { "env": "ANTHROPIC_API_KEY" } }
+  ],
+  "modelProfiles": [
+    {
+      "id": "qwen-local",
+      "providerId": "ollama-local",
+      "model": "qwen3.6:35b-a3b",
+      "kind": "text",
+      "contextWindow": 32768,
+      "maxOutputTokens": 2048,
+      "structuredOutput": "json-schema",
+      "thinking": "off",
+      "sampling": { "temperature": 0.7, "presencePenalty": 1.5 }
+    },
+    {
+      "id": "embed-local",
+      "providerId": "ollama-local",
+      "model": "nomic-embed-text",
+      "kind": "embedding",
+      "contextWindow": 8192,
+      "maxOutputTokens": 1,
+      "structuredOutput": "prompt-only",
+      "embeddingDimensions": 768
+    }
+  ],
+  "roles": {
+    "adjudicator": { "profileId": "qwen-local", "sampling": { "temperature": 0.3 } },
+    "narrator": { "profileId": "qwen-local" },
+    "npc-voice": null,
+    "extractor": { "profileId": "qwen-local", "sampling": { "temperature": 0.1 } },
+    "consolidator": { "profileId": "qwen-local", "sampling": { "temperature": 0.2 } },
+    "world-ticker": { "profileId": "qwen-local", "sampling": { "temperature": 0.5 } },
+    "embedder": { "profileId": "embed-local" }
+  },
+  "explicitContentRoles": {},
+  "queue": { "preemptBackground": true, "maxAttempts": 3 },
+  "retention": { "modelCallRecordDays": 30 }
+}

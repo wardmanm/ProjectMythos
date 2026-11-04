@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "place.gull-and-anchor",
+  "kind": "place",
+  "name": "The Gull and Anchor",
+  "aliases": ["the Gull"],
+  "parentPlaceId": "place.brinemoor",
+  "description": "A low, smoky inn at the top of the harbor steps: a long taproom with a peat fire, five rooms upstairs, and a net loft out back."
+}

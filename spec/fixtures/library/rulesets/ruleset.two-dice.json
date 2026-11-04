@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "ruleset.two-dice",
+  "name": "Two Dice",
+  "description": "2d6 plus stat. 10+ is a full hit, 7–9 a hit with a cost, 6 or less a miss.",
+  "turns": {"suggestedActions": "on-request"},
+  "explanationLevel": "player-safe",
+  "ownership": {"statuses": "authoritative", "clocks": "authoritative"},
+  "stats": {
+    "list": [
+      {"id": "grit", "name": "Grit", "abbreviation": "GRIT", "description": "Toughness, force, endurance."},
+      {"id": "grace", "name": "Grace", "abbreviation": "GRACE", "description": "Agility, stealth, precision."},
+      {"id": "wits", "name": "Wits", "abbreviation": "WITS", "description": "Reasoning, knowledge, noticing angles."},
+      {"id": "heart", "name": "Heart", "abbreviation": "HEART", "description": "Presence, empathy, nerve."}
+    ],
+    "min": -1,
+    "max": 3,
+    "default": 0
+  },
+  "pcCreation": {"statPoints": 3, "minStartingStat": -1, "maxStartingStat": 2},
+  "dice": {
+    "method": "sum",
+    "dice": 2,
+    "sides": 6,
+    "pointValue": 1,
+    "bands": [
+      {"min": 10, "result": "success"},
+      {"min": 7, "result": "partial"},
+      {"min": -100, "result": "failure"}
+    ],
+    "critical": {"type": "none"}
+  },
+  "results": {"labels": {"critical": "Critical", "success": "Strong hit", "partial": "Weak hit", "failure": "Miss"}},
+  "difficulty": {
+    "min": -2,
+    "max": 2,
+    "opposedBaseline": null,
+    "guide": [
+      {"value": 0, "label": "Most rolls"},
+      {"value": -1, "label": "Clearly outmatched"},
+      {"value": 1, "label": "Clearly favored"}
+    ]
+  },
+  "effect": {
+    "labels": {"limited": "Limited", "standard": "Standard", "great": "Great"},
+    "byRating": ["standard", "standard", "standard", "standard", "standard"],
+    "criticalBonus": 0,
+    "scaling": {
+      "limited": {"harmLevels": 0, "clockTicks": 0, "treatmentLevels": 1},
+      "standard": {"harmLevels": 0, "clockTicks": 0, "treatmentLevels": 1},
+      "great": {"harmLevels": 0, "clockTicks": 0, "treatmentLevels": 1}
+    }
+  },
+  "items": {"maxRollBonus": 2, "maxArmorPerHarm": 1},
+  "harm": {
+    "tags": [
+      {
+        "id": "harm",
+        "name": "Harm",
+        "description": "Any lasting hurt.",
+        "hinders": ["grit", "grace", "wits", "heart"],
+        "resistStat": null,
+        "visible": true
+      }
+    ],
+    "levels": [
+      {
+        "name": "Hurt",
+        "capacity": 3,
+        "pointPenalty": 0,
+        "effectPenalty": 0,
+        "incapacitating": false,
+        "untreatedHealMinutes": 4320,
+        "treatedHealMinutes": 1440,
+        "examples": "Scraped, Bleeding"
+      },
+      {
+        "name": "Badly hurt",
+        "capacity": 2,
+        "pointPenalty": 1,
+        "effectPenalty": 0,
+        "incapacitating": false,
+        "untreatedHealMinutes": null,
+        "treatedHealMinutes": 10080,
+        "examples": "Shot, Broken Arm"
+      }
+    ],
+    "fatalName": "Dying",
+    "overflow": "up"
+  },
+  "resistance": {"mode": "off", "who": "pc", "reduction": {"critical": 0, "success": 0, "partial": 0, "failure": 0}},
+  "lethality": {"pc": "heroic", "npc": "lethal"},
+  "clocks": {"minSegments": 2, "maxSegments": 12, "maxTicks": 3},
+  "statChange": {"enabled": true, "clockSegments": 8, "amount": 1, "ticksPerWeek": 1},
+  "relationships": {
+    "dimensions": [
+      {
+        "id": "trust",
+        "name": "Trust",
+        "description": "Belief that the other will keep their word and not betray them."
+      },
+      {"id": "affection", "name": "Affection", "description": "Warmth, liking, attraction."},
+      {"id": "respect", "name": "Respect", "description": "Regard for the other's competence and standing."},
+      {"id": "fear", "name": "Fear", "description": "Belief that the other can and might harm them."}
+    ],
+    "min": -3,
+    "max": 3,
+    "maxChangePerTurn": 1,
+    "trackPc": "off"
+  },
+  "carrying": {"mode": "containers", "sizePoints": {"tiny": 1, "small": 2, "medium": 4, "large": 8, "huge": 16}}
+}

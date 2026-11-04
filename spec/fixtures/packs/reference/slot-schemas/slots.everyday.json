@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "slots.everyday",
+  "name": "Everyday clothing",
+  "slots": [
+    { "id": "head", "name": "Head", "layers": [{ "name": "worn", "visibility": "visible" }] },
+    { "id": "torso", "name": "Torso", "layers": [
+      { "name": "outer", "visibility": "visible" },
+      { "name": "under", "visibility": "concealed" }
+    ] },
+    { "id": "legs", "name": "Legs", "layers": [
+      { "name": "outer", "visibility": "visible" },
+      { "name": "under", "visibility": "concealed" }
+    ] },
+    { "id": "feet", "name": "Feet", "layers": [{ "name": "worn", "visibility": "visible" }] },
+    { "id": "hands", "name": "Hands", "layers": [{ "name": "worn", "visibility": "visible" }] },
+    { "id": "neck", "name": "Neck", "layers": [{ "name": "worn", "visibility": "visible" }], "itemsPerLayer": 2 }
+  ],
+  "heldItems": 2
+}

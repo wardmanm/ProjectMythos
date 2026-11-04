@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.boots",
+  "kind": "item",
+  "name": "boots",
+  "description": "Sturdy walking boots, salt-stained to the ankle.",
+  "startingLocation": {"type": "worn", "characterId": "pc.wren", "slot": "feet", "layer": 0},
+  "ownerId": "pc.wren",
+  "size": "medium",
+  "wearable": {"slots": ["feet"]}
+}

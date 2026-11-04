@@ -1,0 +1,29 @@
+{
+  "name": "@mythos/spec-reference",
+  "private": true,
+  "type": "module",
+  "description": "Non-normative reference code used to validate the Mythos spec. The spec wins any disagreement.",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:fixtures": "tsx scripts/check-fixtures.ts",
+    "check:drift": "tsx scripts/check-drift.ts",
+    "check:docs": "tsx scripts/check-docs.ts",
+    "trace": "tsx scripts/check-docs.ts --report",
+    "check": "tsc --noEmit && vitest run && tsx scripts/check-fixtures.ts && tsx scripts/check-drift.ts && tsx scripts/check-docs.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

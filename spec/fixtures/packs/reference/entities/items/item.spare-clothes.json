@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "item.spare-clothes",
+  "kind": "item",
+  "name": "spare clothes",
+  "description": "A change of clothes, folded tight.",
+  "startingLocation": {"type": "contained", "containerId": "item.carpetbag"},
+  "ownerId": "pc.wren",
+  "size": "medium"
+}

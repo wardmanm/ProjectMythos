@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "setting.brinemoor",
+  "name": "Brinemoor",
+  "summary": "Brinemoor is a fog-bound fishing town on a cold northern coast, in an era of oil lamps and sailing ships. The catch has been poor for two seasons, boats have gone missing, and the Tide Wardens who keep the harbor are stretched thin. There is no overt magic; the sea is the only monster anyone has proven exists.",
+  "calendarId": "calendar.gregorian",
+  "epoch": { "year": 1870, "month": 1, "day": 1 },
+  "epochWeekday": 6,
+  "slotSchemaId": "slots.everyday",
+  "worldTickMinutes": 480,
+  "defaults": { "toneProfileId": "tone.coastal-mystery", "rulesetId": "ruleset.standard" },
+  "scenarioIds": ["scenario.arrival"]
+}

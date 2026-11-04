@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.coins",
+  "kind": "item",
+  "name": "coins",
+  "tags": ["money"],
+  "description": "A few shillings and a handful of pennies: enough for a week's room and board.",
+  "startingLocation": {"type": "contained", "containerId": "item.wool-trousers"},
+  "ownerId": "pc.wren",
+  "size": "tiny"
+}

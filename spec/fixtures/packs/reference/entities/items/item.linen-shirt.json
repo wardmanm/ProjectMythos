@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.linen-shirt",
+  "kind": "item",
+  "name": "linen shirt",
+  "description": "A plain linen shirt, damp at the collar.",
+  "startingLocation": {"type": "worn", "characterId": "pc.wren", "slot": "torso", "layer": 1},
+  "ownerId": "pc.wren",
+  "size": "small",
+  "wearable": {"slots": ["torso"]}
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.harbor-ledger",
+  "kind": "item",
+  "name": "green ledger",
+  "tags": ["evidence"],
+  "description": "A clerk's ledger bound in green cloth, kept locked in the bottom drawer of the harbor office desk.",
+  "startingLocation": {"type": "placed", "placeId": "place.harbor-office"},
+  "ownerId": "npc.varek",
+  "size": "small"
+}

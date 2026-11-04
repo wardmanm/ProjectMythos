@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "faction.tide-wardens",
+  "kind": "faction",
+  "name": "The Tide Wardens",
+  "aliases": ["the Wardens"],
+  "description": "The harbor watch: six wardens and a captain who keep the harbor mouth, collect dues, and hunt smugglers.",
+  "goals": ["Stop the night smuggling before the winter storms", "Keep the harbor safe with too few wardens"]
+}

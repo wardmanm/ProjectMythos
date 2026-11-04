@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "calendar.long-count",
+  "name": "The Long Count",
+  "months": [
+    { "name": "Frostmonth", "days": 30 },
+    { "name": "Deepwinter", "days": 1, "intercalary": true },
+    { "name": "Thaw", "days": 30 },
+    { "name": "Sowing", "days": 30 },
+    { "name": "Rains", "days": 30 },
+    { "name": "Bloomtide", "days": 1, "intercalary": true },
+    { "name": "Blossom", "days": 30 },
+    { "name": "Bright", "days": 30 },
+    { "name": "Highsun", "days": 30 },
+    { "name": "Longday", "days": 1, "intercalary": true },
+    { "name": "Leapnight", "days": 0, "leapDays": 1, "intercalary": true },
+    { "name": "Dry", "days": 30 },
+    { "name": "Harvest", "days": 30 },
+    { "name": "Reaping", "days": 1, "intercalary": true },
+    { "name": "Falling", "days": 30 },
+    { "name": "Mists", "days": 30 },
+    { "name": "Lanternfast", "days": 1, "intercalary": true },
+    { "name": "Dark", "days": 30 }
+  ],
+  "weekdays": ["Moonsday", "Tidesday", "Windsday", "Stonesday", "Flamesday", "Starsday"],
+  "weekdaysSkipIntercalary": true,
+  "leapRule": { "every": 4 },
+  "eraSuffix": "LC",
+  "timesOfDay": [
+    { "name": "night", "startHour": 0 },
+    { "name": "dawn", "startHour": 5 },
+    { "name": "morning", "startHour": 7 },
+    { "name": "midday", "startHour": 11 },
+    { "name": "afternoon", "startHour": 13 },
+    { "name": "evening", "startHour": 17 },
+    { "name": "night", "startHour": 21 }
+  ],
+  "format": "{weekday}, {day} {month} {year} {era} ({timeOfDay})",
+  "intercalaryFormat": "{month}, {year} {era} ({timeOfDay})"
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "item.wool-trousers",
+  "kind": "item",
+  "name": "wool trousers",
+  "description": "Heavy grey wool trousers with one deep pocket.",
+  "startingLocation": {"type": "worn", "characterId": "pc.wren", "slot": "legs", "layer": 0},
+  "ownerId": "pc.wren",
+  "size": "medium",
+  "container": {"capacity": 2, "maxItemSize": "small"},
+  "wearable": {"slots": ["legs"]}
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "item.fishing-knife",
+  "kind": "item",
+  "name": "fishing knife",
+  "tags": ["weapon", "tool"],
+  "description": "A short, thick-spined gutting knife in a leather sheath.",
+  "startingLocation": {"type": "worn", "characterId": "pc.wren", "slot": "legs", "layer": 1},
+  "ownerId": "pc.wren",
+  "size": "small",
+  "wearable": {"slots": ["legs"]},
+  "bonuses": [
+    {"type": "roll", "situation": "cutting rope, net, or line", "points": 1}
+  ]
+}
