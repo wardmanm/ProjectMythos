@@ -1,11 +1,11 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: f3d6fe6 · Branch: main
+Updated: 2026-11-04 · Through: 3d68f76 · Branch: main
 
 ## Current focus
-Phase 1 (Foundation) has not started: 0 of 25 tasks done. `pnpm trace` lists P1-T01, the scaffold,
-as the only task ready to start. P1-T02 (contracts, fixtures, the spec and docs checks) follows it.
+Phase 1 (Foundation): 0 of 25 tasks done. P1-T01, the scaffold, is open on `p1-t01-scaffold` and
+not yet merged; nothing blocks it. P1-T02 (contracts, fixtures, the spec and docs checks) follows it.
 After T02, the core ports (T03), the config module (T06), the events module (T09), and the client
-foundation (T21) can run in parallel. No branch open.
+foundation (T21) can run in parallel.
 
 ## Recent changes
 - 2026-11-04: Mike's decision: pin pnpm 12 (`pnpm@12.16.1`) instead of 10. The root
@@ -27,10 +27,10 @@ foundation (T21) can run in parallel. No branch open.
 - None.
 
 ## Loose ends
-- `main` is ahead of `origin/main` (99c85b0) by the pnpm 12 amendment and two status commits. Not
-  pushed; waiting for Mike's say-so.
-- `spec/reference/pnpm-workspace.yaml` is untracked, left by the standalone install with a placeholder
-  `allowBuilds` entry. Delete it before P1-T01's root `pnpm-workspace.yaml` lands, or pnpm treats
-  `spec/reference` as a workspace of its own (`spec/reference/README.md`).
-- This machine runs Node 26.7.0. ARCH-002 needs 26.11.0 or later, and P1-T01's `engine-strict=true`
-  will refuse the install until Node is upgraded.
+- `main` has commits not on `origin/main` (99c85b0): the pnpm 12 amendment and the status commits.
+  Not pushed; waiting for Mike's say-so.
+- Branch `p1-t01-scaffold` is not merged.
+- nvm's default Node on this machine is 26.7.0, below ARCH-002's 26.11.0, so `pnpm install` refuses
+  the workspace in a new shell. Node 26.13.0 is installed but has no Corepack yet (Node 26 no
+  longer bundles it): under 26.13, run `npm install -g corepack` and `corepack enable`, then
+  `nvm alias default 26`.
