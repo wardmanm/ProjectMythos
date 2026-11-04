@@ -333,8 +333,17 @@ Per OVR-010, these exist from phase 1 even if unused:
   (`text`, `embedding`, `image`, `speech-output`, `speech-input`) so new kinds need no
   queue changes.
 
+## Traps
+
+- **pnpm settings in `.npmrc` are ignored (ARCH-001).** pnpm 11 and later read only
+  auth, registry, and network settings from `.npmrc`, and ignore the `pnpm` field in
+  `package.json` for `onlyBuiltDependencies`. Every other setting, such as `engineStrict`
+  and `allowBuilds`, goes in the root `pnpm-workspace.yaml`. A `pnpm-workspace.yaml` in a
+  member folder makes that folder a workspace of its own.
+
 ## Decisions
 
 | Question | Decision | Rejected and why | Decided by |
 |---|---|---|---|
 | Which pnpm does the repository pin (ARCH-001)? | pnpm 12: `"packageManager": "pnpm@12.16.1"`. Dependency build scripts are approved in the root `pnpm-workspace.yaml` with `allowBuilds: { esbuild: true }`. | pnpm 10, which the handoff assumed: Corepack fetches pnpm 12, and pnpm 11 and later ignore the handoff's `pnpm.onlyBuiltDependencies` in `package.json`. | owner |
+| Does `spec/reference` keep its own `pnpm-lock.yaml` now that it is a workspace member (ARCH-004)? | Yes. Inside the repository the root `pnpm-lock.yaml` governs it, and its own lockfile pins its versions when the folder is copied out and installed alone. | Deleting it: nothing in the repository reads it, but the standalone install would then resolve fresh versions. | owner |

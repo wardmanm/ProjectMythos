@@ -1,5 +1,14 @@
+# Dependencies and build output
 node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Operating system files
 .DS_Store
+Thumbs.db
+
+# Claude Code: only the skills and the status log are tracked (ADR-017).
 .claude/*
 !.claude/skills/
 !.claude/status.md

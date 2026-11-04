@@ -247,3 +247,26 @@ ask "how does this work?", rewrite it.
   version is set to `0.N.0` for phase N, and that commit on `main` is tagged `v0.N.0`.
   A GitHub release for the tag is published with the phase plan's **Retrospective** as
   its notes, and the phase's milestone is closed (ADR-018).
+
+## Traps
+
+- **ESLint rule options do not merge (CONV-121).** In `eslint.config.js`, a later config
+  object that sets `no-restricted-syntax` for a file replaces the earlier list rather
+  than adding to it. Each file group therefore lists every selector that applies to it;
+  adding a restriction means adding it to each group.
+- **Boundaries descriptor order (CONV-121, ARCH-020, ARCH-021).** A file takes the type
+  of the first element descriptor it matches. The server's modules and cli must come
+  before `apps/server/src`, which contains them. Otherwise every import inside the
+  server counts as internal to one element, and none of it is checked.
+- **A broken boundaries policy only warns (CONV-121).** eslint-plugin-boundaries prints
+  an invalid policy, such as `allow: { to: [] }`, as a console warning and skips it,
+  and lint still passes. After changing the policies, read lint's output and run
+  `scripts/lint-rules.test.ts`.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| Does `pnpm check` enforce Prettier (CONV-120, CONV-122)? | Yes: `check` runs `prettier --check .`. `.prettierignore` also lists `pnpm-lock.yaml`, `CLAUDE.md`, and `.claude/`, which pnpm writes or which arrive with the spec. | Leaving formatting to editors: nothing would enforce CONV-120. | Claude (ruling) |
+| How does lint see `@mythos/*` imports (CONV-121)? | By package name: boundaries' default resolver does not read `exports`, so it classes them as external modules. Each policy names both the package and its folder, so a relative import across packages is caught too. Node built-ins in `core` are blocked the same way, by their `core` origin. | `eslint-import-resolver-typescript`: it brings a native resolver with its own build script, so a second `allowBuilds` entry. | Claude (ruling) |
+| How are dependency versions written (CONV-091)? | Exact versions, except TypeScript `~6.0.3` (ADR-015). A tool that `spec/reference` also uses takes its version there, so the workspace holds one copy. | Ranges: the lockfile pins them anyway, but a range hides which version was reviewed. | Claude (ruling) |

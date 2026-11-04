@@ -1,0 +1,15 @@
+# Text files are stored and checked out with LF on every OS (CONV-083), so byte-for-byte
+# fixture copies match on Windows and macOS.
+* text=auto eol=lf
+
+# Binary files: never normalized or diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
