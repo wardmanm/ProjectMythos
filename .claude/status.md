@@ -1,5 +1,5 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: c49acc9 · Branch: main
+Updated: 2026-11-04 · Through: fecee71 · Branch: main
 
 ## Current focus
 Phase 1 (Foundation): 1 of 25 tasks done. P1-T01, the scaffold, merged in PR #26. Ready to start:
@@ -8,6 +8,11 @@ foundations (T03), the config module (T06), the events module (T09), and the cli
 can run in parallel.
 
 ## Recent changes
+- 2026-11-04: Mike's decision: he signs off each feature before a release (ADR-019, CONV-137 to
+  CONV-140). At `/docs close`, Claude asks the phase plan's Try/Expect checks one at a time, on macOS and
+  Windows, and records each answer in its Sign-off table. A failure is an issue labeled `bug` and
+  `sign-off`, with the board's Priority: P0 blocks the release, P1 is high but doesn't block, P2 is
+  deferred. Phase 1's checklist is now nine such checks.
 - 2026-11-04: P1-T01 merged (#26): the pnpm 12 workspace with the four packages and `spec/reference`,
   strict TypeScript, Prettier, Vitest, ESLint with eslint-plugin-boundaries v7 (16 lint-rule tests),
   and CI on Windows and macOS. Rulings: `engineStrict` goes in `pnpm-workspace.yaml`, with no
@@ -41,5 +46,3 @@ can run in parallel.
 - The root `pnpm trace` and the spec and docs checks in `pnpm check` arrive with P1-T02. Until then, run
   `pnpm --filter @mythos/spec-reference trace` and `... check`. On macOS a bare `pnpm trace` runs the
   system's `/usr/bin/trace` instead.
-- CI for the merge commit on `main` (run 41883122977) was still queued when this was written; GitHub
-  Actions was in a partial outage.
