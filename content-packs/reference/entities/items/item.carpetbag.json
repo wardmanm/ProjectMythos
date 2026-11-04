@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.carpetbag",
+  "kind": "item",
+  "name": "carpetbag",
+  "description": "A worn carpetbag with a brass clasp.",
+  "startingLocation": {"type": "held", "characterId": "pc.wren"},
+  "ownerId": "pc.wren",
+  "size": "medium",
+  "container": {"capacity": 8, "maxItemSize": "medium"}
+}

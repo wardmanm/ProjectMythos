@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "tone.adventure",
+  "name": "Adventure",
+  "description": "Bold heroes, far places, and narrow escapes.",
+  "genre": "adventure",
+  "tone": "Energetic, optimistic, and brisk. Danger is real but the heroes are capable. Humor sits comfortably beside peril. Touchstones: pulp serials, swashbucklers, treasure hunts.",
+  "themes": ["courage", "friendship", "discovery", "rivalry"],
+  "narration": {
+    "perspective": "second-person",
+    "tense": "present",
+    "length": "standard",
+    "style": "Keep momentum. Vivid verbs, short paragraphs in action, room to breathe between scenes. End each beat with a choice or a hook."
+  },
+  "pacing": "fast",
+  "content": {
+    "violence": "moderate",
+    "gore": "fade-to-black",
+    "sexual": "fade-to-black",
+    "language": "moderate",
+    "disturbing": "fade-to-black",
+    "lines": [],
+    "veils": []
+  },
+  "themeId": "theme.house",
+  "artStyle": "bright painterly illustration, adventure-novel cover, warm light"
+}

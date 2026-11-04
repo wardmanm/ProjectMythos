@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.harbor-notice",
+  "kind": "item",
+  "name": "harbor office notice",
+  "tags": ["letter"],
+  "description": "A formal notice on harbor office paper, signed by the clerk, Varek Holm.",
+  "startingLocation": {"type": "contained", "containerId": "item.oilskin-cloak"},
+  "ownerId": "pc.wren",
+  "size": "tiny"
+}

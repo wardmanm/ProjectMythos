@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "place.harbor",
+  "kind": "place",
+  "name": "Brinemoor Harbor",
+  "aliases": ["the harbor"],
+  "parentPlaceId": "place.brinemoor",
+  "description": "A stone-walled harbor crowded with fishing boats, slick steps down to the water, and the harbor wall where old men mend nets."
+}

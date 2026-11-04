@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "npc.tomas",
+  "kind": "npc",
+  "name": "Tomas Reyne",
+  "aliases": ["the old fisherman"],
+  "ageCategory": "adult",
+  "age": 63,
+  "stats": {"str": 3, "end": 4, "dex": 2, "int": 2, "cha": 2},
+  "physicalDescription": "Stooped and heavy-shouldered, face like weathered rope, missing two fingers on his left hand.",
+  "personality": "Gruff, superstitious, and sparing with words. Trusts weather and boats more than people. Says nothing about what he saw, because he does not know who is listening.",
+  "goals": ["Keep his head down until the Wardens stop asking questions"],
+  "voice": {"description": "Gravelly and slow, an old fisherman who speaks in short sentences and long pauses."},
+  "startingLocationId": "place.harbor"
+}

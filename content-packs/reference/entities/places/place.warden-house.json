@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "place.warden-house",
+  "kind": "place",
+  "name": "The Warden House",
+  "parentPlaceId": "place.brinemoor",
+  "description": "A squat granite watch house above the harbor mouth, with a signal mast, a lamp room, and a single cell."
+}

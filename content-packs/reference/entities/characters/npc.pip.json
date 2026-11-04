@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "npc.pip",
+  "kind": "npc",
+  "name": "Pip",
+  "aliases": ["the errand girl"],
+  "ageCategory": "minor",
+  "age": 11,
+  "stats": {"str": 1, "end": 2, "dex": 4, "int": 3, "cha": 3},
+  "physicalDescription": "Small and wiry, in a patched coat two sizes too big, with a cap pulled low over tangled hair.",
+  "personality": "Quick, cheeky, and always hungry. Runs messages along the harbor for a penny. Notices everything, and tells what she knows to people who are kind to her.",
+  "voice": {"description": "A child's quick, bright voice with a harbor accent; chatters when nervous."},
+  "startingLocationId": "place.harbor"
+}

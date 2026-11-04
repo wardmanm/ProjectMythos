@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.silver-locket",
+  "kind": "item",
+  "name": "silver locket",
+  "description": "A small silver locket holding a faded portrait of Wren and Jory's mother.",
+  "startingLocation": {"type": "worn", "characterId": "pc.wren", "slot": "neck", "layer": 0},
+  "ownerId": "pc.wren",
+  "size": "tiny",
+  "wearable": {"slots": ["neck"]}
+}

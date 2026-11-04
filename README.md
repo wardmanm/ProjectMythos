@@ -15,15 +15,16 @@ one task at a time.
 
 ## Commands
 
-| Command        | Does                                                                    |
-| -------------- | ----------------------------------------------------------------------- |
-| `pnpm install` | Installs the workspace                                                  |
-| `pnpm check`   | Typecheck, lint, format check, and all tests: the definition of passing |
-| `pnpm test`    | All tests; `pnpm --filter @mythos/core test` for one package            |
-| `pnpm lint`    | ESLint, including the package and module boundaries                     |
-| `pnpm format`  | Formats every file Prettier owns                                        |
-| `pnpm build`   | Builds the client                                                       |
-| `pnpm dev`     | Server and client together (from P1-T20)                                |
+| Command        | Does                                                                                            |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `pnpm install` | Installs the workspace                                                                          |
+| `pnpm check`   | Typecheck, lint, format, tests, and the spec, drift, and docs checks: the definition of passing |
+| `pnpm test`    | All tests; `pnpm --filter @mythos/core test` for one package                                    |
+| `pnpm trace`   | Task status, and requirement counts per spec document                                           |
+| `pnpm lint`    | ESLint, including the package and module boundaries                                             |
+| `pnpm format`  | Formats every file Prettier owns                                                                |
+| `pnpm build`   | Builds the client                                                                               |
+| `pnpm dev`     | Server and client together (from P1-T20)                                                        |
 
 ## Repository map
 

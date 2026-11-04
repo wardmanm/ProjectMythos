@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "faction.night-traders",
+  "kind": "faction",
+  "name": "The Night Traders",
+  "aliases": ["the smugglers"],
+  "description": "A smuggling ring that runs brandy, tobacco, and worse along the coast in a fast cutter, landing cargo at night.",
+  "goals": [
+    "Move their cargo past the Wardens before winter closes the sea",
+    "Make sure nobody talks about the Merrow's Luck"
+  ]
+}

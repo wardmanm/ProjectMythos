@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "theme.high-contrast",
+  "name": "High contrast",
+  "description": "Maximum contrast and a large, plain typeface.",
+  "palettes": {
+    "dark": {
+      "background": "#000000",
+      "surface": "#0A0A0A",
+      "text": "#FFFFFF",
+      "textMuted": "#D0D0D0",
+      "playerText": "#FFE066",
+      "accent": "#FFE066",
+      "onAccent": "#000000",
+      "border": "#FFFFFF",
+      "positive": "#7CF0A0",
+      "caution": "#FFC24D",
+      "negative": "#FF8A8A"
+    },
+    "light": {
+      "background": "#FFFFFF",
+      "surface": "#FFFFFF",
+      "text": "#000000",
+      "textMuted": "#333333",
+      "playerText": "#0033A0",
+      "accent": "#0033A0",
+      "onAccent": "#FFFFFF",
+      "border": "#000000",
+      "positive": "#005A2B",
+      "caution": "#6B3F00",
+      "negative": "#9E0000"
+    }
+  },
+  "fonts": {"narration": {"family": "atkinson-hyperlegible"}, "interface": {"family": "atkinson-hyperlegible", "weight": 700}},
+  "narration": {"size": "large", "lineHeight": 1.7, "measure": 60},
+  "shape": {"radius": 4},
+  "ornament": {"sceneBreak": "*", "dropCap": false, "texture": "none"}
+}

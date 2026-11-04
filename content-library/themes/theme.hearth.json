@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "theme.hearth",
+  "name": "Hearth",
+  "description": "Lavender-grey paper, aubergine ink, dusty rose and sage, for romance and gentle stories.",
+  "palettes": {
+    "light": {
+      "background": "#EFECF2",
+      "surface": "#F8F6FA",
+      "text": "#2E2433",
+      "textMuted": "#5E5266",
+      "playerText": "#8A3558",
+      "accent": "#9E4468",
+      "onAccent": "#FFFFFF",
+      "border": "#D6CFDC",
+      "positive": "#4E7A58",
+      "caution": "#8A6420",
+      "negative": "#A23B4A"
+    },
+    "dark": {
+      "background": "#2A2230",
+      "surface": "#332A3A",
+      "text": "#ECE4F0",
+      "textMuted": "#B7AABF",
+      "playerText": "#E8A3BE",
+      "accent": "#D98AA8",
+      "onAccent": "#2A2230",
+      "border": "#4A3F52",
+      "positive": "#9CC9A5",
+      "caution": "#E0BC7A",
+      "negative": "#EE9AA6"
+    }
+  },
+  "fonts": {"narration": {"family": "gentium-book-plus"}, "interface": {"family": "figtree"}},
+  "narration": {"size": "medium", "lineHeight": 1.7, "measure": 62},
+  "shape": {"radius": 12},
+  "ornament": {"sceneBreak": "❦", "dropCap": true, "texture": "paper"}
+}

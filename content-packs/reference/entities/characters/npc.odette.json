@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "npc.odette",
+  "kind": "npc",
+  "name": "Odette Marsh",
+  "aliases": ["the innkeeper"],
+  "ageCategory": "adult",
+  "age": 54,
+  "stats": {"str": 2, "end": 3, "dex": 2, "int": 3, "cha": 4},
+  "physicalDescription": "Broad and quick-moving, grey hair pinned up anyhow, sleeves rolled to the elbow.",
+  "personality": "Warm, nosy, and generous with soup and gossip. Protective of her regulars and of strays. Thinks the best of old friends and the worst of the Tide Wardens.",
+  "goals": ["Keep the Gull and Anchor open through a lean winter"],
+  "voice": {"description": "A warm, husky alto with a coastal burr; talks fast when gossiping and slow when worried."},
+  "startingLocationId": "place.gull-and-anchor"
+}

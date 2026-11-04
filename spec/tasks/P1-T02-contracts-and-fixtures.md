@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Phase** | 1 |
-| **Status** | Not started |
+| **Status** | Done |
 | **Depends on** | P1-T01 |
 | **Branch** | `p1-t02-contracts-and-fixtures` |
 
@@ -66,19 +66,60 @@ OVR-030, OVR-031, OVR-033, OVR-037, OVR-038, CON-001, CON-002, ARCH-004, CONV-12
 
 ## Acceptance
 
-- [ ] `pnpm check` passes, including the spec check and the reference package's own check.
-- [ ] Changing one byte in `content-packs/reference/setting.json` or in `packages/contracts/src/rules.ts` makes `pnpm check` fail with a message naming the file (verify, then revert).
-- [ ] Tests cite OVR-030 and OVR-033.
-- [ ] `pnpm trace` lists every phase-1 task and the requirement counts for each document; with this task marked Done, `pnpm check` still passes.
-- [ ] `pnpm check` passes.
+- [x] `pnpm check` passes, including the spec check and the reference package's own check.
+- [x] Changing one byte in `content-packs/reference/setting.json` or in `packages/contracts/src/rules.ts` makes `pnpm check` fail with a message naming the file (verify, then revert).
+- [x] Tests cite OVR-030 and OVR-033.
+- [x] `pnpm trace` lists every phase-1 task and the requirement counts for each document; with this task marked Done, `pnpm check` still passes.
+- [x] `pnpm check` passes.
 
 ## Completion notes
 
-_Written when the task is done (CONV-135). Replace this line and fill in each part;
-a part with nothing in it says "None"._
-
 - **Done:**
+  - `packages/contracts/src/`: the 33 files of `spec/reference/contracts/`, copied with
+    `fs.cpSync` (there are no contract tests to leave out). The package depends on
+    `zod` 4.6.5, and its README maps each file to the document that specifies it.
+  - `content-library/` (16 files) and `content-packs/reference/` (51 files), copied the
+    same way.
+  - `scripts/check-spec.ts` compares the three copies with their sources byte for byte
+    and prints each file that is missing, differs, or has no source, then exits 1.
+    `scripts/check-spec.test.ts` has 9 tests citing OVR-030 and OVR-033.
+  - The root `check` also runs the spec check and `spec/reference`'s own check (drift
+    and docs checks), as CONV-122 lists. `pnpm trace` runs the reference package's
+    trace and lists all 25 phase-1 tasks.
+  - Verified, then reverted: one changed byte in a comment in
+    `packages/contracts/src/rules.ts` fails `pnpm check` with
+    `packages/contracts/src/rules.ts differs from spec/reference/contracts/rules.ts`, and
+    one in `content-packs/reference/setting.json` with the matching message.
+  - `pnpm check` passes. The workspace has `Tests  25 passed (25)` and `spec/reference`
+    `Tests  267 passed (267)`, and it ends with `Docs check passed: 834 requirements, 25
+    tasks (2 done), 19 ADRs, 74 markdown files, 28 citations in code.`
 - **Rulings:**
-- **Pending decisions:**
+  - **OVR-033, MEM-041, spec fix** (`P1-T02: spec: drop an unused local in
+    makeExtractionSchemas`). `makeExtractionSchemas` declared `const stat` and never
+    used it. That is a lint error in the copy, which cannot be edited. The line is
+    removed from `spec/reference/contracts/extraction.ts` and from the matching
+    `08-memory.md` block. The stat hints key a strict object by the ruleset's stat IDs,
+    and in the other branch `stat` would equal `StatIdSchema`, which the code uses
+    directly, so nothing changes. 03-contracts gains a Traps entry for it.
+  - **The tests run the spec check as `pnpm check` does,** in a child process
+    (`node --import tsx`), rather than importing it. They cover the exit code and the
+    messages, and the script needs no guard against running on import.
+  - **A missing source folder fails the check** rather than passing with nothing
+    compared, which the design notes don't mention.
+  - **Extra files** (CONV-132): `scripts/README.md` lists the script, and the root
+    `README.md` describes `pnpm check` and `pnpm trace` (CONV-023).
+  - **`tsx` 4.23.15 joins the root dev dependencies,** the reference's version, so the
+    root `check` can run the script.
+  - **The copies were made once with `fs.cpSync`,** not by a committed script. The spec
+    check catches any later difference.
+- **Pending decisions:** None.
 - **Not tested:**
+  - CON-001: every type in `packages/contracts/src/` is `z.infer` of a schema. The files
+    are the spec's own, and the spec check keeps them identical.
+  - CON-002: `packages/contracts/src/` holds only schemas, inferred types, and the
+    `Result` helper, as the copied files show.
+  - ARCH-004: `packages/contracts/package.json` names `@mythos/contracts`, exports `.`
+    and `./content`, and depends on `zod` only.
 - **Dependencies:**
+  - `zod` 4.6.5 in `packages/contracts`, on CONV-091's list.
+  - `tsx` 4.23.15 as a root dev dependency, on CONV-091's list (ADR-015).

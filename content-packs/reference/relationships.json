@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "relationships": [
+    {
+      "fromId": "npc.odette",
+      "toId": "npc.varek",
+      "dimensions": {"trust": 3, "affection": 2},
+      "summary": "Old friends. She thinks he is lonely, not secretive."
+    },
+    {
+      "fromId": "npc.varek",
+      "toId": "npc.odette",
+      "dimensions": {"trust": 2, "affection": 3},
+      "summary": "Fond of her, and careful never to let her near his business."
+    },
+    {
+      "fromId": "npc.odette",
+      "toId": "npc.jory",
+      "dimensions": {"affection": 2, "trust": 1},
+      "summary": "Liked the boy. Thought he talked too freely about money."
+    },
+    {
+      "fromId": "npc.odette",
+      "toId": "npc.pip",
+      "dimensions": {"affection": 4, "trust": 3},
+      "summary": "Slips her bread and soup, and worries about her come winter."
+    },
+    {
+      "fromId": "npc.pip",
+      "toId": "npc.odette",
+      "dimensions": {"trust": 4, "affection": 4},
+      "summary": "Odette feeds her and asks nothing back."
+    },
+    {
+      "fromId": "npc.tomas",
+      "toId": "npc.varek",
+      "dimensions": {"trust": -2, "fear": 2},
+      "summary": "Never liked the clerk. Since the night the Merrow sailed dark, afraid of him too."
+    },
+    {
+      "fromId": "npc.ines-crale",
+      "toId": "npc.varek",
+      "dimensions": {"trust": -1, "respect": 2},
+      "summary": "Finds him efficient and a little too tidy. She has started to wonder why."
+    },
+    {
+      "fromId": "npc.varek",
+      "toId": "npc.ines-crale",
+      "dimensions": {"respect": 2, "fear": 2},
+      "summary": "Respects her, and is afraid of how close she is getting."
+    },
+    {
+      "fromId": "pc.wren",
+      "toId": "npc.jory",
+      "dimensions": {"affection": 5, "trust": 2},
+      "summary": "Her younger brother. She loves him, and has spent years getting him out of trouble."
+    },
+    {
+      "fromId": "npc.jory",
+      "toId": "pc.wren",
+      "dimensions": {"affection": 5, "trust": 4},
+      "summary": "Adores his sister and hates to disappoint her."
+    }
+  ]
+}

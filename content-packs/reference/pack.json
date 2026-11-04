@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "reference",
+  "name": "Brinemoor (Reference Pack)",
+  "version": "0.1.0",
+  "description": "A small fog-bound fishing town. Used by tests and for first play.",
+  "author": "Mythos"
+}

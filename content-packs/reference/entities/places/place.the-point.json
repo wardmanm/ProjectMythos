@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "place.the-point",
+  "kind": "place",
+  "name": "The Point",
+  "parentPlaceId": "place.brinemoor",
+  "description": "A rocky headland north of the harbor, crowned by a ruined beacon tower. The currents off it are treacherous."
+}

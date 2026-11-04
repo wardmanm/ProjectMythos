@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "item.jory-letter",
+  "kind": "item",
+  "name": "Jory's letter",
+  "tags": ["letter"],
+  "description": "A creased letter in Jory's untidy hand, dated August 20th.",
+  "startingLocation": {"type": "contained", "containerId": "item.oilskin-cloak"},
+  "ownerId": "pc.wren",
+  "size": "tiny"
+}

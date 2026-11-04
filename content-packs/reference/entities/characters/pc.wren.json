@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "pc.wren",
+  "kind": "pc",
+  "name": "Wren Ashby",
+  "ageCategory": "adult",
+  "age": 26,
+  "stats": {"str": 2, "end": 3, "dex": 3, "int": 4, "cha": 3},
+  "physicalDescription": "Slight and freckled, with dark hair cropped short and a watchful look.",
+  "personality": "Stubborn, practical, and quick to notice when someone is lying. Hides worry behind briskness. Keeps her promises and expects others to keep theirs.",
+  "voice": {"description": "Clear and brisk, a little hoarse from travel; softens only with people she trusts."},
+  "media": {"imagePrompt": "young woman, short dark hair, freckles, long oilskin cloak"},
+  "startingLocationId": "place.gull-and-anchor"
+}
