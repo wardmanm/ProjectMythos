@@ -1,13 +1,20 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: fecee71 · Branch: main
+Updated: 2026-11-04 · Through: a297a6b · Branch: main
 
 ## Current focus
-Phase 1 (Foundation): 1 of 25 tasks done. P1-T01, the scaffold, merged in PR #26. Ready to start:
-P1-T02 (contracts, fixtures, the spec and docs checks). No branch open. After T02, the core
-foundations (T03), the config module (T06), the events module (T09), and the client foundation (T21)
-can run in parallel.
+Phase 1 (Foundation): 2 of 25 tasks done. P1-T02 merged in PR #27. Ready to start, and independent
+of each other: P1-T03 (port core: compare, calendar, theme), P1-T06 (server config module), P1-T09
+(server events module), and P1-T21 (client foundation). Parallel tasks run in separate worktrees, one
+task each. No branch open.
 
 ## Recent changes
+- 2026-11-04: P1-T02 merged (#27): `packages/contracts/src/`, `content-library/`, and
+  `content-packs/reference/` are byte-for-byte copies of the spec, and `scripts/check-spec.ts` fails
+  `pnpm check` on any difference (OVR-030, OVR-033). `pnpm check` now also runs `spec/reference`'s check
+  (drift and docs), and `pnpm trace` works from the root. Rulings: an unused local, `stat`, removed from
+  `makeExtractionSchemas` (spec fix; 03-contracts Trap: reference contracts are linted only as
+  copies); the check's tests run it as a child process; a missing source folder fails the check;
+  `tsx` 4.23.15 at the root.
 - 2026-11-04: Mike's decision: he signs off each feature before a release (ADR-019, CONV-137 to
   CONV-140). At `/docs close`, Claude asks the phase plan's Try/Expect checks one at a time, on macOS and
   Windows, and records each answer in its Sign-off table. A failure is an issue labeled `bug` and
@@ -43,6 +50,4 @@ can run in parallel.
 - None.
 
 ## Loose ends
-- The root `pnpm trace` and the spec and docs checks in `pnpm check` arrive with P1-T02. Until then, run
-  `pnpm --filter @mythos/spec-reference trace` and `... check`. On macOS a bare `pnpm trace` runs the
-  system's `/usr/bin/trace` instead.
+- None.
