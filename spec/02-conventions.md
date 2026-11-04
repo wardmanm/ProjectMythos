@@ -286,6 +286,10 @@ ask "how does this work?", rewrite it.
   an invalid policy, such as `allow: { to: [] }`, as a console warning and skips it,
   and lint still passes. After changing the policies, read lint's output and run
   `scripts/lint-rules.test.ts`.
+- **Asymmetric matchers are `any` (CONV-002).** `expect.any(String)` and
+  `expect.stringContaining(…)` return `any`, so an object literal holding one fails
+  strict lint (`no-unsafe-assignment`). Parse the value with its schema, such as an
+  error's `details` with `SemanticIssueSchema`, and compare its fields.
 
 ## Decisions
 

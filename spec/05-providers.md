@@ -763,3 +763,17 @@ export type JobQueue = {
   (PRV-052) and sends `role: 'narrator'`. Each request runs with `runInteractive` on
   the profile's device with `campaignId: null`. Nothing is recorded: model call
   records belong to campaigns (ARCH-060).
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| When is `restartRequired` true (PRV-004)? | When the saved `server` section (leaving out `server.pin`) or `dataDir` differs from the config the server started with, so the notice stays until a restart. | Comparing with the previous save: a second save would clear the notice although the change has still not applied. | Claude (ruling) |
+| What does PRV-002 check beyond the references it lists? | IDs are unique within `devices`, `providers`, `modelProfiles`, and `mediaProfiles`. Each `media` pick resolves to a media profile of its own kind (MED-002), and `speechInput.mode: 'server'` needs a `profileId`. | Only the listed references: a duplicate ID makes "resolves" ambiguous, and a media profile of the wrong kind would fail only at its first call. | Claude (ruling) |
+| What does the first-start default contain (PRV-001)? | Only the required parts, with every role written as `null`. The schema's defaults supply the rest, and a save writes the complete validated config. | Writing every default: a later change to a default would never reach an untouched file. | Claude (ruling) |
+
+## Open
+
+- **Headers are not secrets.** An `openai-compatible` provider's `headers` are stored
+  and returned as they are; PRV-005 and CON-111 cover `apiKey` only. An API key belongs
+  in `apiKey`, and the settings screen (P1-T24) should say so beside the headers.
