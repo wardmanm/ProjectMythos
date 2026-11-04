@@ -1,0 +1,13 @@
+# pnpm reads its settings only from this file at the workspace root; pnpm 11 and later
+# ignore everything but auth, registry, and network settings in .npmrc (ARCH-001).
+packages:
+  - apps/*
+  - packages/*
+  - spec/reference
+
+# Refuse to install a dependency whose engines field rejects this Node version.
+engineStrict: true
+
+# Dependency build scripts run only when listed here. tsx and Vite need esbuild's.
+allowBuilds:
+  esbuild: true

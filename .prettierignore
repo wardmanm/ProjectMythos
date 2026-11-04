@@ -1,0 +1,12 @@
+# Byte-for-byte copies of spec files (OVR-030, OVR-033): never reformatted.
+spec/
+content-library/
+content-packs/
+packages/contracts/src/
+
+# Written by pnpm.
+pnpm-lock.yaml
+
+# Arrive with the spec and are kept as written.
+CLAUDE.md
+.claude/
