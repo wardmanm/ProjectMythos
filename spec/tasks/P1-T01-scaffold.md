@@ -30,7 +30,7 @@ ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-010, 
 
 ## Outputs
 
-- Root: `package.json`, `pnpm-workspace.yaml`, `.nvmrc`, `.npmrc`, `.gitattributes`, `.gitignore`, `.editorconfig`, `.prettierrc.json`, `.prettierignore`, `eslint.config.js`, `tsconfig.base.json`, `vitest.config.ts`, `README.md`
+- Root: `package.json`, `pnpm-workspace.yaml`, `.nvmrc`, `.gitattributes`, `.gitignore`, `.editorconfig`, `.prettierrc.json`, `.prettierignore`, `eslint.config.js`, `tsconfig.base.json`, `vitest.config.ts`, `README.md`
 - `.github/workflows/check.yml`
 - `packages/contracts/`, `packages/core/`: `package.json`, `tsconfig.json`, `README.md`, `src/index.ts` (placeholder); contracts also `src/content/index.ts`
 - `apps/server/`: `package.json`, `tsconfig.json`, `README.md`, `src/main.ts` (placeholder), `src/modules/` (empty)
@@ -43,9 +43,11 @@ ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-010, 
 
 ## Design notes
 
-- **Versions.** Node `>=26.11.0 <27` in `engines`, `26` in `.nvmrc`, `engine-strict=true`
-  in `.npmrc`. Pin pnpm with `"packageManager": "pnpm@12.16.1"`. TypeScript `~6.0.3`
-  (ADR-015). Prettier exactly `3.9.9`.
+- **Versions.** Node `>=26.11.0 <27` in `engines`, `26` in `.nvmrc`, `engineStrict: true`
+  in the root `pnpm-workspace.yaml` (pnpm 11 and later read only auth, registry, and
+  network settings from `.npmrc`, so there is no `.npmrc`). Pin pnpm with
+  `"packageManager": "pnpm@12.16.1"`. TypeScript `~6.0.3` (ADR-015). Prettier exactly
+  `3.9.9`.
 - **Prettier config** is `{ "singleQuote": true, "printWidth": 100, "trailingComma": "all" }`:
   the spec's contracts are already formatted this way. `.prettierignore` lists `spec/`,
   `content-library/`, `content-packs/`, and `packages/contracts/src/`, because those

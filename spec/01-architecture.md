@@ -333,6 +333,14 @@ Per OVR-010, these exist from phase 1 even if unused:
   (`text`, `embedding`, `image`, `speech-output`, `speech-input`) so new kinds need no
   queue changes.
 
+## Traps
+
+- **pnpm settings in `.npmrc` are ignored (ARCH-001).** pnpm 11 and later read only
+  auth, registry, and network settings from `.npmrc`, and ignore the `pnpm` field in
+  `package.json` for `onlyBuiltDependencies`. Every other setting, such as `engineStrict`
+  and `allowBuilds`, goes in the root `pnpm-workspace.yaml`. A `pnpm-workspace.yaml` in a
+  member folder makes that folder a workspace of its own.
+
 ## Decisions
 
 | Question | Decision | Rejected and why | Decided by |
