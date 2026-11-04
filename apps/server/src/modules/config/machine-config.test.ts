@@ -200,6 +200,23 @@ describe('ConfigStore.save', () => {
     expect(readFileSync(store.configPath, 'utf8')).toContain('sk-ant-secret');
   });
 
+  it('CON-091: a failed save lists every issue at once, each at a dotted path', async () => {
+    const { store } = await open(emptyDir());
+    const result = await store.save({
+      ...loaded(store),
+      devices: [...loaded(store).devices, { id: 'cloud', name: 'Cloud' }],
+      providers: [
+        ...loaded(store).providers,
+        { id: 'new', type: 'anthropic', deviceId: 'cloud', apiKey: { value: SECRET_PLACEHOLDER } },
+      ],
+      queue: { maxAttempts: 99 },
+    });
+    expect(issuesOf(result).map((issue) => issue.path)).toEqual([
+      'providers.1.apiKey.value',
+      'queue.maxAttempts',
+    ]);
+  });
+
   it('ARCH-032: the module writes only machine-config.json, in its own folder', async () => {
     const dir = emptyDir();
     const { store } = await open(dir);
