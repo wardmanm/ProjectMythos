@@ -191,7 +191,6 @@ export const BROAD_EXTRACTION_LIMITS: ExtractionLimits = {
 };
 
 export function makeExtractionSchemas(limits: ExtractionLimits) {
-  const stat: z.ZodType<string> = limits.statIds ? z.enum(limits.statIds) : StatIdSchema;
   const tag: z.ZodType<string> = limits.tagIds ? z.enum(limits.tagIds) : StatusTagSchema;
   const rating = z.int().min(limits.rating.min).max(limits.rating.max);
   const delta = z.int().min(-limits.maxRelationshipChange).max(limits.maxRelationshipChange);
