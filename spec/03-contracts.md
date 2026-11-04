@@ -1734,6 +1734,14 @@ All paths are under `/api`.
 - **CON-114** The event stream sends a comment line every 15 seconds while idle, so
   phone browsers and proxies keep the connection open.
 
+## Traps
+
+- **Reference contracts are linted only as copies (OVR-033).** Lint ignores `spec/`, so
+  a change to `spec/reference/contracts/` is first linted in `packages/contracts/src/`,
+  where the copy cannot be edited. A lint error there is fixed in the reference file and
+  its code block in the documents, then copied again. Run
+  `pnpm exec eslint --no-ignore spec/reference/contracts` before changing a contract.
+
 ## Open
 
 - **Extraction output.** The model-facing schema the extractor fills, and how it maps
