@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Phase** | 1 |
-| **Status** | Not started |
+| **Status** | Done |
 | **Depends on** | P1-T02 |
 | **Branch** | `p1-t03-core-foundations` |
 
@@ -55,19 +55,59 @@ CONV-087, TIME-001, TIME-002, TIME-003, TIME-004, TIME-010, TIME-011, TIME-012, 
 
 ## Acceptance
 
-- [ ] TIME-001: all 518 truth-table rows round-trip and match weekdays.
-- [ ] TIME-002, TIME-003: the long-count calendar's festivals and weekday skipping behave as `spec/12-time-world.md` §2.2 describes.
-- [ ] UI-130: every theme in `content-library/themes/` passes `themeIssues`; contrast unit tests cover a pass and a fail.
-- [ ] No `localeCompare` anywhere in `packages/core`.
-- [ ] `pnpm check` passes.
+- [x] TIME-001: all 518 truth-table rows round-trip and match weekdays.
+- [x] TIME-002, TIME-003: the long-count calendar's festivals and weekday skipping behave as `spec/12-time-world.md` §2.2 describes.
+- [x] UI-130: every theme in `content-library/themes/` passes `themeIssues`; contrast unit tests cover a pass and a fail.
+- [x] No `localeCompare` anywhere in `packages/core`.
+- [x] `pnpm check` passes.
 
 ## Completion notes
 
-_Written when the task is done (CONV-135). Replace this line and fill in each part;
-a part with nothing in it says "None"._
-
 - **Done:**
+  - `packages/core/src/`: `compare.ts`, `calendar.ts`, `calendar-display.ts`, and
+    `theme.ts`, each with its tests (36 in all), exported from `index.ts`. The README
+    lists the API.
+  - Acceptance, by test:
+    - TIME-001: `all 518 truth-table dates and weekdays match, in both directions`;
+    - TIME-002 and TIME-003: the Long Count's Leapnight, festival weekdays, and four
+      unbroken years of weeks;
+    - UI-130: one test per theme in `content-library/themes/` (six), plus the careless
+      edit and a contrast pass and fail.
+  - No call to `localeCompare` in `packages/core`: `git grep "localeCompare("` finds
+    none, and lint bans it. The word appears only in two comments that say not to use it.
+  - Verified, then reverted:
+    - `cmp` written as plain `<` fails the astral-character test;
+    - the new lint test shows `process`, `fetch`, and `setTimeout` reported in core
+      source and allowed in core tests and the server.
+  - `pnpm check` passes. The workspace has `Tests  96 passed (96)` and `spec/reference`
+    `Tests  267 passed (267)`, and it ends with `Docs check passed: 834 requirements, 25
+    tasks (4 done), 19 ADRs, 75 markdown files, 116 citations in code.`
 - **Rulings:**
-- **Pending decisions:**
-- **Not tested:**
+  - **CONV-087, spec fix** (`P1-T03: spec: the reference cmp compares code points`). The
+    reference `cmp` used `<`, which compares UTF-16 code units and puts characters
+    beyond U+FFFF before U+E000 to U+FFFF. CONV-087, ADR-011, and SQLite's `BINARY`
+    collation all use code-point order, so the requirement wins (OVR-031). Both the
+    reference and the port now walk the strings with `codePointAt`. 02-conventions gains
+    a Trap.
+  - **CONV-060: Node's types in `core`, with lint holding the line.** The tests read
+    fixtures with `node:fs`, so `packages/core` gains `@types/node` and
+    `types: ["node"]`. `eslint.config.js` bans `process`, `Buffer`, `fetch`, `global`,
+    `require`, and the timers in core source, and `scripts/lint-rules.test.ts` has a
+    test for it. These are extra files (CONV-132). Recorded in 02-conventions'
+    Decisions.
+  - **`calendar-display.ts` is an extra file** (CONV-132, CONV-014). After Prettier,
+    `calendar.ts` came to 334 lines, so `formatDate` and `formatDuration` (12-time-world
+    §2.1, Display) moved out, with their tests.
+  - **`minutesUntil` is ported and tested as TIME-021**, though the task does not list
+    TIME-021: it is in the reference file, and the port keeps its behavior.
+  - **Dropped reference test:** "tone profile references a theme" tests
+    `ToneProfileSchema`, not core (porting rule 3).
+  - **Tests beyond the reference**, for CONV-112's branch coverage:
+    - dates before the epoch, and a calendar with no leap rule or no weekdays;
+    - out-of-range months, hours, and minutes;
+    - every `calendarIssues` branch, an unknown format token, adjacent duration units,
+      and a theme with no palette.
+- **Pending decisions:** None.
+- **Not tested:** None. Every listed behavioral requirement has a test named by its ID.
 - **Dependencies:**
+  - `@types/node` 26.6.4 as a dev dependency of `packages/core`, on CONV-091's list.
