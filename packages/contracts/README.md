@@ -15,18 +15,21 @@ Both entry points export TypeScript source; there is no build step (ARCH-005).
 
 ## What is in `src/`
 
-| File | Specified in |
-|---|---|
-| `primitives.ts`, `rules.ts`, `ruling.ts`, `entities.ts`, `world-state.ts`, `turns.ts`, `memory.ts`, `commits.ts`, `models.ts`, `errors.ts`, `result.ts`, `events.ts`, `app-api.ts` | [03-contracts.md](../../spec/03-contracts.md) |
-| `machine-config.ts` | [05-providers.md](../../spec/05-providers.md) |
-| `turn-api.ts` | [06-turn-engine.md](../../spec/06-turn-engine.md) |
-| `extraction.ts` | [08-memory.md](../../spec/08-memory.md) |
-| `model-outputs.ts` | [09-context.md](../../spec/09-context.md) |
-| `journal.ts` | [10-journal.md](../../spec/10-journal.md) |
-| `world-tick.ts` | [12-time-world.md](../../spec/12-time-world.md) |
-| `views.ts`, `content/theme.ts` | [14-ui.md](../../spec/14-ui.md) |
-| `media.ts` | [15-media.md](../../spec/15-media.md) |
-| `content/` (the rest) | [04-content-schemas.md](../../spec/04-content-schemas.md) |
+Each file is specified in a spec document:
+
+- [03-contracts.md](../../spec/03-contracts.md): `primitives.ts`, `rules.ts`, `ruling.ts`,
+  `entities.ts`, `world-state.ts`, `turns.ts`, `memory.ts`, `commits.ts`, `models.ts`,
+  `errors.ts`, `result.ts`, `events.ts`, `app-api.ts`, and `index.ts`
+- [04-content-schemas.md](../../spec/04-content-schemas.md): `content/`, except
+  `content/theme.ts`
+- [05-providers.md](../../spec/05-providers.md): `machine-config.ts`
+- [06-turn-engine.md](../../spec/06-turn-engine.md): `turn-api.ts`
+- [08-memory.md](../../spec/08-memory.md): `extraction.ts`
+- [09-context.md](../../spec/09-context.md): `model-outputs.ts`
+- [10-journal.md](../../spec/10-journal.md): `journal.ts`
+- [12-time-world.md](../../spec/12-time-world.md): `world-tick.ts`
+- [14-ui.md](../../spec/14-ui.md): `views.ts` and `content/theme.ts`
+- [15-media.md](../../spec/15-media.md): `media.ts`
 
 ## Rules
 
