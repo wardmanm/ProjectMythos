@@ -94,7 +94,7 @@ ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-010, 
 
 ## Acceptance
 
-- [ ] `pnpm install && pnpm check` passes on a clean clone, on both operating systems in CI.
+- [x] `pnpm install && pnpm check` passes on a clean clone, on both operating systems in CI.
 - [x] `scripts/lint-rules.test.ts` proves each boundary and restriction listed in the design notes fires, with test names citing ARCH-007, ARCH-010, ARCH-020, ARCH-021, CONV-060, CONV-070, and CONV-087.
 - [x] `pnpm --filter @mythos/client build` produces a static build.
 - [x] `pnpm check` passes.
@@ -117,8 +117,9 @@ ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-010, 
     - deliberate violations in the real tree failed lint: `Math.random()` in core, an
       import of another module's internal file, and `@mythos/core` in the client;
     - `pnpm --filter @mythos/spec-reference check` passes, docs check included.
-  - **CI has not run yet.** The first acceptance item needs the branch pushed, so the
-    Windows run is still unverified.
+  - CI passes on `windows-latest` and `macos-latest` (PR #26, run 41861480691). During
+    a GitHub Actions outage, GitHub cancelled the first macOS attempts before they ran;
+    the re-run passed.
   - `pnpm check`: `Tests  16 passed (16)`.
 - **Rulings:**
   - **ARCH-001, spec fix** (`P1-T01: spec: engine-strict moves to pnpm-workspace.yaml`).
@@ -148,6 +149,9 @@ ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-010, 
   - **Test naming.** The package-table tests cite CONV-121, which requires lint to
     enforce that table, since the table has no ID of its own. The cli test cites ARCH-022.
   - **`apps/server/src/modules/.gitkeep`** keeps the empty modules folder in git.
+  - **CI runs on pull requests and on pushes to `main`,** not on every push. Otherwise a
+    PR branch is checked twice. Every change reaches `main` through a PR (CONV-136), so
+    CONV-086 still holds.
 - **Pending decisions:**
   - **Unused reference lockfile** (raised 2026-11-04, P1-T01). Now that `spec/reference`
     is a workspace member, the root `pnpm-lock.yaml` governs it, and

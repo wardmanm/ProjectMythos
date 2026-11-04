@@ -1,8 +1,10 @@
 # Typecheck, lint, format, and tests on Windows and macOS for every change (CONV-086).
+# Every change reaches main through a pull request, so branches are checked by their PR.
 name: check
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
