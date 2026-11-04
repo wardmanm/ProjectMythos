@@ -160,6 +160,7 @@ ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-010, 
       out on its own / delete it in P1-T02.
     - Claude's suggestion: keep it.
     - Does not block.
+    - Decided 2026-11-04: keep it. Recorded in 01-architecture's Decisions.
 - **Not tested:**
   - ARCH-001: `pnpm-workspace.yaml` and `"packageManager": "pnpm@12.16.1"` in the root
     `package.json`.
