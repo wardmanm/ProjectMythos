@@ -1,13 +1,24 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: 3d68f76 · Branch: main
+Updated: 2026-11-04 · Through: c49acc9 · Branch: main
 
 ## Current focus
-Phase 1 (Foundation): 0 of 25 tasks done. P1-T01, the scaffold, is open on `p1-t01-scaffold` and
-not yet merged; nothing blocks it. P1-T02 (contracts, fixtures, the spec and docs checks) follows it.
-After T02, the core ports (T03), the config module (T06), the events module (T09), and the client
-foundation (T21) can run in parallel.
+Phase 1 (Foundation): 1 of 25 tasks done. P1-T01, the scaffold, merged in PR #26. Ready to start:
+P1-T02 (contracts, fixtures, the spec and docs checks). No branch open. After T02, the core
+foundations (T03), the config module (T06), the events module (T09), and the client foundation (T21)
+can run in parallel.
 
 ## Recent changes
+- 2026-11-04: P1-T01 merged (#26): the pnpm 12 workspace with the four packages and `spec/reference`,
+  strict TypeScript, Prettier, Vitest, ESLint with eslint-plugin-boundaries v7 (16 lint-rule tests),
+  and CI on Windows and macOS. Rulings: `engineStrict` goes in `pnpm-workspace.yaml`, with no
+  `.npmrc` (spec fix, ARCH-001 Trap); a root `tsconfig.json` for `scripts/`; `check` also runs
+  `prettier --check`; `@mythos/*` imports are checked by package name; versions pinned exactly;
+  `build` is real, while `dev` and `start` wait for P1-T20; lint also covers `Intl.Collator`, every
+  `new Date` in core, and CONV-002 to CONV-005; CI runs on PRs and pushes to `main` only. Mike's
+  decision: `spec/reference` keeps its own `pnpm-lock.yaml` (01-architecture Decisions).
+- 2026-11-04: Mike's decision: GitHub mirrors the tasks (ADR-018, CONV-136, CONV-137). Each task has an
+  issue on the Project Mythos board, in its phase's milestone (all ten exist), and its PR says
+  `Closes #N`. Each phase ends in a `v0.N.0` release. Issues #1 to #25 are P1-T01 to P1-T25.
 - 2026-11-04: Mike's decision: pin pnpm 12 (`pnpm@12.16.1`) instead of 10. The root
   `pnpm-workspace.yaml` approves esbuild's build with `allowBuilds`, since pnpm 11 and later ignore
   `pnpm.onlyBuiltDependencies` in `package.json`. Recorded in 01-architecture's Decisions table; the
@@ -27,10 +38,8 @@ foundation (T21) can run in parallel.
 - None.
 
 ## Loose ends
-- `main` has commits not on `origin/main` (99c85b0): the pnpm 12 amendment and the status commits.
-  Not pushed; waiting for Mike's say-so.
-- Branch `p1-t01-scaffold` is not merged.
-- nvm's default Node on this machine is 26.7.0, below ARCH-002's 26.11.0, so `pnpm install` refuses
-  the workspace in a new shell. Node 26.13.0 is installed but has no Corepack yet (Node 26 no
-  longer bundles it): under 26.13, run `npm install -g corepack` and `corepack enable`, then
-  `nvm alias default 26`.
+- The root `pnpm trace` and the spec and docs checks in `pnpm check` arrive with P1-T02. Until then, run
+  `pnpm --filter @mythos/spec-reference trace` and `... check`. On macOS a bare `pnpm trace` runs the
+  system's `/usr/bin/trace` instead.
+- CI for the merge commit on `main` (run 41883122977) was still queued when this was written; GitHub
+  Actions was in a partial outage.
