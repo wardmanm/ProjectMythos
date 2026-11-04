@@ -1,5 +1,5 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: — (written in the handoff, before the repository exists) · Branch: main
+Updated: 2026-11-04 · Through: 99c85b0 · Branch: main
 
 ## Current focus
 Phase 1 (Foundation) has not started. Next: create the repository from the handoff, then P1-T01, the
