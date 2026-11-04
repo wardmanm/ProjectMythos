@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Phase** | 1 |
-| **Status** | Not started |
+| **Status** | Done |
 | **Depends on** | P1-T02 |
 | **Branch** | `p1-t06-config-module` |
 
@@ -64,20 +64,63 @@ ARCH-030, ARCH-032, PRV-001, PRV-002, PRV-003, PRV-004, PRV-005, CON-091, CON-11
 
 ## Acceptance
 
-- [ ] PRV-001: starting with an empty directory writes the default config, which loads.
-- [ ] PRV-002: a config with three broken references reports all three with paths.
-- [ ] CON-111: a property-style test over configs with random inline secrets shows no secret string ever appears in `JSON.stringify(redact(config))`, and that `mergeSecrets(redact(c), c)` returns `c`.
-- [ ] PRV-003: a crash simulated between temp write and rename leaves the old file intact.
-- [ ] ARCH-030: the resolver returns the right path for `win32`, `darwin`, and `linux`.
-- [ ] `pnpm check` passes.
+- [x] PRV-001: starting with an empty directory writes the default config, which loads.
+- [x] PRV-002: a config with three broken references reports all three with paths.
+- [x] CON-111: a property-style test over configs with random inline secrets shows no secret string ever appears in `JSON.stringify(redact(config))`, and that `mergeSecrets(redact(c), c)` returns `c`.
+- [x] PRV-003: a crash simulated between temp write and rename leaves the old file intact.
+- [x] ARCH-030: the resolver returns the right path for `win32`, `darwin`, and `linux`.
+- [x] `pnpm check` passes.
 
 ## Completion notes
 
-_Written when the task is done (CONV-135). Replace this line and fill in each part;
-a part with nothing in it says "None"._
-
 - **Done:**
+  - `apps/server/src/modules/config/`: `data-dir.ts`, `machine-config.ts`,
+    `cross-references.ts`, `secrets.ts`, `index.ts`, and `README.md`, with 34 tests
+    in four files. The module imports no other module and has no logger.
+  - `openConfig` returns a `ConfigStore` (`configPath`, `dataDir`, `current()`,
+    `save()`) for the composition root (P1-T20). P1-T16's `setPin` saves through
+    `store.save`.
+  - Acceptance, by test:
+    - PRV-001: `an empty folder gets the default config, which loads`;
+    - PRV-002: `three broken references are all reported, each with its path`;
+    - CON-111: the property test over 200 seeded configs (264 inline secrets), with a
+      guard against a vacuous pass;
+    - PRV-003: `a crash between the temp write and the rename leaves the old file
+      intact`;
+    - ARCH-030: the `win32`, `darwin`, and `linux` resolver tests.
+  - Verified, then reverted: with `redact` no longer hiding the PIN hash, the CON-111
+    property test and a PRV-005 test both fail.
+  - `pnpm check` passes. The workspace has `Tests  59 passed (59)` and `spec/reference`
+    `Tests  267 passed (267)`, and it ends with `Docs check passed: 834 requirements, 25
+    tasks (3 done), 19 ADRs, 75 markdown files, 71 citations in code.`
 - **Rulings:**
-- **Pending decisions:**
-- **Not tested:**
+  - **CON-111, owner's decision** (`P1-T06: spec: owner: stored secrets follow the
+    provider id`). A placeholder takes the key stored for the provider with the same
+    `id`, not the same index, so reordering or deleting providers never moves a key.
+    Recorded in 03-contracts' Decisions.
+  - **PRV-002 checks more than it lists**: unique IDs in each list, media picks of the
+    right kind (MED-002), and a `profileId` for server speech input. Recorded in
+    05-providers' Decisions.
+  - **PRV-004: `restartRequired` compares with the config the server started with**,
+    so the notice stays until a restart. Recorded in 05-providers' Decisions.
+  - **PRV-001: the default file is minimal**, with every role written as `null`; saves
+    write the complete config. Recorded in 05-providers' Decisions.
+  - **A failed save reports secret and schema issues together** (CON-091), and nothing
+    is written.
+  - **No logger in the module**: `openConfig` reports `created` for the caller to log,
+    so a config object can't reach a log (CONV-072).
+  - **Relative paths**: a relative `--data-dir` resolves against the working folder,
+    and a relative `dataDir` against the config's folder.
+  - **On Windows with `APPDATA` unset**, the default is `<home>\AppData\Roaming\Mythos`.
+  - **Extra file** (CONV-132): `apps/server/package.json` gains `zod` 4.6.5, for
+    `z.infer` of contract schemas that export no type. `apps/server/src/modules/.gitkeep`
+    is gone now that the folder has a module.
+  - **Open, 05-providers**: `headers` on an `openai-compatible` provider are not treated
+    as secrets.
+  - **Trap, 02-conventions**: asymmetric matchers such as `expect.any(String)` are
+    `any` under strict lint.
+- **Pending decisions:** None.
+- **Not tested:** None. Every behavioral requirement has a test named by its ID; CONV-072,
+  CONV-080, and CONV-085 are met by the code and `pnpm check`.
 - **Dependencies:**
+  - `zod` 4.6.5 in `apps/server`, on CONV-091's list.

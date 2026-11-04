@@ -1722,9 +1722,10 @@ All paths are under `/api`.
 - **CON-110** A route that no spec document lists does not exist. A task that needs one
   adds it to the spec first (OVR-020).
 - **CON-111** No response contains an inline secret or the PIN hash; each is replaced by
-  `SECRET_PLACEHOLDER`. On `PUT /settings`, every placeholder is replaced by the stored
-  value at the same path before validation, and a placeholder with no stored value is
-  a validation issue.
+  `SECRET_PLACEHOLDER`. On `PUT /settings`, every placeholder is replaced by its stored
+  value before validation: a provider's `apiKey.value` by the inline key stored for the
+  provider with the same `id`, and `server.pin.hash` by the stored hash. A placeholder
+  with no stored value is a validation issue at its path.
 - **CON-112** `POST /campaigns` checks the whole command against the pack, the ruleset,
   and the creation rules (SCH-072, SCH-110 to SCH-116) and reports every issue at once,
   as SCH-100 does. On success the campaign folder exists, turn zero's `setup` sets are
@@ -1741,6 +1742,12 @@ All paths are under `/api`.
   where the copy cannot be edited. A lint error there is fixed in the reference file and
   its code block in the documents, then copied again. Run
   `pnpm exec eslint --no-ignore spec/reference/contracts` before changing a contract.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| Where does a saved placeholder get its secret back from (CON-111)? | The provider with the same `id` in the stored config; the PIN hash from `server.pin.hash`. | The same array index: deleting or reordering providers in settings would shift the indexes and could give one provider another's API key, sending it to the wrong endpoint. | owner |
 
 ## Open
 
