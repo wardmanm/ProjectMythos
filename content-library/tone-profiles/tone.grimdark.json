@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "tone.grimdark",
+  "name": "Grimdark",
+  "description": "A cruel world where every victory costs something.",
+  "genre": "dark fantasy",
+  "tone": "Bleak, brutal, and morally grey. Power corrupts, kindness is rare and costly, and nobody is safe. Hope exists but is never cheap.",
+  "themes": ["survival", "corruption", "loyalty under pressure", "the price of power"],
+  "narration": {
+    "perspective": "second-person",
+    "tense": "present",
+    "length": "standard",
+    "style": "Spare and unflinching. Concrete physical detail, no melodrama. Let consequences land and stay."
+  },
+  "pacing": "standard",
+  "content": {
+    "violence": "explicit",
+    "gore": "moderate",
+    "sexual": "fade-to-black",
+    "language": "explicit",
+    "disturbing": "moderate",
+    "lines": [],
+    "veils": []
+  },
+  "themeId": "theme.ash",
+  "artStyle": "dark oil painting, heavy shadow, muted earth tones and oxblood"
+}

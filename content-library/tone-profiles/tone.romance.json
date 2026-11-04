@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "tone.romance",
+  "name": "Romance",
+  "description": "Slow-burn relationships where feelings drive the story.",
+  "genre": "romance",
+  "tone": "Warm, intimate, and emotionally honest. Tension comes from people, not monsters. Small gestures carry weight. Touchstones: period romance, cozy drama.",
+  "themes": ["longing", "trust", "vulnerability", "belonging"],
+  "narration": {
+    "perspective": "second-person",
+    "tense": "present",
+    "length": "rich",
+    "style": "Linger on expressions, silences, and what goes unsaid. Let dialogue reveal feeling. Keep the focus on the people in the room."
+  },
+  "pacing": "slow",
+  "content": {
+    "violence": "fade-to-black",
+    "gore": "off",
+    "sexual": "fade-to-black",
+    "language": "moderate",
+    "disturbing": "fade-to-black",
+    "lines": [],
+    "veils": []
+  },
+  "themeId": "theme.hearth",
+  "artStyle": "soft watercolor, warm afternoon light, gentle pastel palette"
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "tone.science-fiction",
+  "name": "Science Fiction",
+  "description": "Ships, stations, and the strangeness of the future.",
+  "genre": "science fiction",
+  "tone": "Curious, grounded, and a little lonely. Technology is ordinary to the people who use it. Wonder and danger come from the unknown. Touchstones: working-class space fiction, first-contact stories.",
+  "themes": ["the unknown", "survival", "what makes us human", "corporate power"],
+  "narration": {
+    "perspective": "second-person",
+    "tense": "present",
+    "length": "standard",
+    "style": "Precise, concrete detail about machines and spaces. Explain technology only through use. Keep jargon light and consistent."
+  },
+  "pacing": "standard",
+  "content": {
+    "violence": "moderate",
+    "gore": "moderate",
+    "sexual": "fade-to-black",
+    "language": "moderate",
+    "disturbing": "moderate",
+    "lines": [],
+    "veils": []
+  },
+  "themeId": "theme.signal",
+  "artStyle": "cinematic concept art, cool teal and amber lighting, used-future detail"
+}

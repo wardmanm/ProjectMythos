@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "theme.house",
+  "name": "House",
+  "description": "The app's own look: ink blue on fog, built for legibility.",
+  "palettes": {
+    "light": {
+      "background": "#EEF1F5",
+      "surface": "#FFFFFF",
+      "text": "#1A2433",
+      "textMuted": "#4F5B6B",
+      "playerText": "#2B4F8C",
+      "accent": "#2F5DA8",
+      "onAccent": "#FFFFFF",
+      "border": "#D3DAE3",
+      "positive": "#2E7350",
+      "caution": "#8C5B0A",
+      "negative": "#B03A3A"
+    },
+    "dark": {
+      "background": "#161C26",
+      "surface": "#1E2633",
+      "text": "#E3E8EF",
+      "textMuted": "#A2ADBC",
+      "playerText": "#9DBBF0",
+      "accent": "#7FA6E8",
+      "onAccent": "#161C26",
+      "border": "#2F3A4A",
+      "positive": "#7CC79C",
+      "caution": "#E2B36A",
+      "negative": "#EE8A8A"
+    }
+  },
+  "fonts": {"narration": {"family": "literata"}, "interface": {"family": "atkinson-hyperlegible"}},
+  "narration": {"size": "medium", "lineHeight": 1.6, "measure": 66},
+  "shape": {"radius": 6},
+  "ornament": {"sceneBreak": "*", "dropCap": false, "texture": "none"}
+}

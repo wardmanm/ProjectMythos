@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "ref": "merrow-lost",
+      "when": {"year": 1874, "month": 9, "day": 3},
+      "kind": "event",
+      "text": "The fishing boat Merrow's Luck failed to return to Brinemoor. Her crew of five is presumed drowned.",
+      "actorIds": [],
+      "witnessIds": [],
+      "importance": 8,
+      "tags": ["merrows-luck"],
+      "alsoKnownBy": [
+        {"entityId": "npc.varek", "via": "rumor"},
+        {"entityId": "npc.odette", "via": "rumor"},
+        {"entityId": "npc.tomas", "via": "rumor"},
+        {"entityId": "npc.pip", "via": "rumor"},
+        {"entityId": "npc.ines-crale", "via": "rumor"}
+      ]
+    },
+    {
+      "ref": "merrow-scuttled",
+      "when": {"year": 1874, "month": 9, "day": 2, "hour": 23},
+      "placeId": "place.harbor",
+      "kind": "event",
+      "text": "Varek Holm signed false papers letting the Merrow's Luck sail at night with smuggled cargo, knowing she was unseaworthy.",
+      "actorIds": ["npc.varek"],
+      "witnessIds": ["npc.varek"],
+      "importance": 10,
+      "tags": ["merrows-luck", "secret"]
+    },
+    {
+      "ref": "varek-storm-story",
+      "when": {"year": 1874, "month": 9, "day": 5, "hour": 20},
+      "placeId": "place.gull-and-anchor",
+      "kind": "claim",
+      "text": "Varek told Odette the Merrow's Luck was caught in a squall off the point.",
+      "actorIds": ["npc.varek"],
+      "witnessIds": ["npc.varek", "npc.odette"],
+      "importance": 6,
+      "tags": ["merrows-luck"],
+      "claim": {
+        "sourceId": "npc.varek",
+        "audienceIds": ["npc.odette"],
+        "content": "The Merrow's Luck was caught in a squall off the point.",
+        "aboutRef": "merrow-lost",
+        "truthful": "false"
+      }
+    },
+    {
+      "ref": "varek-debt",
+      "kind": "event",
+      "text": "Varek Holm lost heavily at cards to the Night Traders, and has paid the debt down ever since by clearing their cargo through the harbor office.",
+      "actorIds": ["npc.varek"],
+      "witnessIds": ["npc.varek"],
+      "importance": 9,
+      "tags": ["smuggling", "secret"]
+    },
+    {
+      "ref": "jory-tells-odette",
+      "when": {"year": 1874, "month": 8, "day": 12, "hour": 19},
+      "placeId": "place.gull-and-anchor",
+      "kind": "claim",
+      "text": "Over supper at the Gull and Anchor, Jory Ashby told Odette that the harbor clerk had found the Merrow's Luck crew some well-paid extra work.",
+      "actorIds": ["npc.jory"],
+      "witnessIds": ["npc.jory", "npc.odette"],
+      "importance": 5,
+      "tags": ["jory"],
+      "claim": {
+        "sourceId": "npc.jory",
+        "audienceIds": ["npc.odette"],
+        "content": "The harbor clerk has found the Merrow's Luck crew some well-paid extra work.",
+        "aboutRef": null,
+        "truthful": "true"
+      }
+    },
+    {
+      "ref": "jory-letter",
+      "when": {"year": 1874, "month": 8, "day": 20},
+      "placeId": "place.gull-and-anchor",
+      "kind": "claim",
+      "text": "Jory wrote to his sister Wren that he had signed on with the Merrow's Luck, and that the harbor clerk had found the crew night runs for good money.",
+      "actorIds": ["npc.jory"],
+      "witnessIds": ["npc.jory"],
+      "importance": 7,
+      "tags": ["jory", "letter"],
+      "claim": {
+        "sourceId": "npc.jory",
+        "audienceIds": ["pc.wren"],
+        "content": "He has signed on with the Merrow's Luck, and the harbor clerk has found the crew night runs for good money, enough to clear what he owes.",
+        "aboutRef": null,
+        "truthful": "true"
+      }
+    },
+    {
+      "ref": "pip-saw-varek",
+      "when": {"year": 1874, "month": 9, "day": 2, "hour": 22, "minute": 40},
+      "placeId": "place.harbor",
+      "kind": "event",
+      "text": "Pip saw Varek Holm hurrying along the harbor wall late at night with a shuttered lantern and his leather document case.",
+      "actorIds": ["npc.varek"],
+      "witnessIds": ["npc.pip"],
+      "importance": 6,
+      "tags": ["merrows-luck"]
+    },
+    {
+      "ref": "merrow-sails-dark",
+      "when": {"year": 1874, "month": 9, "day": 2, "hour": 23, "minute": 30},
+      "placeId": "place.harbor",
+      "kind": "event",
+      "text": "The Merrow's Luck slipped out of Brinemoor harbor after dark with no lanterns lit, riding low in the water on a flat calm sea.",
+      "actorIds": ["npc.jory"],
+      "witnessIds": ["npc.jory", "npc.tomas"],
+      "importance": 7,
+      "tags": ["merrows-luck"]
+    },
+    {
+      "ref": "jory-rescued",
+      "when": {"year": 1874, "month": 9, "day": 3, "hour": 2},
+      "placeId": "place.the-point",
+      "kind": "event",
+      "text": "The overloaded Merrow's Luck foundered in calm water off the Point. The Night Traders' cutter waiting to meet her pulled Jory Ashby from the sea and carried him away up the coast; the other four crew drowned.",
+      "actorIds": ["npc.jory"],
+      "witnessIds": ["npc.jory"],
+      "importance": 10,
+      "tags": ["merrows-luck", "jory", "secret"]
+    },
+    {
+      "ref": "varek-notice",
+      "when": {"year": 1874, "month": 9, "day": 10},
+      "placeId": "place.harbor-office",
+      "kind": "claim",
+      "text": "Varek Holm wrote to Wren Ashby, as Jory's next of kin, that the Merrow's Luck had been lost with all hands in a squall off the Point.",
+      "actorIds": ["npc.varek"],
+      "witnessIds": ["npc.varek"],
+      "importance": 8,
+      "tags": ["merrows-luck", "jory", "letter"],
+      "claim": {
+        "sourceId": "npc.varek",
+        "audienceIds": ["pc.wren"],
+        "content": "The Merrow's Luck was lost with all hands in a squall off the Point on the night of September 2nd, and Jory is presumed drowned.",
+        "aboutRef": "merrow-lost",
+        "truthful": "partly"
+      }
+    },
+    {
+      "ref": "wardens-suspect",
+      "when": {"year": 1874, "month": 9, "day": 20, "hour": 15},
+      "placeId": "place.warden-house",
+      "kind": "event",
+      "text": "Ines Crale found harbor office clearances for three night sailings that no warden on watch saw leave, the Merrow's Luck among them.",
+      "actorIds": ["npc.ines-crale"],
+      "witnessIds": ["npc.ines-crale"],
+      "importance": 7,
+      "tags": ["merrows-luck", "smuggling"]
+    }
+  ]
+}

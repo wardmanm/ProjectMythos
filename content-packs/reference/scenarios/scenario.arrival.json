@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "scenario.arrival",
+  "name": "Arrival",
+  "description": "You arrive in Brinemoor on the evening coach, looking for your missing brother.",
+  "start": { "year": 1874, "month": 10, "day": 12, "hour": 18 },
+  "startPlaceId": "place.gull-and-anchor",
+  "openingFile": "scenarios/arrival.md",
+  "presentEntityIds": ["npc.odette"],
+  "pc": { "mode": "either", "characterId": "pc.wren", "concept": "An outsider searching for a missing sibling who crewed the Merrow's Luck." }
+}

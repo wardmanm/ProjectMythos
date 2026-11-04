@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "id": "ruleset.d20",
+  "name": "Heroic d20",
+  "description": "d20 plus stat. 15+ succeeds, 10–14 succeeds with a cost, a natural 20 is a critical.",
+  "turns": {"suggestedActions": "on-request"},
+  "explanationLevel": "player-safe",
+  "ownership": {"statuses": "authoritative", "clocks": "authoritative"},
+  "stats": {
+    "list": [
+      {
+        "id": "str",
+        "name": "Strength",
+        "abbreviation": "STR",
+        "description": "Force, power, lifting, grappling, melee impact."
+      },
+      {
+        "id": "end",
+        "name": "Endurance",
+        "abbreviation": "END",
+        "description": "Stamina, toughness, resisting pain, poison, cold, and strain."
+      },
+      {
+        "id": "dex",
+        "name": "Dexterity",
+        "abbreviation": "DEX",
+        "description": "Agility, reflexes, stealth, precision, ranged attacks, sleight of hand."
+      },
+      {
+        "id": "int",
+        "name": "Intelligence",
+        "abbreviation": "INT",
+        "description": "Reasoning, knowledge, crafting, medicine, technology. Sets how well things you make or fix turn out."
+      },
+      {
+        "id": "cha",
+        "name": "Charisma",
+        "abbreviation": "CHA",
+        "description": "Presence, poise, delivery, performance. Shapes how words come across, never whether an argument works."
+      }
+    ],
+    "min": 0,
+    "max": 5,
+    "default": 1
+  },
+  "pcCreation": {"statPoints": 12, "minStartingStat": 0, "maxStartingStat": 4},
+  "dice": {
+    "method": "sum",
+    "dice": 1,
+    "sides": 20,
+    "pointValue": 1,
+    "bands": [
+      {"min": 15, "result": "success"},
+      {"min": 10, "result": "partial"},
+      {"min": -100, "result": "failure"}
+    ],
+    "critical": {"type": "faces", "face": 20, "count": 1}
+  },
+  "results": {"labels": {"critical": "Critical", "success": "Success", "partial": "Partial", "failure": "Failure"}},
+  "difficulty": {
+    "min": -5,
+    "max": 5,
+    "opposedBaseline": 2,
+    "guide": [
+      {"value": 0, "label": "Even"},
+      {"value": -5, "label": "Nearly impossible"},
+      {"value": 5, "label": "Nearly certain"}
+    ]
+  },
+  "effect": {
+    "labels": {"limited": "Limited", "standard": "Standard", "great": "Great"},
+    "byRating": ["limited", "standard", "standard", "standard", "great", "great"],
+    "criticalBonus": 1,
+    "scaling": {
+      "limited": {"harmLevels": -1, "clockTicks": -1, "treatmentLevels": 0},
+      "standard": {"harmLevels": 0, "clockTicks": 0, "treatmentLevels": 1},
+      "great": {"harmLevels": 1, "clockTicks": 1, "treatmentLevels": 2}
+    }
+  },
+  "items": {"maxRollBonus": 2, "maxArmorPerHarm": 1},
+  "harm": {
+    "tags": [
+      {
+        "id": "physical",
+        "name": "Physical",
+        "description": "Injury, exhaustion, illness.",
+        "hinders": ["str", "dex", "end"],
+        "resistStat": "end",
+        "visible": true
+      },
+      {
+        "id": "mental",
+        "name": "Mental",
+        "description": "Fear, shock, grief, confusion.",
+        "hinders": ["int", "cha"],
+        "resistStat": "end",
+        "visible": false
+      },
+      {
+        "id": "social",
+        "name": "Social",
+        "description": "Humiliation, disgrace, heartbreak.",
+        "hinders": ["cha"],
+        "resistStat": "cha",
+        "visible": false
+      }
+    ],
+    "levels": [
+      {
+        "name": "Lesser",
+        "capacity": 2,
+        "pointPenalty": 0,
+        "effectPenalty": 1,
+        "incapacitating": false,
+        "untreatedHealMinutes": 1440,
+        "treatedHealMinutes": 720,
+        "examples": "Bruised, Winded, Shaken, Embarrassed"
+      },
+      {
+        "name": "Moderate",
+        "capacity": 2,
+        "pointPenalty": 1,
+        "effectPenalty": 0,
+        "incapacitating": false,
+        "untreatedHealMinutes": 10080,
+        "treatedHealMinutes": 4320,
+        "examples": "Deep Cut, Cracked Ribs, Terrified, Heartbroken"
+      },
+      {
+        "name": "Severe",
+        "capacity": 1,
+        "pointPenalty": 2,
+        "effectPenalty": 0,
+        "incapacitating": true,
+        "untreatedHealMinutes": null,
+        "treatedHealMinutes": 10080,
+        "examples": "Stabbed Through, Broken Leg, Shattered, Disgraced"
+      }
+    ],
+    "fatalName": "Fatal",
+    "overflow": "up"
+  },
+  "resistance": {"mode": "auto", "who": "pc", "reduction": {"critical": "negate", "success": 2, "partial": 1, "failure": 0}},
+  "lethality": {"pc": "heroic", "npc": "lethal"},
+  "clocks": {"minSegments": 2, "maxSegments": 12, "maxTicks": 3},
+  "statChange": {"enabled": true, "clockSegments": 8, "amount": 1, "ticksPerWeek": 1},
+  "relationships": {
+    "dimensions": [
+      {
+        "id": "trust",
+        "name": "Trust",
+        "description": "Belief that the other will keep their word and not betray them."
+      },
+      {"id": "affection", "name": "Affection", "description": "Warmth, liking, attraction."},
+      {"id": "respect", "name": "Respect", "description": "Regard for the other's competence and standing."},
+      {"id": "fear", "name": "Fear", "description": "Belief that the other can and might harm them."}
+    ],
+    "min": -5,
+    "max": 5,
+    "maxChangePerTurn": 3,
+    "trackPc": "off"
+  },
+  "carrying": {"mode": "containers", "sizePoints": {"tiny": 1, "small": 2, "medium": 4, "large": 8, "huge": 16}}
+}

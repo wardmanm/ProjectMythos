@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "tone.coastal-mystery",
+  "name": "Coastal Mystery",
+  "description": "Slow-burn investigation in a closed community with secrets.",
+  "genre": "low-fantasy mystery",
+  "tone": "Melancholy, atmospheric, grounded. Everyone has a reason to lie. Danger is real but rarely theatrical. Moments of warmth matter because they are scarce.",
+  "themes": ["secrets", "loyalty", "the sea as indifferent", "outsiders"],
+  "narration": {
+    "perspective": "second-person",
+    "tense": "present",
+    "length": "standard",
+    "style": "Concrete sensory detail over adjectives. Let dialogue carry character. End on something the player can act on."
+  },
+  "pacing": "slow",
+  "content": {
+    "violence": "moderate",
+    "gore": "fade-to-black",
+    "sexual": "fade-to-black",
+    "language": "moderate",
+    "disturbing": "moderate",
+    "lines": [],
+    "veils": ["harm to animals"]
+  },
+  "themeId": "theme.brine",
+  "artStyle": "muted oil painting, overcast light, desaturated blues and greys"
+}

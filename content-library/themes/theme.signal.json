@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "theme.signal",
+  "name": "Signal",
+  "description": "A deep teal console, cyan signal, amber warnings, for science fiction.",
+  "palettes": {
+    "dark": {
+      "background": "#0F2129",
+      "surface": "#152B35",
+      "text": "#D6E6EC",
+      "textMuted": "#8FA9B4",
+      "playerText": "#7FDBEA",
+      "accent": "#3FBFD6",
+      "onAccent": "#0F2129",
+      "border": "#24414D",
+      "positive": "#6FD39A",
+      "caution": "#E5A94A",
+      "negative": "#F07A6E"
+    }
+  },
+  "fonts": {
+    "narration": {"family": "ibm-plex-sans"},
+    "interface": {"family": "ibm-plex-sans", "weight": 500},
+    "mechanics": {"family": "ibm-plex-mono"}
+  },
+  "narration": {"size": "medium", "lineHeight": 1.6, "measure": 70},
+  "shape": {"radius": 2},
+  "ornament": {"sceneBreak": "//", "dropCap": false, "texture": "scanlines"}
+}

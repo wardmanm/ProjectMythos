@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "npc.ines-crale",
+  "kind": "npc",
+  "name": "Ines Crale",
+  "aliases": ["the Warden captain"],
+  "ageCategory": "adult",
+  "age": 47,
+  "stats": {"str": 3, "end": 4, "dex": 3, "int": 4, "cha": 3},
+  "physicalDescription": "Tall and rawboned, iron-grey hair in a short braid, a Warden's blue coat worn shiny at the cuffs.",
+  "personality": "Blunt, tired, and honest to a fault. Respects competence and has no patience for grief that gets in her way. Suspects smuggling but lacks proof and wardens.",
+  "goals": ["Catch whoever is moving cargo past the harbor at night"],
+  "voice": {"description": "Flat, clipped, and tired; an officer who gives orders and does not repeat them."},
+  "startingLocationId": "place.warden-house"
+}

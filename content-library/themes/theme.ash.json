@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "theme.ash",
+  "name": "Ash",
+  "description": "Charcoal, bone, and oxblood, for grim and violent stories.",
+  "palettes": {
+    "dark": {
+      "background": "#1F1B19",
+      "surface": "#28231F",
+      "text": "#DCD3C8",
+      "textMuted": "#A39789",
+      "playerText": "#E0B49A",
+      "accent": "#BA4C41",
+      "onAccent": "#FFFFFF",
+      "border": "#3D3530",
+      "positive": "#9DB38A",
+      "caution": "#C99A5A",
+      "negative": "#D96B5E"
+    }
+  },
+  "fonts": {
+    "narration": {"family": "crimson-pro"},
+    "interface": {"family": "alegreya-sans"},
+    "display": {"family": "im-fell-english"}
+  },
+  "narration": {"size": "large", "lineHeight": 1.6, "measure": 62},
+  "shape": {"radius": 0},
+  "ornament": {"sceneBreak": "†", "dropCap": true, "texture": "grain"}
+}

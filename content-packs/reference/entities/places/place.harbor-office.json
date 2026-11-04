@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "place.harbor-office",
+  "kind": "place",
+  "name": "The Harbor Office",
+  "parentPlaceId": "place.harbor",
+  "description": "A narrow two-room office on the harbor wall: a counter, a stove, shelves of clearance books, and the clerk's desk behind a rail."
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "slots.simple",
+  "name": "Simple",
+  "slots": [
+    { "id": "clothes", "name": "Clothes", "layers": [
+      { "name": "outer", "visibility": "visible" },
+      { "name": "under", "visibility": "concealed" }
+    ], "itemsPerLayer": 3 }
+  ],
+  "heldItems": 2
+}
