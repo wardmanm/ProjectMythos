@@ -23,6 +23,7 @@ context, what was decided, and what it costs. Requirements say *what*; records s
 | [ADR-015](ADR-015-typescript-and-runtime.md) | TypeScript 6.0, run with tsx, no build step |
 | [ADR-016](ADR-016-fixtures-and-reference-code.md) | Normative fixtures and non-normative reference code |
 | [ADR-017](ADR-017-spec-is-the-documentation.md) | The spec is the documentation, kept true by each task |
+| [ADR-018](ADR-018-github-mirrors-tasks.md) | GitHub issues mirror the tasks, and each phase is a release |
 
 ## When to write one
 

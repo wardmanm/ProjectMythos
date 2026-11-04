@@ -32,6 +32,7 @@ everywhere.
 | Task files | Status and completion notes: the log of what each task did and decided. |
 | `pnpm trace` | What is built: task status, and the requirements done tasks list and tests cite. |
 | `.claude/status.md` | Where things stand: focus, recent changes, pending decisions, loose ends. |
+| GitHub issues, milestones, releases | A mirror for Mike's [Project Mythos board](https://github.com/users/wardmanm/projects/9): one issue per task, one milestone per phase, one release per phase (ADR-018). Never edited to show progress. |
 
 The code is the truth for what is built, and the spec for what must be. When they
 disagree, one of them has a defect: find out which.
@@ -56,6 +57,12 @@ disagree, one of them has a defect: find out which.
   own commits: `P1-T03: spec: …` in a task branch, `spec: …` outside one (CONV-133).
 - Change the files the task lists under **Outputs**, plus its Status and Completion
   notes (CONV-132).
+- Each task has a GitHub issue titled like its task file, labeled `task`, in its
+  phase's milestone, and on the board (CONV-136). Open it when the task file is
+  written. The task's PR has the same title, and its body starts `Closes #N`; the merge
+  closes the issue and the board moves the card. Never move a card or edit an issue by
+  hand.
+- Each phase ends in a release, `v0.N.0`, published by `/docs close` (CONV-137).
 - Done means (CONV-134): `pnpm check` passes; every requirement the task lists is
   implemented, and each behavioral one has a test whose name starts with its ID or an
   `ID: reason` entry under **Not tested**; no runtime dependency outside the approved

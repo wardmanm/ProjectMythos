@@ -235,3 +235,15 @@ ask "how does this work?", rewrite it.
     runtime one outside CONV-091's list.
 
   A part with nothing in it says "None".
+- **CONV-136** Each task has one GitHub issue, opened when its task file is written.
+  Its title is the task file's title (`P1-T01: Scaffold the repository and tooling`).
+  It has the `task` label and its phase's milestone (`Phase 1: Foundation`), and it is
+  on the owner's Project Mythos board. Its body links the task file and the issues it
+  depends on. The task's pull request is titled the same, and its body starts with
+  `Closes #N`, so the merge closes the issue and the board's workflows move its card.
+  The issue mirrors the task file and is never edited to show progress (OVR-037,
+  ADR-018).
+- **CONV-137** Each phase ends in a release. At phase close, the root `package.json`
+  version is set to `0.N.0` for phase N, and that commit on `main` is tagged `v0.N.0`.
+  A GitHub release for the tag is published with the phase plan's **Retrospective** as
+  its notes, and the phase's milestone is closed (ADR-018).

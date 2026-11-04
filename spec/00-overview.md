@@ -277,7 +277,9 @@ owner decides anything that changes behavior, scope, or a recorded decision
 - **OVR-037** A task's state lives only in its file's **Status** row: `Not started` or
   `Done`. Progress is never tracked by hand: `pnpm trace` lists every task with its
   status, the tasks ready to start, and, for each document, how many requirements are
-  defined, retired, listed by a done task, and cited by a test name.
+  defined, retired, listed by a done task, and cited by a test name. Each task's GitHub
+  issue mirrors its file and is closed by the merge, never edited to show progress
+  (CONV-136).
 - **OVR-038** `pnpm check` runs the docs check, `spec/reference/scripts/check-docs.ts`.
   It reads the spec, `CLAUDE.md`, `.claude/`, the root and module READMEs, and, under
   `apps/`, `packages/`, and `scripts/`, the `Implements` comments and the test names in

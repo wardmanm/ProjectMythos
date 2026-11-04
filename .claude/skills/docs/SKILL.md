@@ -53,8 +53,11 @@ Run it as `/docs land`, `/docs amend`, `/docs close`, `/docs lint`, or
    in place as `Decided YYYY-MM-DD: the answer` and commit that too.
 7. Set **Status** to `Done`, rebase onto `main`, and run `pnpm check`. The docs check
    now holds the task to its notes. Quote the final summary line under **Done**.
-8. Tell Mike what landed, the rulings, and the pending decisions. After he merges, run
-   `/status` on `main`.
+8. Tell Mike what landed, the rulings, and the pending decisions. When he says the
+   branch may be pushed, push it and open a pull request titled like the task file,
+   whose body starts `Closes #N` for the task's issue (CONV-136):
+   `gh issue list --label task --search "PN-TNN in:title"` finds N. After he merges,
+   run `/status` on `main`.
 
 ## Amend: after Mike decides
 
@@ -66,7 +69,8 @@ Run it as `/docs land`, `/docs amend`, `/docs close`, `/docs lint`, or
 3. Record the decision in a **Decisions** row, Decided by `owner`. If it crosses
    documents, it also gets an ADR (OVR-036), `Accepted` because Mike has decided.
 4. Tasks still `Not started` that list affected IDs get their Requirements and Design
-   notes updated. A `Done` task's text stays as it was.
+   notes updated. A `Done` task's text stays as it was. A task added to a phase plan
+   gets its GitHub issue (CONV-136).
 5. Where to commit:
    - **A clarification the code already meets** goes on `main` as `spec: owner: …`.
    - **An amendment that retires an ID, or that existing code no longer meets,** goes
@@ -85,8 +89,21 @@ Write the phase plan's **Retrospective**:
 
 Take these from the tasks' completion notes and the documents' Open sections. Leave
 unfinished work under Loose ends in the status log or in the Open section of the
-document it concerns, then run `/status`. The next phase's plan is written when that
-phase is reached (00-overview §7).
+document it concerns.
+
+Then release the phase (CONV-137), once Mike has said `main` may be pushed:
+
+1. Set the root `package.json` `version` to `0.N.0`, commit on `main` as
+   `release: v0.N.0`, and tag it: `git tag -a v0.N.0 -m "Phase N: <name>"`.
+2. Push `main` and the tag, then publish the release with the Retrospective as its
+   notes: `gh release create v0.N.0 --title "v0.N.0: Phase N: <name>" --notes-file <file>`.
+3. Close the milestone:
+   `gh api -X PATCH repos/wardmanm/ProjectMythos/milestones/<number> -f state=closed`.
+
+Run `/status`. The next phase's plan is written when that phase is reached
+(00-overview §7). When its tasks are written, open one issue per task (CONV-136):
+`gh issue create --title "<task title>" --label task --milestone "Phase N: <name>"
+--body <body>`, then `gh project item-add 9 --owner wardmanm --url <issue url>`.
 
 ## Query: "how does X work?"
 
