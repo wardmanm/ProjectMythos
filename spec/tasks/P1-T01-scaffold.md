@@ -44,15 +44,17 @@ ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-010, 
 ## Design notes
 
 - **Versions.** Node `>=26.11.0 <27` in `engines`, `26` in `.nvmrc`, `engine-strict=true`
-  in `.npmrc`. Pin pnpm with `packageManager` (current 10.x). TypeScript `~6.0.3`
+  in `.npmrc`. Pin pnpm with `"packageManager": "pnpm@12.16.1"`. TypeScript `~6.0.3`
   (ADR-015). Prettier exactly `3.9.9`.
 - **Prettier config** is `{ "singleQuote": true, "printWidth": 100, "trailingComma": "all" }`:
   the spec's contracts are already formatted this way. `.prettierignore` lists `spec/`,
   `content-library/`, `content-packs/`, and `packages/contracts/src/`, because those
   are byte-for-byte copies of spec files (OVR-030, OVR-033).
 - **`pnpm-workspace.yaml`** lists `apps/*`, `packages/*`, and `spec/reference`, and sets
-  `onlyBuiltDependencies: [esbuild]` (pnpm 10 ignores that setting inside workspace
-  members, so it must be at the root).
+  `allowBuilds: { esbuild: true }`. The setting must be at the root: pnpm reads settings
+  only from the workspace root's `pnpm-workspace.yaml`, and pnpm 11 and later ignore
+  `pnpm.onlyBuiltDependencies` in a `package.json`. Without it, `pnpm install` exits
+  with `ERR_PNPM_IGNORED_BUILDS` for esbuild's build script.
 - **Not tested.** ARCH-001 to ARCH-006 are met by the scaffold's shape rather than by a
   test: give each an `ARCH-001: what shows it` entry under **Not tested** (CONV-135).
   The docs check holds this task to that once P1-T02 turns it on.

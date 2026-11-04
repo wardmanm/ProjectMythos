@@ -20,6 +20,14 @@ pnpm check          # typecheck, tests, fixture check, drift check, docs check
 pnpm trace          # task status and requirement counts (OVR-037)
 ```
 
+With pnpm 11 or later, `pnpm install` run here exits with `ERR_PNPM_IGNORED_BUILDS` for
+esbuild's build script until the repository's root `pnpm-workspace.yaml` exists, since
+that file approves the build (`allowBuilds`). The packages are installed all the same,
+and `pnpm check` passes. The failed install also leaves a `pnpm-workspace.yaml` in this
+folder whose `allowBuilds` entry for esbuild is a placeholder; setting it to `true`
+approves the build here. Delete that file once the root one exists: while it is here,
+pnpm treats this folder as a workspace of its own.
+
 | Script | What it does |
 |---|---|
 | `pnpm test` | Runs the Vitest suite (`core/*.test.ts` and `scripts/docs/docs.test.ts`) |

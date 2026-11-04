@@ -332,3 +332,9 @@ Per OVR-010, these exist from phase 1 even if unused:
 - **ARCH-133** Provider adapters implement a common interface with a `kind`
   (`text`, `embedding`, `image`, `speech-output`, `speech-input`) so new kinds need no
   queue changes.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| Which pnpm does the repository pin (ARCH-001)? | pnpm 12: `"packageManager": "pnpm@12.16.1"`. Dependency build scripts are approved in the root `pnpm-workspace.yaml` with `allowBuilds: { esbuild: true }`. | pnpm 10, which the handoff assumed: Corepack fetches pnpm 12, and pnpm 11 and later ignore the handoff's `pnpm.onlyBuiltDependencies` in `package.json`. | owner |
