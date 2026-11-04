@@ -129,6 +129,22 @@ const noClockOrRandomness = [
   },
 ];
 
+// CONV-060: Node types are visible in core (its tests read fixtures), so lint keeps Node's
+// IO and timer globals out of core source.
+const nodeGlobals = [
+  'process',
+  'Buffer',
+  'fetch',
+  'global',
+  'require',
+  'setTimeout',
+  'setInterval',
+  'setImmediate',
+].map((name) => ({
+  name,
+  message: 'CONV-060: core does no IO; take what it needs as a parameter.',
+}));
+
 const tests = ['**/*.test.ts', '**/*.test.tsx'];
 // Files whose tool requires a default export (CONV-005).
 const toolConfigs = ['eslint.config.js', 'vitest.config.ts', 'apps/client/vite.config.ts'];
@@ -187,6 +203,7 @@ export default defineConfig(
         ...noLocaleOrdering,
         ...noClockOrRandomness,
       ],
+      'no-restricted-globals': ['error', ...nodeGlobals],
     },
   },
   {

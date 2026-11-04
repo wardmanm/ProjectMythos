@@ -212,6 +212,19 @@ describe('code restrictions', () => {
     }
   });
 
+  it('CONV-060: core never touches Node globals such as process or fetch outside tests', async () => {
+    for (const code of [
+      'export const e = process.env;\n',
+      "export const r = fetch('http://localhost');\n",
+      'export const t = setTimeout(() => undefined, 1);\n',
+    ]) {
+      await expectRule('no-restricted-globals', code, {
+        reports: [coreFile],
+        quiet: [coreTest, serverFile],
+      });
+    }
+  });
+
   it('CONV-070: console is allowed only in scripts and the server cli', async () => {
     await expectRule('no-console', "console.log('hello');\n", {
       reports: [serverFile, coreFile, 'apps/client/src/app.tsx'],

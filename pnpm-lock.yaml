@@ -263,6 +263,9 @@ importers:
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
+      '@types/node':
+        specifier: 26.6.4
+        version: 26.6.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
