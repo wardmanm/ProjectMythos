@@ -68,9 +68,10 @@ CSET-002, CSET-010, CSET-040, CSET-041, CSET-042, CSET-060, CSET-061, RUL-002, S
 ## Completion notes
 
 - **Done:**
-  - `packages/core/src/`: `content.ts`, `ruleset-check.ts`, `gear.ts`,
-    `gear-appearance.ts`, `journal.ts`, and `context.ts`, each with its tests (104 in
-    all), exported from `index.ts`. The README lists the API.
+  - `packages/core/src/`: `rules/ruleset-check.ts`, `rules/gear.ts`,
+    `rules/gear-appearance.ts`, `knowledge/journal.ts`, `prompts/content.ts`, and
+    `prompts/context.ts`, each with its tests (104 in all), exported from `index.ts`.
+    The README lists the API and the folders.
   - Acceptance, by test:
     - CSET-060: `every category renders at every level`, and lines and veils render
       verbatim after the categories;
@@ -90,6 +91,12 @@ CSET-002, CSET-010, CSET-040, CSET-041, CSET-042, CSET-060, CSET-061, RUL-002, S
     `spec/reference` `Tests  271 passed (271)`, and it ends with `Docs check passed: 834 requirements, 25 tasks
     (5 done), 19 ADRs, 75 markdown files, 262 citations in code.`
 - **Rulings:**
+  - **Mike's decision: `core`'s files go in folders by spec document**
+    (`P1-T04: spec: owner: core's folders by spec document`). The folders are `rules/`,
+    `state/`, `knowledge/`, `prompts/`, and `time/`; `compare.ts`, `theme.ts`, and
+    `index.ts` stay at the top. P1-T03's calendar files moved to `time/`. The Outputs
+    above name the flat paths this task was written with. A row in 01-architecture's
+    Decisions records the layout, and P1-T05's and P1-T17's Outputs now name `state/`.
   - **Mike's decisions, CTX-030 and CTX-031** (`P1-T04: spec: owner: CTX-030 margin,
     CTX-031 trimmable caps`). The margin is 10% of `contextWindow − maxOutputTokens`,
     and a `contextBudget` cap applies only to trimmable tiers. Both requirements are
