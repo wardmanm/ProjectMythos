@@ -646,6 +646,8 @@ export type JobHandler<P> = {
   priority: JobPriority;
   persisted: boolean; // true for background jobs
   run(payload: P, ctx: JobContext): Promise<Result<void, AppError>>;
+  /** The failure path, run once with the last error when the job ends `failed` (PRV-063). */
+  onFailed?(payload: P, error: AppError): Promise<void>;
 };
 
 export type JobContext = {
@@ -694,13 +696,15 @@ export type JobQueue = {
   their caller; they are not persisted. The caller cancels one by aborting the signal
   it passed in.
 - **PRV-062** Persisted jobs are stored in the campaign database with type, payload,
-  status, attempts, and timestamps. When a campaign is opened, its unfinished
-  persisted jobs are re-enqueued. Jobs of campaigns that are not open wait until they
-  are.
+  status, attempts, and timestamps. On server start, the queue re-enqueues every
+  campaign's unfinished persisted jobs (`queued` and `running`), in the order they were
+  stored; a campaign that fails to open or migrate is logged and skipped. Before a
+  campaign's first new job, the queue also takes back that campaign's stored jobs, once
+  per campaign per process.
 - **PRV-063** A job that fails with a retryable error is re-queued with exponential
   backoff (2 s, 8 s, 30 s, …) until `queue.maxAttempts`. A non-retryable error or
-  exhausted attempts marks it `failed`, and its handler's failure path runs (e.g.
-  `extraction-failed` on the turn).
+  exhausted attempts marks it `failed`, and its handler's failure path, `onFailed`,
+  runs (e.g. `extraction-failed` on the turn).
 - **PRV-064** Preemption: if `preemptBackground` is true and an interactive job is
   queued for a device whose slots are all running background jobs, the most recently
   started background job is aborted and re-queued **without** counting an attempt.
@@ -792,6 +796,10 @@ export type JobQueue = {
 | Where does `estimateTokens` live (PRV-070)? | In the providers module, for now. Whether it moves to `core` is considered when P1-T18 is planned (Open). | Moving it to `core` now, before the context module that budgets with it is planned. | owner |
 | What does a fixture's sequence number count (PRV-081)? | The calls of that fixture's role within the test, from `001`: `002-narrator.json` is the second narrator call, whatever other roles ran between. | One count across all roles: background extraction interleaves with interactive calls in no fixed order, so the numbers would change from run to run. | Claude (ruling) |
 | What does `TokenUsage.inputTokens` count (PRV-071)? | The whole prompt, cached tokens included; `cachedInputTokens` is the cached part of it. Calibration compares it with the estimate, which is for the whole prompt. | Only the uncached tokens: a cached prefix would make the reported count much smaller than the estimate, so calibration would drift until prompts overflow (Traps). | Claude (ruling) |
+| When does the queue take back stored jobs (PRV-062, TRN-012)? | At server start, `resume()` goes through `listCampaigns()` and re-enqueues every campaign's unfinished persisted jobs, `queued` and `running`, in stored order. Before a campaign's first new job, the queue also takes back its stored jobs, once per campaign per process. A campaign that fails to open or migrate is logged and skipped. | Re-enqueueing when a campaign is opened, as PRV-062 first said: nothing opens a campaign for its background jobs, so a turn left `extracting` would wait until the player opened it, although TRN-012 resumes such turns on server start. | owner |
+| Does `runInteractive` retry transient errors (PRV-051, PRV-067)? | Yes, with the background jobs' policy: an error the work returns with `retryable: true` is retried with backoff until `queue.maxAttempts`, and the caller gets the last run's result. Every phase-1 model call is interactive, so this is how PRV-051 holds in phase 1. An error after text has streamed must not be retryable (Open). | Retrying only background jobs: phase 1 has none, so a transient provider error would fail every phase-1 call at once. | owner |
+| How does a handler's failure path run (PRV-063)? | Through an optional `onFailed(payload, error)` on `JobHandler`, which the queue calls once, with the last error, after the job is stored and published as `failed`. A stored job that has no handler, or whose payload its handler rejects, is marked `failed` without it. | Leaving it to whoever awaits `wait`: nobody awaits a job resumed after a restart, so its turn would stay `extracting`. | owner |
+| What concurrency does a job get when its device is not in machine config (ARCH-081)? | 1, the schema's default, as every device gets while machine config fails to load. The job still runs. | Failing the job: a device renamed or removed in settings would fail every job already queued for it. | owner |
 
 ## Open
 
@@ -806,3 +814,8 @@ export type JobQueue = {
   deterministic placeholder vectors, whatever the mode (PRV-080, PRV-081). Retrieval
   tests that need chosen similarities arrive in phase 4, which adds scripted and fixture
   embeddings.
+- **Retrying a streamed call after its text has been sent (PRV-051, PRV-047).**
+  `runInteractive` retries any error the work returns with `retryable: true`
+  (Decisions). A streamed call that fails after some text has reached the player would
+  then stream the narration a second time. P1-T14 must return such an error with
+  `retryable: false`.
