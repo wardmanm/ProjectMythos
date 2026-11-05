@@ -41,8 +41,8 @@ disagree, one of them has a defect: find out which.
 
 - **Mike decides** anything that changes behavior or scope, any change to a decision
   already recorded in an ADR or a Decisions table, a runtime dependency outside the
-  approved list (CONV-090), and when a branch merges. Something is decided only when
-  Mike says so.
+  approved list (CONV-090), and when a branch merges (a batch he approves is then
+  merged in order; see Workflow). Something is decided only when Mike says so.
 - **Claude rules** on the calls a task needs: an extra file it must touch (CONV-132),
   or a spec fix with one reasonable answer (CONV-133). Every ruling is recorded with
   its reason, so Mike sees each one: in the task's completion notes, or, outside a
@@ -74,6 +74,11 @@ disagree, one of them has a defect: find out which.
   blocks the task; Status `Done`.
 - Finish every task with `/docs land`. Before Mike merges, rebase onto `main` and run
   `pnpm check` again. After the merge, run `/status` on `main`.
+- **Merging an approved batch.** When Mike approves a set of branches and their merge
+  order, Claude merges them in that order without asking again. After each merge,
+  rebase the next branch onto `main`, run `pnpm check`, update the summary line its
+  completion notes quote, force-push, and merge only when CI passes on macOS and
+  Windows.
 
 ## Keeping the docs current
 
