@@ -383,6 +383,7 @@ Per OVR-010, these exist from phase 1 even if unused:
 | How is the content snapshot stored (ARCH-045, SCH-111)? | In two tables. `canon` has one row per definition, entity, or file: its `kind`, `id`, JSON (parsed on read with the kind's content schema), and Markdown. The kinds are `setting`, `calendar`, `slots`, `tone`, `ruleset`, `scenario`, `theme`, `entity` (runtime form, SCH-005), `history`, and `relationships`. `canon_templates` has the template files by layer and path (CTX-005). The theme is snapshotted because a copied campaign cannot rely on the library (ARCH-031). | One table for both: a template has a layer and a path where an entry has a kind and an ID. A SQL `CHECK` on `kind`: a new kind would need a table rebuild. | Claude (ruling) |
 | How is a model call record's time stored (ARCH-061)? | `model_calls.created_at` is INTEGER milliseconds since 1970 UTC, so the retention prune compares numbers; the record's JSON keeps its `createdAt` string. | A WallTime string: strings with different numbers of fraction digits sort wrongly (02-conventions Traps). | Claude (ruling) |
 | Does the client's dev server mark the requests it proxies as forwarded (ARCH-006, ARCH-111)? | Yes: Vite's `/api` proxy sets `xfwd: true`, so each request carries `X-Forwarded-For`, and the PIN lock never exempts a forwarded request as localhost. A LAN device using the dev server needs the PIN, as it would with `pnpm start`; so does the host machine itself in development, when a PIN is set. | No `xfwd`: every request through the dev server would reach the server from 127.0.0.1, and the localhost exemption would let any LAN device in without the PIN. | Claude (ruling) |
+| What does campaign creation write together (TRN-123, ARCH-041)? | `createCampaignFolder` makes the folder and writes the `campaign` row; then `writeCampaignStart` writes canon, the first `content_settings` and `current_branch_id`, and the root turn with its setup set and branch `Main`, in one transaction. If either step throws, campaign creation deletes the folder and rethrows. Every expected failure is found before the folder is made. | Writing the `campaign` row in the same transaction: `createCampaignFolder` writes it, and moving it would change storage's API for a gap the Open section records. A transaction per part: a crash could leave canon with no root turn. | Claude (ruling) |
 
 ## Open
 
@@ -405,3 +406,10 @@ Per OVR-010, these exist from phase 1 even if unused:
   opened by a newer Mythos is refused with an exception whose message says to update
   Mythos. No `ErrorCode` fits, so the HTTP layer reports it as `internal_error`. If the
   library should show that message as it is, the error needs a code of its own.
+- **A crash between the campaign row and the campaign start (ARCH-031, TRN-123).** A new
+  campaign's `campaign` row is written before the transaction that writes its canon and
+  root turn. If the process dies between the two, the folder holds a campaign with no
+  canon or root turn, and `campaignView` and `listCampaignSummaries` throw on it, so the
+  whole campaign list fails until the folder is deleted by hand. A fix would write the
+  row in `writeCampaignStart`'s transaction, or have the list skip and report such a
+  campaign.

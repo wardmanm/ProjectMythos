@@ -1143,11 +1143,11 @@ Excerpt: the first of the fixture's ten relationships.
   tone profile's override if present), tone profile, ruleset, scenario, all entities
   and their canon, history, relationships, and templates into the campaign database.
   From then on the campaign never reads the pack (ARCH-045).
-- **SCH-112** Campaign creation produces the campaign's first turn, whose commit sets
-  (origin `engine`) create every entity, convert history entries into observations and
-  knowledge grants, seed relationships, set game time to the scenario start, and start
-  the first scene. It is a normal turn: inspectable in the context inspector and the
-  root of every branch.
+- **SCH-112** Campaign creation produces the campaign's first turn, whose one `setup`
+  set (origin `engine`, SCH-117) creates every entity, converts history entries into
+  observations and knowledge grants, seeds relationships, sets game time to the scenario
+  start, and starts the first scene. It is a normal turn: inspectable in the context
+  inspector and the root of every branch.
 - **SCH-113** Only the chosen PC is instantiated. Premade PCs not chosen are omitted.
 - **SCH-114** A pack's characters are authored against the setting's default ruleset
   (`defaults.rulesetId`, or `ruleset.standard` if absent). If the campaign uses a
@@ -1163,16 +1163,17 @@ Excerpt: the first of the fixture's ten relationships.
   PC is still Jory's sibling, has received both letters, and starts wearing Wren's
   clothes.
 - **SCH-116** References to any other PC that is not instantiated are removed at
-  creation: the PC is dropped from actor, witness, audience, and `alsoKnownBy` lists;
-  a history entry whose claim source is that PC is dropped; relationships from or to
-  it are dropped; items it possesses are omitted; items it only owns become ownerless.
-  Each removal is listed in the setup turn as a warning.
+  creation: the PC is dropped from actor, witness, audience, and `alsoKnownBy` lists
+  and from the scenario's `presentEntityIds`; a history entry whose claim source is that
+  PC, or whose claim has no audience left, is dropped, and a claim about a dropped entry
+  is about nothing (`aboutObservationId: null`); relationships from or to it are
+  dropped; items it possesses are omitted; items it only owns become ownerless. Each
+  removal is listed in the setup turn as a warning.
 - **SCH-117** Setup is a single `setup` set on the root turn. Its commits, in order:
   1. `entity.create` for every entity in runtime form (SCH-005): places, then
      factions, then characters, then items, each kind sorted by ID with `cmp`, except
-     that a parent place always comes before the places inside it, and a container
-     before the items inside it. Characters start
-     `alive` with their `startingStatuses`.
+     that a parent place or a container that sorts later moves up to just before the
+     first entity inside it. Characters start `alive` with their `startingStatuses`.
   2. `time.advance` from game time 0 (the setting's epoch) to the scenario's `start`,
      unless they are equal.
   3. `entity.move` to the scenario's `startPlaceId` for the PC and each entity in
@@ -1183,11 +1184,14 @@ Excerpt: the first of the fixture's ten relationships.
      from `when` (0 when undated), its claim's `aboutRef` resolved to that entry's
      observation; then `knowledge.grant` for each witness (`witnessed`, CON-071), each
      claim audience member who is not a witness (`told`, MEM-034), and each
-     `alsoKnownBy` entry (its own `via`, MEM-035), all at the observation's game time.
-     History is not checked against MEM-011: witnesses were where the history says.
+     `alsoKnownBy` entry (its own `via`, MEM-035), one grant per knower, the first of
+     these that applies, all at the observation's game time with `viaObservationId:
+     null`. History is not checked against MEM-011: witnesses were where the history
+     says.
   5. `relationship.set` for each seed relationship (SCH-092).
   6. `knowledge.name` for the PC for every other character named in a history entry
-     the PC knows: actors, witnesses, and a claim's source and audience (JRN-022).
+     the PC knows: actors, witnesses, and a claim's source and audience, in ID order
+     (JRN-022).
 - **SCH-118** Folding starts from an initial world state built from the campaign
   record: game time 0, no entities, clocks, or flags, the chosen PC's ID, the
   scenario's start place, and the first scene's ID, which setup's `scene.start` then
@@ -1228,6 +1232,9 @@ Excerpt: the first of the fixture's ten relationships.
 | What happens to a pack folder whose name is not a pack ID (SCH-020)? | It is skipped, with a warning logged. | Listing it with its issues: `PackSummary.packId` must be a slug, so the client could not parse the list. | Claude (ruling) |
 | Where do setup's warnings go (SCH-114, SCH-116, GEAR-090 say "in the setup turn")? | `buildSetup` returns them and campaign creation logs each one, with the campaign's ID. They are not stored: no contract has a place for them (Open). | A `campaign_state` key or a field on the root turn's view: the contracts would change for a list no screen shows yet. | owner |
 | What happens before GEAR-090, when the campaign's slot schema lacks a slot an item is worn in (SCH-082)? | GEAR-090's move arrives with gear in phase 6. Until then the setup set fails validation, and campaign creation is refused with `illegal_state_change`, with an issue for each such item (Open). | Moving the items in phase 1: it is phase 6's gear work, and no tone profile in the reference pack or the built-in library overrides the slot schema. | owner |
+| What do SCH-117's exceptions to ID order mean, and how many grants and names does setup make? | A parent place or a container that sorts after what it holds moves up to just before the first entity inside it; nothing else moves. Each knower gets one grant per observation, the first that applies of witness, audience, and `alsoKnownBy`. The PC's names follow in ID order. `buildSetup` in `core` is the one implementation. | Sorting each kind by nesting depth first: it reorders entities that need no move, and the setup set would differ from the plain ID order everywhere. A grant for each list a knower is in: the fold would hold two grants of one observation for one knower. | Claude (ruling) |
+| What happens to a claim when SCH-116's removals leave it with no audience, or remove the entry it is about? | A claim with no audience left is dropped, like one whose source is removed: a claim is "source told audience", and no one was told. A claim about a dropped entry stays, about nothing (`aboutObservationId: null`). Each is a warning. | Keeping a claim with no audience: `ObservationSchema` requires at least one audience member. Dropping a claim whose truth was dropped: its source and audience still said and heard it. | Claude (ruling) |
+| What does a campaign's canon hold of the pack (SCH-111)? | The pack as loaded: every entity in runtime form, premade PCs not chosen included, with `statuses: []`, and history and relationships as authored. SCH-113 and SCH-116's removals and the starting statuses exist only in the setup set, so canon stays what the author wrote. | Canon after the removals: it would no longer be the pack, and an "update from pack" (ARCH-045) could not tell an author's change from a removal. | Claude (ruling) |
 
 ## Open
 
