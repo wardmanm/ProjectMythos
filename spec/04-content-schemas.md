@@ -1167,7 +1167,8 @@ Excerpt: the first of the fixture's ten relationships.
 - **SCH-117** Setup is a single `setup` set on the root turn. Its commits, in order:
   1. `entity.create` for every entity in runtime form (SCH-005): places, then
      factions, then characters, then items, each kind sorted by ID with `cmp`, except
-     that a container always comes before the items inside it. Characters start
+     that a parent place always comes before the places inside it, and a container
+     before the items inside it. Characters start
      `alive` with their `startingStatuses`.
   2. `time.advance` from game time 0 (the setting's epoch) to the scenario's `start`,
      unless they are equal.
