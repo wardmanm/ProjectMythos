@@ -845,6 +845,9 @@ export type JobQueue = {
 | When is a streamed reply complete (PRV-012)? | When its body ends cleanly, even without Ollama's `done` line or an OpenAI `finish_reason`: the finish is then `stop`, and missing counts are estimated. A dropped connection is an error. | Requiring the last line: the server has already ended the body, and some servers leave it out. | Claude (ruling) |
 | Do adapters log (CONV-070)? | No: they take no logger. A failure returns as a `ProviderError` with a message in plain words, and the caller logs it. | A logger in each adapter: failures would be logged twice, and each adapter would need its own care to keep keys out of logs. | Claude (ruling) |
 | How do `health` and `listModels` reach a provider (PRV-091)? | With one GET under a 10-second idle timeout, since no profile gives a `timeoutMs`: Ollama's `/api/version` and `/api/tags`, and an OpenAI-compatible server's `/models` for both. Any error makes `health` unreachable, with the error's message as its detail. | No timeout: a hung server would leave the settings screen waiting. | Claude (ruling) |
+| Which API version does the Anthropic adapter send, and what of the profile's sampling (PRV-042)? | `anthropic-version: 2026-10-21`. It never sends `temperature`, `top_p`, or `top_k`, which that version rejects on every model, so Anthropic ignores the profile's and the role's sampling, as the providers README says. | Staying on `2023-06-01` to keep sampling: the newest models accept only their default sampling on any version, and new API features arrive on the new one. | owner |
+| What does the Anthropic adapter send for each `thinking` setting (PRV-046)? | `off` sends `{ type: 'disabled' }`, `on` sends `{ type: 'adaptive', display: 'summarized' }`, and `provider-default` leaves the field out. A model that cannot turn thinking off, such as Claude Opus 5.5, Sonnet 5.5, or Fable 5.1, answers `off` with a 400. That is `provider_rejected`, with a message a player can act on: Anthropic's own explanation, then the setting to change, the profile's thinking to `provider-default`. | Sending something else for `off` where a model refuses `disabled`, such as leaving the field out: the profile would think while its setting says off, and the adapter would need a list of models. | owner |
+| How does the Anthropic adapter carry out the `tool-call` method (PRV-040)? | One tool named after the schema, with `strict: true`, forced with `tool_choice: { type: 'tool', name }`; the answer is its input. A model that refuses forced tool use, such as Claude Opus 5.5, Sonnet 5.5, or Fable 5.1, answers with a 400, which is `provider_rejected`, so PRV-053 falls back to `prompt-only`, and the probe suggests `json-schema`. | `tool_choice: auto` with the tool named in the prompt: the model could answer without calling it, so the method would no longer guarantee a call. | owner |
 
 ## Open
 
@@ -885,3 +888,7 @@ export type JobQueue = {
 - **The local adapters have no `embedding` member.** Ollama and OpenAI-compatible
   servers both serve embedding models, but `embed` arrives with retrieval in phase 4;
   until then only the mock embeds (PRV-010).
+- **Anthropic profiles with thinking `off`.** Claude Opus 5.5, Sonnet 5.5, and Fable 5.1
+  cannot turn thinking off, so a profile with `thinking: 'off'` fails on them, with a
+  message that names `provider-default` (Decisions). P1-T24's settings screen should
+  suggest `provider-default` for Anthropic profiles, and P1-T15's probe shows the message.
