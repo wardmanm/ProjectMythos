@@ -723,9 +723,11 @@ export type JobQueue = {
   `ceil(characters / charsPerToken)`. No tokenizer libraries are used; exact counts are
   impossible across providers anyway.
 - **PRV-071** After each call, the provider-reported `inputTokens` is compared with the
-  estimate, and the profile's calibrated ratio is updated as an exponential moving
-  average. Calibration is stored in `<dataDir>/calibration.json`, not in machine config,
-  so editing config never clobbers it.
+  estimate, and the calibrated ratio for the profile and its model is updated as an
+  exponential moving average. A profile estimates with its own `charsPerToken` until it
+  has a calibrated ratio, and changing its model starts it there again. Calibration is
+  stored in `<dataDir>/calibration.json`, not in machine config, so editing config never
+  clobbers it.
 - **PRV-072** The context module budgets against the calibrated estimate with a 10%
   safety margin, and never assembles a prompt where estimated input plus
   `maxOutputTokens` exceeds `contextWindow` (09-context).
@@ -771,9 +773,18 @@ export type JobQueue = {
 | When is `restartRequired` true (PRV-004)? | When the saved `server` section (leaving out `server.pin`) or `dataDir` differs from the config the server started with, so the notice stays until a restart. | Comparing with the previous save: a second save would clear the notice although the change has still not applied. | Claude (ruling) |
 | What does PRV-002 check beyond the references it lists? | IDs are unique within `devices`, `providers`, `modelProfiles`, and `mediaProfiles`. Each `media` pick resolves to a media profile of its own kind (MED-002), and `speechInput.mode: 'server'` needs a `profileId`. | Only the listed references: a duplicate ID makes "resolves" ambiguous, and a media profile of the wrong kind would fail only at its first call. | Claude (ruling) |
 | What does the first-start default contain (PRV-001)? | Only the required parts, with every role written as `null`. The schema's defaults supply the rest, and a save writes the complete validated config. | Writing every default: a later change to a default would never reach an untouched file. | Claude (ruling) |
+| What does the mock return for a JSON-format call with no script or fixtures (PRV-083)? | The placeholder for its `schemaName` from a table in the mock (`jsonPlaceholders`). Each later phase adds a placeholder for each schema it introduces, with a test that it parses with that schema. The table is empty in phase 1, since no structured role runs in phase-1 play. An unknown schema name returns `provider_rejected`. | Generating values from the JSON Schema: much more code than a table, for output that is valid but meaningless in play. | owner |
+| What is a mock provider's `fixturesDir` (PRV-081)? | The test scenario's folder itself: a test sets it to `<root>/<scope>`, so fixture mode works through `createAdapter` like any other config. The scope is a kebab-case slug named after the test. | The fixtures root, with the scope given separately: the provider config has no field for it, so fixture mode would not work through the registry. The test name itself as the folder: test names contain `:`, which Windows file names cannot. | owner |
+| How is the copied `providers/types.ts` kept equal to its code block (OVR-033)? | The repository's spec check, `scripts/check-spec.ts`, compares it byte for byte with `spec/reference/server-types/providers/types.ts`, as it does the contracts. A later pure copy is one more entry in its `serverTypeCopies`. Copies that add an implementation after the verbatim types, such as P1-T13's `queue.ts`, are not compared yet. | Relying on review alone: a hand edit to the copy would pass `pnpm check`. | owner |
+| What key is a calibrated ratio stored under (PRV-071)? | The profile's ID and its model, so changing a profile's model starts again from the profile's own `charsPerToken`. | The profile ID alone: a ratio learned for one model would carry over to a model with a different tokenizer. | owner |
+| Where does `estimateTokens` live (PRV-070)? | In the providers module, for now. Whether it moves to `core` is considered when P1-T18 is planned (Open). | Moving it to `core` now, before the context module that budgets with it is planned. | owner |
 
 ## Open
 
 - **Headers are not secrets.** An `openai-compatible` provider's `headers` are stored
   and returned as they are; PRV-005 and CON-111 cover `apiKey` only. An API key belongs
   in `apiKey`, and the settings screen (P1-T24) should say so beside the headers.
+- **Where `estimateTokens` lives.** It is in the providers module (PRV-070). The context
+  module budgets with it but imports neither `config` nor `providers` (CTX-110), so
+  whether it moves to `core`, or reaches context through `ContextDependencies`, is
+  considered when P1-T18 is planned.
