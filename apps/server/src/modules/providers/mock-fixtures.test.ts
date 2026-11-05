@@ -23,13 +23,16 @@ const profile = ModelProfileSchema.parse({
 
 /** A mock provider replaying one scenario, built through the registry as config builds it. */
 function replaying(scope: string): ProviderAdapter {
-  return createAdapter({
-    id: 'mock',
-    type: 'mock',
-    deviceId: 'this-computer',
-    fixturesDir: path.join(fixturesRoot, scope),
-    delayMs: 0,
-  });
+  return createAdapter(
+    {
+      id: 'mock',
+      type: 'mock',
+      deviceId: 'this-computer',
+      fixturesDir: path.join(fixturesRoot, scope),
+      delayMs: 0,
+    },
+    { env: {}, timeSource: { now: () => 0 } },
+  );
 }
 
 function generate(adapter: ProviderAdapter, role: ModelRole) {

@@ -7,7 +7,7 @@ export type {
   TextRequest,
   TextResponse,
 } from './types';
-export { createAdapter } from './registry';
+export { type AdapterDependencies, createAdapter } from './registry';
 export { createMockAdapter, type MockAdapter, type MockProviderConfig } from './mock-adapter';
 export { type MockOutcome, mockProviderError, mockResponse } from './mock-outputs';
 export { CALIBRATION_FILE, type Calibration, estimateTokens, openCalibration } from './tokens';

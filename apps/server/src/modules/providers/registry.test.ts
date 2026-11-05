@@ -1,11 +1,13 @@
 import { type ProviderConfig, ProviderConfigSchema } from '@mythos/contracts';
 import { describe, expect, it } from 'vitest';
-import { createAdapter } from './registry';
+import { type AdapterDependencies, createAdapter } from './registry';
+
+const deps: AdapterDependencies = { env: {}, timeSource: { now: () => 0 } };
 
 describe('createAdapter', () => {
   it('ARCH-133: builds the mock as a ProviderAdapter with text and embedding members', async () => {
     const config = ProviderConfigSchema.parse({ id: 'mock', type: 'mock', deviceId: 'cpu' });
-    const adapter = createAdapter(config);
+    const adapter = createAdapter(config, deps);
     const signal = new AbortController().signal;
 
     expect(adapter.config).toBe(config);
@@ -29,6 +31,6 @@ describe('createAdapter', () => {
       deviceId: 'gpu',
       ...rest,
     });
-    expect(() => createAdapter(config)).toThrow(arrives);
+    expect(() => createAdapter(config, deps)).toThrow(arrives);
   });
 });

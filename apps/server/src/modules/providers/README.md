@@ -2,9 +2,11 @@
 
 Everything between the engine and a model. So far: the adapter interface every provider
 implements, the registry that builds an adapter from machine config, the mock adapter
-every test uses, token estimation with its calibration, and the job queue. The real
-adapters (P1-T11, P1-T12) and the structured-output pipeline (P1-T14) arrive later. The
-queue imports `config`, `storage`, and `events`, which ARCH-021 allows.
+every test uses, the HTTP helpers the real adapters share, token estimation with its
+calibration, and the job queue. The real adapters (P1-T11, P1-T12) and the
+structured-output pipeline (P1-T14) arrive later. The adapters import `config`, for
+`DataDirEnv` and `resolveSecret`; the queue imports `config`, `storage`, and `events`.
+ARCH-021 allows all three.
 
 ## Public API (`index.ts`)
 
@@ -12,8 +14,11 @@ queue imports `config`, `storage`, and `events`, which ARCH-021 allows.
   `ProviderAdapter`, `TextRequest`, `TextResponse`, `ResponseFormat`, and
   `ProviderError`. Never edit it here; `pnpm check` fails if it differs from
   `spec/reference/server-types/providers/types.ts`.
-- `createAdapter(config)` builds the adapter for one provider in machine config. The
-  real adapters throw, naming the task that brings them, until they arrive.
+- `createAdapter(config, deps)` builds the adapter for one provider in machine config.
+  `deps` is an `AdapterDependencies` from the composition root: `env`, where
+  `{ "env": … }` API keys are read, and `timeSource`, which turns an HTTP-date
+  `retry-after` into seconds. The real adapters throw, naming the task that brings them,
+  until they arrive.
 - `createMockAdapter(config)` builds the mock directly, as a `MockAdapter`, whose
   `text` and `embedding` members are always there. A test can:
   - `script(role, ...outcomes)` to queue each call's `MockOutcome`: a response, or an
@@ -46,6 +51,28 @@ never streamed. An abort after some text returns that text, with `finishReason` 
 global `setTimeout`, so Vitest's fake timers control them. `embed` returns
 deterministic unit vectors of the profile's `embeddingDimensions`. The mock never calls
 `fetch`.
+
+## Adapter helpers (`adapters/`)
+
+The real adapters share these. None is exported from `index.ts`.
+
+- `sendRequest(request, timeSource)` in `http.ts` sends one request with `fetch` and
+  returns once the response headers arrive. `timeoutMs` is an idle timeout: it bounds
+  the wait for the headers, then each wait for a body chunk, never the whole call. Every
+  failure is the `ProviderError` PRV-013 gives it (`http-errors.ts`); the caller's abort
+  is checked before the timeout. Messages name the provider and the server's origin,
+  never a header, path, or query string, and quote the provider's own message with any
+  `secrets` replaced. A 2xx body is read once, with `chunks()` or `json(schema)`.
+- `parseWire(text, schema, provider)` parses a body, or one line or event of a stream,
+  with the adapter's Zod wire schema. Anything it cannot read is `provider_unavailable`.
+- `resolveApiKey(secret, env)` reads an API key. A missing variable is
+  `provider_rejected`.
+- `readNdjsonLines(chunks)` and `readSseEvents(chunks)` in `lines.ts` read a streamed
+  body line by line, or event by event. `[DONE]` ends an SSE stream.
+- `createThinkTagSplitter()` in `think-tags.ts` separates inline `<think>…</think>`
+  reasoning from answer text as it streams, holding back a possible partial tag.
+- `startFakeServer()` in `fake-server.ts` is for tests only: a `node:http` server on
+  127.0.0.1 and port 0 that replies as the test scripts and records each request.
 
 ## Calibration
 
@@ -125,7 +152,7 @@ How jobs run:
 ## Files
 
 - `types.ts`: the copied interface types.
-- `registry.ts`: `createAdapter`.
+- `registry.ts`: `createAdapter` and `AdapterDependencies`.
 - `mock-adapter.ts`: the mock's modes, streaming, delays, and aborts.
 - `mock-outputs.ts`: placeholders, embeddings, `mockResponse`, `mockProviderError`.
 - `mock-fixtures.ts`: fixture names, reading, and the strict `TextResponse` schema.
@@ -140,6 +167,12 @@ How jobs run:
   recorder that stores each change and then publishes it.
 - `queue-testing.ts`: the queue tests' helpers (a fake timer, held runs, an editable
   config, campaigns in temporary folders). Not exported.
+- `adapters/http.ts`: `sendRequest`, `parseWire`, `resolveApiKey`, and
+  `RateLimitDetailsSchema`.
+- `adapters/http-errors.ts`: the PRV-013 error mapping, messages, and `retry-after`.
+- `adapters/lines.ts`: the NDJSON and SSE readers.
+- `adapters/think-tags.ts`: the `<think>` splitter.
+- `adapters/fake-server.ts`: the fake provider server adapter tests use.
 
 ## Governing spec
 
