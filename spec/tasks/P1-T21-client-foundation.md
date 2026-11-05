@@ -105,7 +105,10 @@ ARCH-120, ARCH-121, ARCH-122, UI-001, UI-030, UI-032, UI-033, UI-034, UI-040, UI
   - `pnpm --filter @mythos/client build` succeeds. Vite warns that the one script
     chunk is 613 kB, over its 500 kB hint; the app is served on the LAN, so it is not
     split.
-  - `pnpm check` passes. CHECKLINE
+  - `pnpm check` passes. The workspace has `Tests  270 passed (270)` (68 in the
+    client) and `spec/reference` `Tests  271 passed (271)`, and it ends with `Docs check
+    passed: 834 requirements, 25 tasks (6 done), 20 ADRs, 76 markdown files, 356
+    citations in code.`
 - **Rulings:**
   - **Mike's decisions** (`P1-T21: spec: owner:` commits): `cn`, `tw-animate-css`,
     `shadcn` (dev), and `@testing-library/dom` are on CONV-091's list, with a row in
