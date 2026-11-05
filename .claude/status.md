@@ -1,65 +1,61 @@
 # Status: Mythos
-Updated: 2026-11-05 · Through: 129bc99 · Branch: main
+Updated: 2026-11-05 · Through: 11bf8d2 · Branch: main
 
 ## Current focus
-Phase 1 (Foundation): 5 of 25 tasks done. P1-T04 merged in PR #30. Ready to start, and independent
-of each other: P1-T05 (world-state fold and commit validation), P1-T07 (server storage module),
-P1-T08 (server content module), P1-T09 (server events module), P1-T10 (provider types, mock adapter,
-token estimation), P1-T16 (auth module), and P1-T21 (client foundation). P1-T07, P1-T09, and P1-T10
-head the longest chain (P1-T13 job queue, P1-T14, P1-T18 context, P1-T19, P1-T20); P1-T05 and P1-T08
-lead to campaign creation (P1-T17). No branch open.
+Phase 1 (Foundation): 12 of 25 tasks done. Seven tasks ran in parallel worktrees and merged as PRs
+#31 to #37; the worktrees are removed. Ready to start: P1-T11 (Ollama and OpenAI-compatible
+adapters), P1-T12 (Anthropic adapter), P1-T13 (job queue), and P1-T17 (campaign creation). P1-T13
+and P1-T17 head the longest chain (P1-T14, P1-T18 context, P1-T19 turns, P1-T20 HTTP, then the
+client screens and P1-T25). No branch open.
 
 ## Recent changes
-- 2026-11-05: P1-T04 merged (#30): `packages/core` has the hard floor and content wording,
-  ruleset checks, gear checks and appearance, display names, and prompt budgets. Mike's
-  decisions: CTX-030's margin is 10% of `contextWindow − maxOutputTokens`; CTX-031's caps
-  apply to trimmable tiers only; `core`'s files go in folders by spec document (`rules/`,
-  `state/`, `knowledge/`, `prompts/`, `time/`), so P1-T05 and P1-T17 now name `state/`.
-  Rulings: four reference bugs fixed; new `appendFloorToTask` and `inputBudget`; the hard
-  limit weighs the holder's load after the move, contents included (11-gear Decisions).
-- 2026-11-04: P1-T03 merged (#29): `packages/core` has `cmp`, calendar math (`toDate`, `fromDate`, leap
-  rules, festivals, weekdays), date and duration display, and theme contrast checks; all 518 truth-table
-  dates and all six built-in themes pass. Rulings: the reference `cmp` compared UTF-16 code units, so it
-  and the port now compare code points (spec fix; 02-conventions Trap); `packages/core` has Node's types
-  for its tests, and lint bans Node globals in core source (02-conventions Decisions);
-  `calendar-display.ts` split out to keep `calendar.ts` under 300 lines.
-- 2026-11-04: P1-T06 merged (#28): the config module finds the data directory (flag, then config, then
-  OS default), writes the default machine config, checks it with every issue at a dotted path, saves
-  atomically into a store whose edits apply at once, and keeps inline keys and the PIN hash out of
-  responses. Mike's decision: a saved placeholder takes the key stored for the provider with the same
-  `id` (CON-111 reworded). Rulings, in 05-providers' Decisions: `restartRequired` compares with the
-  running config; PRV-002 also checks unique IDs and media profile kinds; the default file is minimal.
-  05-providers Open: `headers` are not secrets.
-- 2026-11-04: P1-T02 merged (#27): `packages/contracts/src/`, `content-library/`, and
-  `content-packs/reference/` are byte-for-byte copies of the spec, and `scripts/check-spec.ts` fails
-  `pnpm check` on any difference (OVR-030, OVR-033). `pnpm check` now also runs `spec/reference`'s check
-  (drift and docs), and `pnpm trace` works from the root. Rulings: an unused local, `stat`, removed from
-  `makeExtractionSchemas` (spec fix; 03-contracts Trap: reference contracts are linted only as
-  copies); the check's tests run it as a child process; a missing source folder fails the check;
-  `tsx` 4.23.15 at the root.
-- 2026-11-04: Mike's decision: he signs off each feature before a release (ADR-019, CONV-137 to
-  CONV-140). At `/docs close`, Claude asks the phase plan's Try/Expect checks one at a time, on macOS and
-  Windows, and records each answer in its Sign-off table. A failure is an issue labeled `bug` and
-  `sign-off`, with the board's Priority: P0 blocks the release, P1 is high but doesn't block, P2 is
-  deferred. Phase 1's checklist is now nine such checks.
-- 2026-11-04: P1-T01 merged (#26): the pnpm 12 workspace with the four packages and `spec/reference`,
-  strict TypeScript, Prettier, Vitest, ESLint with eslint-plugin-boundaries v7 (16 lint-rule tests),
-  and CI on Windows and macOS. Rulings: `engineStrict` goes in `pnpm-workspace.yaml`, with no
-  `.npmrc` (spec fix, ARCH-001 Trap); a root `tsconfig.json` for `scripts/`; `check` also runs
-  `prettier --check`; `@mythos/*` imports are checked by package name; versions pinned exactly;
-  `build` is real, while `dev` and `start` wait for P1-T20; lint also covers `Intl.Collator`, every
-  `new Date` in core, and CONV-002 to CONV-005; CI runs on PRs and pushes to `main` only. Mike's
-  decision: `spec/reference` keeps its own `pnpm-lock.yaml` (01-architecture Decisions).
-- 2026-11-04: Mike's decision: GitHub mirrors the tasks (ADR-018, CONV-136, CONV-137). Each task has an
-  issue on the Project Mythos board, in its phase's milestone (all ten exist), and its PR says
-  `Closes #N`. Each phase ends in a `v0.N.0` release. Issues #1 to #25 are P1-T01 to P1-T25.
-- 2026-11-04: Mike's decision: pin pnpm 12 (`pnpm@12.16.1`) instead of 10. The root
-  `pnpm-workspace.yaml` approves esbuild's build with `allowBuilds`, since pnpm 11 and later ignore
-  `pnpm.onlyBuiltDependencies` in `package.json`. Recorded in 01-architecture's Decisions table; the
-  P1-T01 design notes, `spec/reference/package.json`, and its README follow it.
+- 2026-11-05: Mike's decision: CLAUDE.md's Never line now reads "game state and its history change
+  only through commits (ARCH-040)", matching ARCH-040's new wording.
+- 2026-11-05: P1-T21 merged (#37): the client foundation: routes with placeholder screens,
+  `theme.house` as CSS variables, a typed API layer, one `EventSource` per open campaign, and twelve
+  shadcn components at 44 px. Mike's decisions: `cn`, `tw-animate-css`, and `shadcn` approved
+  (CONV-091); ADR-020 (native build tools) accepted; lint and tests ignore `.claude/worktrees/`.
+  Rulings: UI-101 and CONV-101 amended; the dev proxy sets `xfwd: true`.
+- 2026-11-05: P1-T08 merged (#36): the pack and library loader, reporting every issue in three
+  passes. Mike's decisions: nested keys checked; library issues only for packs that use them;
+  relative library paths; a data-directory pack wins; `aboutRef` names an earlier entry (SCH-090);
+  starting items checked against the setting's slot schema (SCH-082). Rulings: three reference
+  checker gaps fixed; SCH-092 checked at load.
+- 2026-11-05: P1-T05 merged (#35): `core/state/`: `orderSets` (depth, stage, `seq`), the lenient
+  `fold`, the strict `validateSet`, and the commit allowlist. Mike's decisions: `orderSets` is
+  TRN-061's only definition; relationships are between characters (CON-073); `override.record` is
+  allowed in any superseding set (TRN-080). Rulings: TRN-064 names, consolidation grants, SCH-117.
+- 2026-11-05: P1-T07 merged (#34): the `node:sqlite` wrapper, migration 0001 with TRN-001 triggers,
+  repositories, and campaign folders. Mike's decisions: ARCH-040 names what is not a commit; one
+  transaction per write; `DatabaseSync` (ADR-012 amended). Ruling: ARCH-130 calls assets campaign
+  state, not a projection.
+- 2026-11-05: P1-T10 merged (#33): verbatim provider types (now in the spec check), the registry,
+  the mock adapter, and token calibration. Mike's decisions: calibration keyed by profile and model
+  (PRV-071 reworded); a JSON placeholder table; `estimateTokens` stays in providers for now.
+- 2026-11-05: P1-T16 merged (#32): scrypt PIN, sliding 30-day sessions, rate limit, and the
+  localhost exemption. Mike's decisions: a PIN change ends every session; a broken config admits
+  only localhost. Ruling: ARCH-110 names CON-113's session routes.
+- 2026-11-05: P1-T09 merged (#31): the event bus, per-campaign replay buffers, and SSE frames.
+  Mike's decisions: each stream starts at the current event ID; ADR-001 amended to per-campaign.
+- 2026-11-05: Mike's decision: wall time comes from an injected `TimeSource` in contracts, not a
+  `Clock`, which the glossary reserves for the progress tracker (CONV-061, ARCH-010, glossary).
+- 2026-11-05: P1-T04 merged (#30): hard floor, ruleset and gear checks, names, and budgets. Mike's
+  decisions: CTX-030's 10% margin, CTX-031's caps on trimmable tiers only, `core` in folders.
 
 ## Pending decisions
-- None.
+- **Avoiding merge conflicts between parallel branches** (raised 2026-11-05, this session): every
+  parallel branch appends to the same closing-section tables, so each merge made the next PR
+  conflict. Options: (a) create empty Traps, Decisions, and Open sections in every document and
+  keep rows ordered by the requirement ID they cite (an OVR-035 change); (b) leave the layout as it
+  is. Separately: may Claude merge a reviewed batch in order once CI passes, as a standing rule in
+  CLAUDE.md, rather than per batch? Claude's suggestion: (a), plus the standing rule. Blocks:
+  nothing; worth settling before the next parallel round.
 
 ## Loose ends
-- None.
+- Unpushed on `main`: 11bf8d2 (CLAUDE.md) and this status commit.
+- Acceptance checklists left unticked though the completion notes show each item tested: P1-T05
+  (6 items) and P1-T08 (5). P1-T07's "deleting an open campaign works on Windows (CI)" is unticked;
+  CI passed on windows-latest for #34.
+- Not tested, owned by later work: PRV-062's re-enqueue on open (P1-T13); UI-042's horizontal
+  scroll at phone width (P1-T23, P1-T25); ARCH-061's export exclusion and TRN-003's range rewrites
+  (phase 2).
