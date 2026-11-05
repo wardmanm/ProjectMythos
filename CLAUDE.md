@@ -153,7 +153,7 @@ From `spec/02-conventions.md`, which has the full list:
 - Weaken, move, or reword the content hard floor. It lives in `core` and is appended
   by code to every prompt (13-content-settings §5, ADR-014).
 - Let the client call a model or hold a game rule (ARCH-011, ARCH-012).
-- Write directly to projection tables; every change is a commit (ARCH-040).
+- Write directly to projection tables; game state and its history change only through commits (ARCH-040).
 - Edit an applied migration (CONV-052).
 - Change behavior, scope, or a recorded decision in `spec/` without Mike's say-so
   (CONV-133).
