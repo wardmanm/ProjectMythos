@@ -52,3 +52,6 @@ const swords = item('item.swords', 'short swords', { type: 'gone' }, { weight: 3
 eq('encumbrance: load and capacity (10 + 5 × STR 2)', loadOf('pc.wren', [item('item.rope', 'rope', { type: 'carried', characterId: 'pc.wren' }, { weight: 4 })], wren, enc), { load: 4, capacity: 20 });
 eq('15 swords (45) exceed twice capacity (40): refused', validateItemMove(swords, { type: 'carried', characterId: 'pc.wren' }, [], chars, slots, enc).map((i) => i.message), ['too heavy: Wren cannot carry that much']);
 eq('6 swords (18) are fine: magic-pocket style', validateItemMove({ ...swords, quantity: 6 }, { type: 'carried', characterId: 'pc.wren' }, [], chars, slots, enc), []);
+eq('a missing container is reported, not a crash', validateItemMove(item('item.ring', 'ring', { type: 'gone' }, { size: 'tiny' }), { type: 'contained', containerId: 'item.box' }, items, chars, slots, enc).map((i) => i.message), ['item.box cannot hold things']);
+const sack = item('item.sack', 'sack', { type: 'placed', placeId: 'place.harbor' }, { weight: 2, container: { capacity: 50, maxItemSize: 'large' } });
+eq('a full sack counts what is inside it', validateItemMove(sack, { type: 'held', characterId: 'pc.wren' }, [sack, { ...swords, quantity: 13, location: { type: 'contained', containerId: 'item.sack' } }], chars, slots, enc).map((i) => i.message), ['too heavy: Wren cannot carry that much']);

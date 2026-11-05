@@ -55,7 +55,7 @@ CTX-001, CTX-002, CTX-003, CTX-004, CTX-005, CTX-006, CTX-007, CTX-008, CTX-010,
 - **Phase-1 narrator recipe** for ordinary turns: `instructions` (narration style, tone, content settings,
   hard floor appended by code, CTX-007); `world` (setting summary, PC sheet); `scene`
   (place, date and time of day, present characters' public blocks: display names for
-  the PC, appearance from `gear.appearanceOf`, personality); `transcript` (verbatim
+  the PC, appearance from `appearanceOf`, personality); `transcript` (verbatim
   turns of the current scene, rolled by chunks with `transcriptBoundary`; rolled turns
   are left out until phase 2); `turn` (the input); `task` ("Write the narration").
   There is no ruling yet, so the instructions tell the narrator to decide outcomes

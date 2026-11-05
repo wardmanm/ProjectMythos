@@ -95,7 +95,9 @@ export function validateItemMove(item: Item, to: ItemLocation, items: Item[], ch
     case 'contained': {
       const box = byId[to.containerId];
       if (!box?.container) { say(`${box?.name ?? to.containerId} cannot hold things`); break; }
-      for (let c: Item | undefined = box; c; c = c.location.type === 'contained' ? byId[c.location.containerId] : undefined) {
+      const seen = new Set<string>(); // a cycle already in the state must not loop forever
+      for (let c: Item | undefined = box; c && !seen.has(c.id); c = c.location.type === 'contained' ? byId[c.location.containerId] : undefined) {
+        seen.add(c.id);
         if (c.id === item.id) { say(`${item.name} cannot go inside itself`); break; }
       }
       if (ruleset.carrying.mode === 'containers') {
@@ -108,12 +110,15 @@ export function validateItemMove(item: Item, to: ItemLocation, items: Item[], ch
       break;
     }
   }
-  // Encumbrance hard limit applies to whoever ends up with it (GEAR-052).
+  // Encumbrance hard limit applies to whoever ends up with it, counting what is inside it (GEAR-050, GEAR-052).
   const c = ruleset.carrying;
-  const holderId = to.type === 'contained' ? possessor(byId[to.containerId] as Item, byId) : 'characterId' in to ? to.characterId : null;
-  if (c.mode === 'encumbrance' && c.hardLimitMultiplier !== null && holderId && characters[holderId]) {
-    const before = loadOf(holderId, others, characters[holderId] as Character, ruleset);
-    if (before && before.load + (item.weight ?? 0) * item.quantity > before.capacity * c.hardLimitMultiplier) say(`too heavy: ${characters[holderId]?.name} cannot carry that much`);
+  const moved: Item = { ...item, location: to };
+  const after = [...items.filter((i) => i.id !== item.id), moved];
+  const holderId = possessor(moved, Object.fromEntries(after.map((i) => [i.id, i])));
+  const holder = holderId ? characters[holderId] : undefined;
+  if (c.mode === 'encumbrance' && c.hardLimitMultiplier !== null && holderId && holder) {
+    const load = loadOf(holderId, after, holder, ruleset);
+    if (load && load.load > load.capacity * c.hardLimitMultiplier) say(`too heavy: ${holder.name} cannot carry that much`);
   }
   return issues;
 }

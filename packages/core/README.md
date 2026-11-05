@@ -5,6 +5,21 @@ validation, calendar math, retrieval scoring, and context budget allocation
 ([01-architecture.md §2.1](../../spec/01-architecture.md)). It depends on
 `@mythos/contracts` only.
 
+## Layout
+
+Files are grouped by the spec document that governs them, so a new file goes in the
+folder of its document (01-architecture Decisions). Folders have no `index.ts` of their
+own (CONV-015): `src/index.ts` is the only public entry point.
+
+| Folder           | Governing spec                   | Holds                                                                     |
+| ---------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| `src/`           |                                  | `index.ts`, `compare.ts` (used by every folder), and `theme.ts` (14-ui)   |
+| `src/rules/`     | 07-rules, 11-gear                | Ruleset checks, gear, and appearance; dice, harm, and clocks to come      |
+| `src/state/`     | 06-turn-engine, 03-contracts §10 | Turn logic, the fold, commit validation, and setup (from P1-T05)          |
+| `src/knowledge/` | 08-memory, 10-journal            | Display names and common knowledge; retrieval and consolidation to come   |
+| `src/prompts/`   | 09-context, 13-content-settings  | Budgets, transcript rolling, the hard floor, and content-settings wording |
+| `src/time/`      | 12-time-world                    | Calendar math and display; world ticks to come                            |
+
 ## Public API
 
 `@mythos/core`, exported from `src/index.ts` as TypeScript source (ARCH-005).
@@ -12,6 +27,60 @@ validation, calendar math, retrieval scoring, and context budget allocation
 - **Ordering** (`compare.ts`): `cmp(a, b)` orders strings by code point. Use it for every
   sort that reaches stored data, prompts, or tests, never `localeCompare` or plain `<`
   (CONV-087, ADR-011).
+- **Themes** (`theme.ts`): `contrast` gives the WCAG contrast ratio. `CONTRAST_RULES` lists
+  the pairs every palette must meet, and `themeIssues` lists everything that stops a
+  theme being applied (UI-031).
+
+### `rules/`
+
+- **Ruleset checks** (`ruleset-check.ts`): `rulesetIssues` lists every cross-field problem
+  in a ruleset (RUL-002, SCH-062), and `rulingLimitsFor` narrows the model-facing ruling
+  schema to a ruleset (RUL-065). Spec: 07-rules §4.5 and §12.
+- **Gear** (`gear.ts`), for items in play:
+  - `possessor` finds who has an item on them, through containers (GEAR-011);
+  - `validateItemMove` lists every reason a move is illegal, in plain English (GEAR-053).
+    It checks slots, layers, hands, containers, and the hard limit. Whether a character
+    or place named by the move exists is left to commit validation;
+  - `containerUse` and `loadOf` give the size points used in a container and a
+    character's load and capacity (GEAR-041, GEAR-050, GEAR-051).
+
+  Spec: 11-gear §2 to §5.
+
+- **Appearance** (`gear-appearance.ts`): `appearanceOf` builds what others see of a
+  character, and lists the items they can't see (GEAR-030, GEAR-060 to GEAR-065).
+  Spec: 11-gear §6.
+
+### `knowledge/`
+
+- **Journal names** (`journal.ts`): `displayName` gives the name a knower uses for an
+  entity (JRN-020), and `commonKnowledge` takes the public section of an entity's canon
+  (JRN-031). Spec: 10-journal §3 and §4.
+
+### `prompts/`
+
+- **Content settings and the hard floor** (`content.ts`):
+  - `HARD_FLOOR` is the floor's normative text; never reword it (CSET-040, ADR-014);
+  - `appendLocked` adds it to the end of the instructions tier for each role in
+    `FLOOR_ROLES`, and `appendFloorToTask` repeats it at the end of the task tier while
+    a minor is involved (CSET-042);
+  - `minorInvolved`, `effectiveSettings`, and `usesExplicitRoles` apply automatic
+    tightening (CSET-042, CSET-043);
+  - `renderContentSettings` renders the default partial from `DEFAULT_WORDING`, one line
+    per category in `CONTENT_CATEGORIES`, then lines and veils (CSET-010).
+
+  Spec: 13-content-settings §2, §3, §5.
+
+- **Context budgets** (`context.ts`):
+  - `inputBudget` gives a prompt's input budget from a model profile (CTX-030);
+  - `allocateBudgets` splits it among the tiers, or reports the fixed tiers that don't
+    fit (CTX-031 to CTX-033);
+  - `transcriptBoundary` finds where the verbatim transcript starts, rolling by whole
+    chunks (CTX-041).
+
+  Spec: 09-context §4 and §5.
+
+### `time/`
+
 - **Calendars** (`calendar.ts`), for converting game time (minutes since the epoch):
   - `toDate` and `fromDate` convert between game time and dates;
   - `isLeap`, `monthDays`, `dayMinutes`, and `timeOfDay` describe a calendar;
@@ -23,9 +92,6 @@ validation, calendar math, retrieval scoring, and context budget allocation
 
 - **Calendar display** (`calendar-display.ts`): `formatDate` and `formatDuration`, for
   showing time to the player (TIME-010, TIME-012).
-- **Themes** (`theme.ts`): `contrast` gives the WCAG contrast ratio. `CONTRAST_RULES` lists
-  the pairs every palette must meet, and `themeIssues` lists everything that stops a
-  theme being applied (UI-031).
 
 ## Rules
 
@@ -40,5 +106,10 @@ Node's types.
 
 - [01-architecture.md](../../spec/01-architecture.md) §2
 - [02-conventions.md](../../spec/02-conventions.md) §8
+- [07-rules.md](../../spec/07-rules.md) §4.5, §12
+- [09-context.md](../../spec/09-context.md) §4, §5
+- [10-journal.md](../../spec/10-journal.md) §3, §4
+- [11-gear.md](../../spec/11-gear.md) §2 to §6
 - [12-time-world.md](../../spec/12-time-world.md) §2
+- [13-content-settings.md](../../spec/13-content-settings.md) §2, §3, §5
 - [14-ui.md](../../spec/14-ui.md) §3.2

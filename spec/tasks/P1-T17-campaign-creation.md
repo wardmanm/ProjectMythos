@@ -33,7 +33,7 @@ SCH-005, SCH-110, SCH-111, SCH-112, SCH-113, SCH-116, SCH-117, SCH-118, TRN-056,
 
 ## Outputs
 
-- `packages/core/src/setup.ts` and `setup.test.ts`: the pure setup-set builder
+- `packages/core/src/state/setup.ts` and `setup.test.ts`: the pure setup-set builder
 - `apps/server/src/modules/turn/`: `index.ts`, `create-campaign.ts`, `campaign-view.ts`, tests, `README.md`
 - Additions to the storage module's API, if needed (see P1-T07's public API note)
 

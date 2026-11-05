@@ -12,6 +12,31 @@ export {
   monthDays,
   timeOfDay,
   toDate,
-} from './calendar';
-export { formatDate, formatDuration } from './calendar-display';
+} from './time/calendar';
+export { formatDate, formatDuration } from './time/calendar-display';
 export { CONTRAST_RULES, contrast, themeIssues } from './theme';
+export {
+  type ContentCategory,
+  appendFloorToTask,
+  appendLocked,
+  CONTENT_CATEGORIES,
+  DEFAULT_WORDING,
+  effectiveSettings,
+  FLOOR_ROLES,
+  HARD_FLOOR,
+  minorInvolved,
+  renderContentSettings,
+  usesExplicitRoles,
+} from './prompts/content';
+export { rulesetIssues, rulingLimitsFor } from './rules/ruleset-check';
+export { containerUse, loadOf, possessor, validateItemMove } from './rules/gear';
+export { type Appearance, appearanceOf } from './rules/gear-appearance';
+export { commonKnowledge, displayName } from './knowledge/journal';
+export {
+  type BudgetOverflow,
+  type TierBudgets,
+  type TierSpec,
+  allocateBudgets,
+  inputBudget,
+  transcriptBoundary,
+} from './prompts/context';

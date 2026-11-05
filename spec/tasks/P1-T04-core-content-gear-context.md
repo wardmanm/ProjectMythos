@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Phase** | 1 |
-| **Status** | Not started |
+| **Status** | Done |
 | **Depends on** | P1-T03 |
 | **Branch** | `p1-t04-core-content-gear-context` |
 
@@ -59,19 +59,100 @@ CSET-002, CSET-010, CSET-040, CSET-041, CSET-042, CSET-060, CSET-061, RUL-002, S
 
 ## Acceptance
 
-- [ ] CSET-060: every category renders at every level, with lines and veils verbatim.
-- [ ] CSET-061: with a minor involved, `sexual` is `off` and `usesExplicitRoles` returns false (the helper is ported now; routing uses it in phase 3).
-- [ ] GEAR-053: every illegal move in the reference tests is reported with its plain-English reason.
-- [ ] CTX-100: fixed tiers exact, trimmable tiers by weight, spill order as CTX-033; CTX-041's 60-turn stability test passes.
-- [ ] `pnpm check` passes.
+- [x] CSET-060: every category renders at every level, with lines and veils verbatim.
+- [x] CSET-061: with a minor involved, `sexual` is `off` and `usesExplicitRoles` returns false (the helper is ported now; routing uses it in phase 3).
+- [x] GEAR-053: every illegal move in the reference tests is reported with its plain-English reason.
+- [x] CTX-100: fixed tiers exact, trimmable tiers by weight, spill order as CTX-033; CTX-041's 60-turn stability test passes.
+- [x] `pnpm check` passes.
 
 ## Completion notes
 
-_Written when the task is done (CONV-135). Replace this line and fill in each part;
-a part with nothing in it says "None"._
-
 - **Done:**
+  - `packages/core/src/`: `rules/ruleset-check.ts`, `rules/gear.ts`,
+    `rules/gear-appearance.ts`, `knowledge/journal.ts`, `prompts/content.ts`, and
+    `prompts/context.ts`, each with its tests (104 in all), exported from `index.ts`.
+    The README lists the API and the folders.
+  - Acceptance, by test:
+    - CSET-060: `every category renders at every level`, and lines and veils render
+      verbatim after the categories;
+    - CSET-061: with a minor, `sexual` is `off`, `usesExplicitRoles` is false, and the
+      floor appears twice; with only adults, the settings are unchanged and the floor
+      appears once;
+    - GEAR-053: every illegal move in the reference tests, plus full hands, a missing
+      slot, a missing container, an item that holds nothing, and a cycle already in the
+      state, each with its message. Every starting item in the reference pack is legal
+      where it starts;
+    - CTX-100: fixed tiers exact, trimmable tiers by weight, each step of the spill
+      order, profile caps, and overflow naming every fixed tier. CTX-041's 60-turn
+      test passes with 6 prefix changes.
+  - Wren's appearance, built from the reference pack, reads exactly as the design notes
+    give it.
+  - `pnpm check` passes. The workspace has `Tests  200 passed (200)` and
+    `spec/reference` `Tests  271 passed (271)`, and it ends with `Docs check passed: 834 requirements, 25 tasks
+    (5 done), 19 ADRs, 75 markdown files, 262 citations in code.`
 - **Rulings:**
-- **Pending decisions:**
-- **Not tested:**
-- **Dependencies:**
+  - **Mike's decision: `core`'s files go in folders by spec document**
+    (`P1-T04: spec: owner: core's folders by spec document`). The folders are `rules/`,
+    `state/`, `knowledge/`, `prompts/`, and `time/`; `compare.ts`, `theme.ts`, and
+    `index.ts` stay at the top. P1-T03's calendar files moved to `time/`. The Outputs
+    above name the flat paths this task was written with. A row in 01-architecture's
+    Decisions records the layout, and P1-T05's and P1-T17's Outputs now name `state/`.
+  - **Mike's decisions, CTX-030 and CTX-031** (`P1-T04: spec: owner: CTX-030 margin,
+    CTX-031 trimmable caps`). The margin is 10% of `contextWindow − maxOutputTokens`,
+    and a `contextBudget` cap applies only to trimmable tiers. Both requirements are
+    reworded in place, with two rows in 09-context's Decisions.
+  - **GEAR-050, GEAR-052, CTX-041, spec fix** (`P1-T04: spec: reference fixes for gear
+    and transcript`). The reference disagreed with the spec, so the requirements win
+    (OVR-031), and the reference and the port are fixed alike:
+    - `validateItemMove` crashed on a move into a missing container;
+    - its containment walk looped forever on a cycle already in the state;
+    - the hard limit counted only the moved item's own weight, so a full pack moved as
+      if empty;
+    - `transcriptBoundary` returned `-1` for an empty transcript, and kept an
+      over-budget turn when nothing fit.
+  - **GEAR-052: the hard limit weighs the holder's load after the move.** The plan said
+    to refuse a move only when it raises the load. The pack loader, though, checks each
+    starting item as a move to where it already is, so under that rule an over-limit
+    starting inventory would pass. The check keeps the reference's rule, with contents
+    counted: refuse when the load after the move is over the limit. Recorded in
+    11-gear's Decisions.
+  - **GEAR-053: `validateItemMove` checks slots and containers.** Whether a character or
+    place named by the move exists is left to commit validation (P1-T05) and the pack
+    loader (P1-T08). Recorded in 11-gear's Decisions.
+  - **CSET-042: `appendFloorToTask` is new.** The reference had nothing for the second
+    floor at the end of the task tier, so all floor text is now appended by `core`.
+    Recorded in 13-content-settings' Decisions.
+  - **CTX-030: `inputBudget` is new.** It computes the margin in integer arithmetic and
+    never returns less than 0.
+  - **`gear-appearance.ts` is an extra file** (CONV-132, CONV-014). After Prettier,
+    `gear.ts` came to 354 lines, so `appearanceOf` and its tests moved out.
+    `gear.test.ts` stays at 396 lines, over the 300-line guideline: it holds the
+    fixtures and a test for every move rule.
+  - **`rulingLimitsFor` is ported and tested as RUL-065,** though the task does not list
+    RUL-065: it is in the reference file, which the task ports whole.
+  - **Changes from the reference API:**
+    - `TierSpec` is `{ tier, need, weight, cap }`, the spec's words, and whether a tier
+      is fixed comes from the tier itself;
+    - `allocateBudgets` returns a `Result` (CONV-040);
+    - `validateItemMove` returns `string[]`, like `rulesetIssues`;
+    - `loadOf` takes the character, not its ID as well;
+    - `possessor` is a loop;
+    - `concealedItemIds` is sorted with `cmp` (CTX-012);
+    - `FLOOR_ROLES` and `appendLocked` use `ModelRole`.
+  - **Changes from the reference behavior:**
+    - `rulesetIssues` gives each message once, where the reference repeated it for each
+      offending entry;
+    - a layer that doesn't exist reads "the feet slot has only 1 layer", where the
+      reference had "the feet has no layer 1";
+    - a missing container reads `there is no "item.box" to put it in`;
+    - a container's free room is never shown as negative;
+    - `commonKnowledge` scans by line instead of a lookahead regex, and returns LF line
+      endings.
+  - **The CSET-010 test reads the wording table from `spec/13-content-settings.md`**, so
+    the code and the spec cannot drift apart.
+  - **Not ported:** `selectKeySpeakers` (phase 4), and `knownEntityIds` and
+    `visibleSections` (phase 5), as the design notes say. Their reference tests stay in
+    `spec/reference`.
+- **Pending decisions:** None.
+- **Not tested:** None. Every listed behavioral requirement has a test named by its ID.
+- **Dependencies:** None.

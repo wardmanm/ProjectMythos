@@ -133,12 +133,13 @@ Every prompt is built from up to eight **tiers**, always in this order:
 ## 4. Budgets
 
 - **CTX-030** A prompt's input budget is the profile's `contextWindow` minus
-  `maxOutputTokens`, minus a 10% margin (PRV-072). Token counts use the calibrated
-  estimate (PRV-070).
+  `maxOutputTokens`, less 10% of that as a safety margin (PRV-072), rounded down: a
+  32,768-token window with 2,048 output tokens gives 27,648. Token counts use the
+  calibrated estimate (PRV-070).
 - **CTX-031** **Fixed** tiers (`instructions`, `world`, `turn`, `task`) get exactly
   what they need. **Trimmable** tiers share the rest by weight. A profile may cap any
-  tier for any role with a `contextBudget` entry keyed `<role>.<tier>`, e.g.
-  `narrator.transcript: 6000`.
+  trimmable tier for any role with a `contextBudget` entry keyed `<role>.<tier>`, e.g.
+  `narrator.transcript: 6000`. A cap on a fixed tier has no effect.
 - **CTX-032** If the fixed tiers alone exceed the budget, the call fails with
   `context_overflow`, naming each fixed tier and its size. Nothing is silently cut
   from instructions or the current turn. The settings screen warns about any text
@@ -492,3 +493,10 @@ export type ContextBuilder = {
   whose knowledge that role may see (§7).
 - **CTX-106** Template layers resolve by priority; locked content cannot be overridden;
   a missing variable fails rendering; snapshot tests cover every engine template.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| 10% of what is CTX-030's margin? | Of the input budget: `floor((contextWindow − maxOutputTokens) × 0.9)`. The margin covers error in the input token estimate (PRV-072). | 10% of the whole window: a larger margin that also covers output, which `maxOutputTokens` already reserves. | owner |
+| What does a `contextBudget` cap on a fixed tier do (CTX-031)? | Nothing: caps limit trimmable tiers only, so fixed tiers always get exactly what they need. | Failing with `context_overflow` when a fixed tier needs more than its cap: every call of that role would fail over a setting that cannot help. | owner |
