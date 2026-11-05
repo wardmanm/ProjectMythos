@@ -2,11 +2,11 @@
 
 Everything between the engine and a model. So far: the adapter interface every provider
 implements, the registry that builds an adapter from machine config, the mock adapter
-every test uses, the Ollama and OpenAI-compatible adapters and the HTTP helpers they
-share, token estimation with its calibration, and the job queue. The Anthropic adapter
-(P1-T12) and the structured-output pipeline (P1-T14) arrive later. The adapters import
-`config`, for `DataDirEnv` and `resolveSecret`; the queue imports `config`, `storage`,
-and `events`. ARCH-021 allows all three.
+every test uses, the Ollama, OpenAI-compatible, and Anthropic adapters and the HTTP
+helpers they share, token estimation with its calibration, and the job queue. The
+structured-output pipeline (P1-T14) arrives later. The adapters import `config`, for
+`DataDirEnv` and `resolveSecret`; the queue imports `config`, `storage`, and `events`.
+ARCH-021 allows all three.
 
 ## Public API (`index.ts`)
 
@@ -17,8 +17,8 @@ and `events`. ARCH-021 allows all three.
 - `createAdapter(config, deps)` builds the adapter for one provider in machine config.
   `deps` is an `AdapterDependencies` from the composition root: `env`, where
   `{ "env": … }` API keys are read, and `timeSource`, which turns an HTTP-date
-  `retry-after` into seconds. The adapters still to come throw, naming the task that
-  brings them.
+  `retry-after` into seconds. It builds the mock and the three text adapters; `comfyui`
+  throws, naming the phase that brings it.
 - `createMockAdapter(config)` builds the mock directly, as a `MockAdapter`, whose
   `text` and `embedding` members are always there. A test can:
   - `script(role, ...outcomes)` to queue each call's `MockOutcome`: a response, or an
@@ -140,6 +140,79 @@ the refusal's own words when there is none. `prompt_tokens` is the whole prompt 
 `cached_tokens` its cached part. An `error` field, or an SSE `error` event, in a 200
 reply is `provider_unavailable`.
 
+## The Anthropic adapter
+
+`adapters/anthropic.ts` talks to the Messages API with `fetch` through `sendRequest`,
+never the SDK (ADR-010). It has `text` and no `embedding`. Written against these pages
+of Anthropic's documentation, all read on 2026-11-05 (PRV-042):
+
+- [Messages](https://platform.claude.com/docs/en/api/messages),
+  [streaming](https://platform.claude.com/docs/en/build-with-claude/streaming), and
+  [errors](https://platform.claude.com/docs/en/api/errors);
+- [prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching);
+- [structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)
+  and [strict tool use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use);
+- [thinking](https://platform.claude.com/docs/en/build-with-claude/thinking);
+- [listing models](https://platform.claude.com/docs/en/api/models/list);
+- [version 2026-10-21](https://platform.claude.com/docs/en/api/migration-2026-10-21).
+
+**The request** (`anthropic-request.ts`, pure) is `POST {baseUrl}/v1/messages`. `baseUrl`
+is the API's origin without `/v1`, `https://api.anthropic.com` by default. Each request
+sends:
+
+- the key in `x-api-key` and `anthropic-version: 2026-10-21`. Anthropic's newer SDKs send
+  the key as `Authorization: Bearer` instead; the API accepts both;
+- the leading system messages as `system` text blocks, and the rest as messages, with
+  consecutive same-role messages merged into one message with one block each (PRV-043,
+  CTX-011);
+- `cache_control: { type: 'ephemeral' }` on each block whose message has
+  `cacheBreakpoint`, and nowhere else (PRV-041). A message with no visible text is left
+  out, and its breakpoint moves to the block before it. A system message after the
+  conversation began, or more than four breakpoints, throws;
+- `stream: true`, always, so one parser reads every response;
+- `thinking` from the profile: `off` is `{ type: 'disabled' }`, `on` is
+  `{ type: 'adaptive', display: 'summarized' }`, and `provider-default` leaves it out.
+  Without `display: 'summarized'`, current models stream empty thinking.
+
+Anthropic ignores the profile's and the role's sampling settings: version 2026-10-21
+rejects `temperature`, `top_p`, and `top_k` on every model, so none is sent.
+
+**Structured output.** For a JSON format, the profile's `structuredOutput` picks the
+method. The schema arrives already adapted by the pipeline (PRV-052) and is sent as it is.
+
+- `json-schema` uses the native JSON outputs, `output_config.format` with
+  `type: 'json_schema'`: generally available, with no beta header. The JSON comes back in
+  the text block. The older `output_format` parameter is deprecated and not used.
+- `tool-call` sends one tool named after the schema, with `strict: true`, and forces it
+  with `tool_choice: { type: 'tool', name }`. The answer is that tool's input. Claude Opus
+  5.5, Sonnet 5.5, Fable 5.1, and Mythos 5.1 refuse forced tool use with a 400, which is
+  `provider_rejected`, so the pipeline falls back (PRV-053).
+- `prompt-only` sends neither.
+
+**The response** (`anthropic-stream.ts`) is read event by event. Text deltas go to
+`onDelta` as they arrive and make up `text`; thinking deltas make up `thinking`, never
+sent to `onDelta` (PRV-046). Signatures and `redacted_thinking` blocks are dropped, and
+empty thinking is `null`. Unknown events, such as `ping`, are skipped; a delta type the
+documentation does not list is an unreadable response, since it might carry text.
+
+- **Usage:** `inputTokens` is the whole prompt, the sum of `input_tokens`,
+  `cache_read_input_tokens`, and `cache_creation_input_tokens`, and `cachedInputTokens` is
+  `cache_read_input_tokens`. The latest count reported wins. A call cancelled before its
+  `message_delta` estimates its output tokens from the profile's `charsPerToken`.
+- **`finishReason`:** `max_tokens` and `model_context_window_exceeded` are `length`;
+  `refusal` is `refusal`, returned as a response; every other reason is `stop`.
+- **Errors:** an HTTP failure is mapped by `sendRequest`. A 400 on a profile whose
+  thinking is `off` adds that some models cannot turn thinking off, and to set the
+  profile's thinking to `provider-default`. An `error` event in the stream is mapped by its
+  `error.type`: overloaded and internal errors are `provider_unavailable`, a rate limit is
+  `rate_limited`, a timeout is `provider_timeout`, and anything else is
+  `provider_rejected`. It is an error even after text has arrived, and so is a body that
+  ends before `message_stop`. Only an abort keeps partial text (PRV-047).
+
+`listModels` reads `GET /v1/models` 1000 at a time, following `after_id`, in the API's
+order. `health` lists one model and times the round trip. A key Anthropic refuses, with a
+401 or 403, is unreachable, with a message that says to check it.
+
 ## Calibration
 
 `<dataDir>/calibration.json` holds one ratio per profile and model, keyed
@@ -246,6 +319,12 @@ How jobs run:
   the finished or failed `TextResponse`.
 - `adapters/quick-calls.ts`: the GET behind `health` and `listModels`.
 - `adapters/testing.ts`: builders for the adapters' tests.
+- `adapters/anthropic.ts`: the Anthropic adapter: `generate`, `listModels`, and `health`.
+- `adapters/anthropic-request.ts`: the request body, from system blocks to thinking.
+- `adapters/anthropic-stream.ts`: the stream's event schemas and the fold into a
+  `TextResponse`.
+- `adapters/anthropic-testing.ts`: the configs, requests, and stream events the Anthropic
+  tests share.
 
 ## Governing spec
 
@@ -255,6 +334,8 @@ How jobs run:
   (§6.1), ARCH-131, and ARCH-133.
 - [06-turn-engine.md](../../../../../spec/06-turn-engine.md): TRN-012, resuming
   background jobs on server start.
+- [09-context.md](../../../../../spec/09-context.md): CTX-010 and CTX-011, the message
+  layout the Anthropic adapter's breakpoints follow.
 - [02-conventions.md](../../../../../spec/02-conventions.md): CONV-113 and CONV-114.
 - [ADR-010](../../../../../spec/decisions/ADR-010-no-vendor-sdks.md): adapters use
   `fetch`, not vendor SDKs.

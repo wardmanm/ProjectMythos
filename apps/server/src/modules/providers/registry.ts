@@ -2,6 +2,7 @@
 // types.ts, whose optional members are the kinds it serves (ARCH-133).
 import type { ProviderConfig, TimeSource } from '@mythos/contracts';
 import type { DataDirEnv } from '../config';
+import { createAnthropicAdapter } from './adapters/anthropic';
 import { createOllamaAdapter } from './adapters/ollama';
 import { createOpenAiCompatibleAdapter } from './adapters/openai-compatible';
 import { createMockAdapter } from './mock-adapter';
@@ -31,7 +32,7 @@ export function createAdapter(config: ProviderConfig, deps: AdapterDependencies)
     case 'openai-compatible':
       return createOpenAiCompatibleAdapter(config, deps);
     case 'anthropic':
-      throw new Error('The anthropic adapter arrives in P1-T12.');
+      return createAnthropicAdapter(config, deps);
     case 'comfyui':
       throw new Error('The comfyui adapter arrives in phase 9 (15-media.md §4).');
     default: {
