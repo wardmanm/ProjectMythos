@@ -6,7 +6,7 @@ import { type Ruleset, RulesetSchema } from '@mythos/contracts/content';
 import { describe, expect, it } from 'vitest';
 import { cmp } from '../compare';
 import { COMMIT_ALLOWLIST, stageIssues } from './commit-allowlist';
-import { commitSet } from './test-support';
+import { commitSet, testId } from './test-support';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 const ruleset = RulesetSchema.parse(
@@ -51,12 +51,19 @@ describe('stageIssues', () => {
     expect(allowed).not.toContain('note.upsert');
   });
 
-  it('CON-005: override.record needs a set with origin player', () => {
+  it('CON-005: override.record is allowed in a player set, though it supersedes nothing', () => {
     const edit = commitSet(4, 'player-edit', { origin: 'player' });
     expect(stageIssues('override.record', edit, ruleset)).toEqual([]);
     expect(stageIssues('override.record', extraction, ruleset)).toEqual([
-      'override.record needs a set with origin player',
+      'override.record needs a set with origin player, or one that supersedes another',
     ]);
+  });
+
+  it('TRN-080: a regenerated model set may carry an override.record; a model set that supersedes nothing may not', () => {
+    const regenerated = commitSet(7, 'narration', { origin: 'model', supersedesSetId: testId(5) });
+    expect(stageIssues('override.record', regenerated, ruleset)).toEqual([]);
+    const fresh = commitSet(8, 'narration', { origin: 'model' });
+    expect(stageIssues('override.record', fresh, ruleset)).toHaveLength(1);
   });
 
   it('CON-005: extraction may write statuses or clocks only when the ruleset makes them narrative', () => {

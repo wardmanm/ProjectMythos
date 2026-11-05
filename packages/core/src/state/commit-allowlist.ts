@@ -13,7 +13,7 @@ export type Affects =
 
 export type AllowlistRow = {
   affects: Affects;
-  /** Stages that may write the type. `override.record` is limited by origin instead. */
+  /** Stages that may write the type. `override.record` is limited by the set instead. */
   stages: readonly CommitStage[];
   /**
    * The table's †: extraction may also write the type when this ownership field of the
@@ -79,7 +79,8 @@ export const COMMIT_ALLOWLIST: Readonly<Record<CommitType, AllowlistRow>> = {
 
 function allowed(type: CommitType, set: CommitSet, ruleset: Ruleset): boolean {
   const row = COMMIT_ALLOWLIST[type];
-  if (type === 'override.record') return set.origin === 'player';
+  // Implements TRN-080: a regenerated set keeps origin model but supersedes another.
+  if (type === 'override.record') return set.origin === 'player' || set.supersedesSetId !== null;
   // Implements TRN-056: setup takes any world-state or memory type.
   if (set.stage === 'setup') return row.affects === 'world state' || row.affects === 'memory';
   if (row.stages.includes(set.stage)) return true;
@@ -92,11 +93,11 @@ function allowed(type: CommitType, set: CommitSet, ruleset: Ruleset): boolean {
 
 /**
  * Why a commit of `type` may not be in `set`: empty when it may, else one message.
- * `override.record` needs a set with origin `player`.
+ * `override.record` needs a set with origin `player` or one that supersedes another.
  */
 export function stageIssues(type: CommitType, set: CommitSet, ruleset: Ruleset): string[] {
   if (allowed(type, set, ruleset)) return [];
   return type === 'override.record'
-    ? [`${type} needs a set with origin player`]
+    ? [`${type} needs a set with origin player, or one that supersedes another`]
     : [`${type} is not allowed in ${set.stage} sets`];
 }
