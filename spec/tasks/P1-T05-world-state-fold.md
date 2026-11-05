@@ -77,7 +77,7 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
 
 - **Done:**
   - `packages/core/src/state/`: `turn-logic.ts`, `folded-state.ts`, `apply-commit.ts`,
-    `commit-allowlist.ts`, `validate.ts`, and `fold.ts`, each with its tests (47 in
+    `commit-allowlist.ts`, `validate.ts`, and `fold.ts`, each with its tests (48 in
     all), and `test-support.ts`, the builders those tests share. `index.ts` exports
     `activeSets`, `orderSets`, `staleStages`, `FoldedState`, `FoldContext`,
     `initialState`, `relationshipKey`, `applyCommit`, `commitIssues`, `CommitSetEntry`,
@@ -94,9 +94,9 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
     - TRN-070: a set with a stage violation, a missing place, and full hands is
       rejected with all three, each at its path, and returns no state;
     - CON-085: one type from each later phase throws `<type> arrives in phase N`.
-  - `pnpm check` passes. The workspace has `Tests  247 passed (247)` and
+  - `pnpm check` passes. The workspace has `Tests  248 passed (248)` and
     `spec/reference` `Tests  271 passed (271)`, and it ends with
-    `Docs check passed: 834 requirements, 25 tasks (6 done), 19 ADRs, 75 markdown files, 330 citations in code.`
+    `Docs check passed: 834 requirements, 25 tasks (6 done), 19 ADRs, 75 markdown files, 332 citations in code.`
 - **Rulings:**
   - **Mike's decisions** (`P1-T05: spec: owner: TRN-061's order, CON-073's factions,
     TRN-064's later parts`), each a row in its document's Decisions:
@@ -107,6 +107,11 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
       switch for factions (03-contracts, with an Open entry);
     - TRN-064's wiki sections, notes, and beliefs arrive with their reducers in phases 4
       and 5 (06-turn-engine, with an Open entry).
+  - **Mike's decision on the first pending question** (`P1-T05: spec: owner:
+    override.record in any set that supersedes another`): 03-contracts §10.2 allows
+    `override.record` in a set with origin `player` or a non-null `supersedesSetId`,
+    TRN-080 says a regenerated set keeps origin `model`, and a 03-contracts Decisions
+    row records it. `stageIssues` follows it, tested as TRN-080.
   - **Spec fixes** (`P1-T05: spec: TRN-064 names, consolidation grants, TRN-080, fold
     rulings`):
     - **TRN-064:** the folded state also holds the latest name each knower learned
@@ -115,7 +120,8 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
       table rejected MEM-105's summary grants and CON-071's witness grants there;
     - **TRN-080:** only the sets that edits and regenerations create carry an
       `override.record`. As written it covered every player-origin set, but the input
-      set holds only its `input.set` (TRN-030). See Pending decisions;
+      set holds only its `input.set` (TRN-030). Mike then decided which sets may hold
+      one (Pending decisions);
     - **03-contracts Decisions:** CON-071 is a write-time set check, and the set
       builders (setup, extraction) add the grants; a `null` summary in
       `relationship.set` leaves the summary unchanged, and a `null` value in `flag.set`
@@ -170,6 +176,11 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
     2. give a set regenerated at the player's request origin `player`, though the
        model wrote it;
     3. keep the instruction out of the commit log, on the regeneration's job.
+
+    Decided 2026-11-05: option 1. `override.record` is allowed in any set with origin
+    `player` or a non-null `supersedesSetId`, so a regeneration stays origin `model`
+    and still records the player's instruction (03-contracts §10.2 and Decisions,
+    TRN-080).
   - **A claim about a later history entry (SCH-090, SCH-117).** Not blocking for this
     task; it matters to P1-T08 and P1-T17. SCH-090 lets a claim's `aboutRef` name any
     entry, setup adds history in file order (SCH-117 step 4), and validation requires a
@@ -180,5 +191,11 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
     2. setup adds an entry a claim is about before the claim, otherwise in file order;
     3. validation lets `aboutObservationId` name an observation added later in the same
        set.
+
+    Decided 2026-11-05: option 1. A claim's `aboutRef` must name an earlier history
+    entry; P1-T08 amends SCH-090 and adds the pack loader's check. This task needs no
+    change, and P1-T17's setup can rely on it: adding history in file order always adds
+    a claim's target first. The reference pack's two claims both point at the first
+    entry, `merrow-lost`.
 - **Not tested:** None. Every listed behavioral requirement has a test named by its ID.
 - **Dependencies:** None.
