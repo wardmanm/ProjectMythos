@@ -64,8 +64,8 @@ export function transcriptBoundary(turnTokens: number[], budget: number, chunk: 
   const n = turnTokens.length;
   const tail = (from: number) => turnTokens.slice(from).reduce((a, b) => a + b, 0);
   for (let b = 0; b < n; b += chunk) if (tail(b) <= budget) return { summarizedChunks: b / chunk, verbatimFrom: b };
-  // Even the newest chunk is too big: keep whatever newest turns fit. Unstable, but rare.
-  let from = n - 1;
+  // Even the newest chunk is too big: keep whatever newest turns fit, perhaps none. Unstable, but rare.
+  let from = n;
   while (from > 0 && tail(from - 1) <= budget) from--;
   return { summarizedChunks: Math.floor(from / chunk), verbatimFrom: from };
 }

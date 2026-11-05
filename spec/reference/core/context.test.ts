@@ -54,3 +54,5 @@ for (let i = 0; i < 60; i++) {
 eq('over 60 turns, the verbatim tail stays in budget and starts on a chunk edge', loopProblems, []);
 eq('over 60 turns, the cached prefix changes only when a whole chunk rolls (6 times)', prefixChanges, 6);
 eq('oversized newest chunk falls back to what fits', transcriptBoundary([100, 100, 5000, 100], 300, 8), { summarizedChunks: 0, verbatimFrom: 3 });
+eq('nothing fits: the verbatim tail is empty', transcriptBoundary([100, 5000], 300, 8), { summarizedChunks: 0, verbatimFrom: 2 });
+eq('an empty transcript has nothing to roll', transcriptBoundary([], 300, 8), { summarizedChunks: 0, verbatimFrom: 0 });
