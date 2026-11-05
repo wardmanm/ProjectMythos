@@ -86,9 +86,10 @@ SCH-001, SCH-002, SCH-003, SCH-004, SCH-005, SCH-010, SCH-011, SCH-012, SCH-020,
     - SCH-010: `a pack ruleset.standard wins, and a warning is logged`; SCH-011: `two files
       with one ID in one source are an issue`, for a pack and for a library;
     - SCH-103: `loading twice gives deep-equal results`.
-  - `pnpm check` passes. The workspace has `Tests  294 passed (294)` and `spec/reference`
+  - `pnpm check` passes, after rebasing onto the merges of P1-T09, P1-T16, P1-T10, P1-T07,
+    and P1-T05. The workspace has `Tests  493 passed (493)` and `spec/reference`
     `Tests  271 passed (271)`, and it ends with `Docs check passed: 834 requirements, 25
-    tasks (6 done), 19 ADRs, 76 markdown files, 408 citations in code.`
+    tasks (11 done), 19 ADRs, 81 markdown files, 667 citations in code.`
 - **Rulings:**
   - **Mike's decisions of 2026-11-05** (`P1-T08: spec: owner: content loading decisions`),
     each a row in 04-content-schemas' Decisions:
