@@ -1227,7 +1227,7 @@ may contain any world-state or memory commit type (TRN-056).
 | `roll.record` | turn content | resolution |
 | `resolution.record` | turn content | resolution |
 | `narration.set` | turn content | narration, player-edit |
-| `override.record` | audit only | any set with origin `player` |
+| `override.record` | audit only | any set with origin `player`, or any set with a non-null `supersedesSetId` (TRN-080) |
 | `entity.create` | world state | resolution, extraction, world-tick, player-edit |
 | `entity.update-narrative` | world state | extraction, world-tick, player-edit |
 | `entity.move` | world state | resolution, extraction, world-tick, player-edit |
@@ -1767,6 +1767,7 @@ All paths are under `/api`.
 | Where is CON-071 enforced? | When a set is written: `validateSet` in `core` rejects a set in which a witness of an observation it adds has no `witnessed` grant. The set builders, setup (SCH-117) and extraction (08-memory), add the grants. Replay does not check it. | Adding the grants inside the fold: the grants would exist only in folded state, not as commits, so row projections would not see them. | Claude (ruling) |
 | What does a `null` mean in `relationship.set` and `flag.set`? | A `null` summary in `relationship.set` leaves the summary unchanged, and a new relationship's summary is `''`. A `null` value in `flag.set` removes the flag. | A `null` summary clearing the summary: `relationship.adjust` already uses `null` for "unchanged". | Claude (ruling) |
 | What are an `illegal_state_change` error's `details`? | `{ issues: SemanticIssue[] }`, like `validation_failed` (CON-091), every issue at once. Each `path` is a dotted path into the set's entry, such as `commits.2.payload.to`. | A bare array: the client would read the two codes' details differently. | Claude (ruling) |
+| Which sets may hold an `override.record` (TRN-080)? | Any set with origin `player`, and any set with a non-null `supersedesSetId`. A regenerated set keeps origin `model` (or `engine` for resolution, 06-turn-engine §7.1) and still records the player's instruction. | Only sets with origin `player`: a regeneration's `override.record` would be rejected. Giving a regenerated set origin `player`: the model wrote its content, and origin records who did. Keeping the instruction on the job: overrides would leave the commit log. | owner |
 
 ## Open
 

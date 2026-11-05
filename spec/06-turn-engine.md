@@ -316,8 +316,10 @@ turn (§7.4).
 
 - **TRN-080** Every set that an edit or a regeneration creates (§7.1's edit a stage,
   edit state or memory, and regenerate a stage) includes an `override.record` commit
-  naming the target and, for regeneration, the player's instruction. A new action's
-  input set holds only its `input.set` (TRN-030).
+  naming the target and, for regeneration, the player's instruction. A regenerated set
+  keeps origin `model` (or `engine`), and the allowlist accepts its `override.record`
+  because it supersedes another set (03-contracts §10.2). A new action's input set
+  holds only its `input.set` (TRN-030).
 - **TRN-081** Rulings sent to the client have both explanation fields replaced with
   `''`; the explanation allowed by the ruleset's `explanationLevel` is sent separately
   as `visibleExplanation`. In GM mode, the full ruling is sent.
