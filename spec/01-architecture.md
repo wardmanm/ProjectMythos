@@ -298,8 +298,9 @@ All model and media work goes through one queue in the `providers` module.
 
 ### 6.4 Auth
 
-- **ARCH-110** When a PIN is configured, all `/api` routes except the PIN check require
-  a valid session cookie. The PIN is stored hashed. Failed attempts are rate-limited.
+- **ARCH-110** When a PIN is configured, all `/api` routes except the session routes
+  CON-113 lists (`GET` and `POST /session`) require a valid session cookie. The PIN is
+  stored hashed. Failed attempts are rate-limited.
 - **ARCH-111** Localhost MAY be exempted from the PIN by machine config.
 
 ## 7. Client architecture
@@ -340,6 +341,13 @@ Per OVR-010, these exist from phase 1 even if unused:
   `package.json` for `onlyBuiltDependencies`. Every other setting, such as `engineStrict`
   and `allowBuilds`, goes in the root `pnpm-workspace.yaml`. A `pnpm-workspace.yaml` in a
   member folder makes that folder a workspace of its own.
+- **A proxy on the host makes LAN requests look local (ARCH-111).** A reverse proxy on
+  the same computer, or Vite's dev server proxying `/api`, connects to Mythos from
+  loopback, so every request it forwards has a localhost socket address. A forwarding
+  header is then the only sign that the request came from another device. Vite's proxy
+  adds none by default, so P1-T21 sets `xfwd: true` on it; any other proxy must add
+  `X-Forwarded-For` or `Forwarded`. Never decide localhost from `request.ip`, which
+  follows Fastify's `trustProxy`.
 
 ## Decisions
 
@@ -351,6 +359,10 @@ Per OVR-010, these exist from phase 1 even if unused:
 | Is the event stream per client session or per campaign (ARCH-090)? | Per campaign a client has open, as ARCH-090, UI-101, and the `GET /campaigns/:campaignId/events` route say. ADR-001's wording, "one stream per client session", is corrected to match. | Per client session: one stream for every campaign would contradict the route and UI-101, and each client would filter out other campaigns' events. | owner |
 | Where does a new stream start (ARCH-091)? | With no `Last-Event-ID`, the route first writes `formatPosition(bus.lastId())`: an `id:` line and no `data:`, which sets the browser's last event ID without firing an event. A client that drops before its first event then reconnects with a covered ID and misses nothing. | Starting with nothing: a client that drops before its first event reconnects with no `Last-Event-ID` and silently misses whatever was published while it was away. Sending `resync.required` on every first connect: the client has only just fetched. | owner |
 | How do event IDs and replay coverage work (ARCH-091)? | One ID counter for the whole process, starting at `firstId`, so a campaign's IDs can skip numbers. Each campaign's buffer remembers `lastDroppedId`, the last ID it evicted (`firstId - 1` at first); a `Last-Event-ID` is covered when `lastDroppedId <= id <= lastId()`, since the buffer holds every event of the campaign after `lastDroppedId`. `resync.required` takes an ID of its own and is not buffered. | Coverage by the oldest buffered ID: other campaigns' IDs fall in the gaps, so a client that missed nothing would be told to resync. A counter per campaign: `lastId()` would need a campaign, and the contract numbers IDs per process. Buffering `resync.required`: a later replay would make another client refetch for nothing. Giving it no ID: the client's last ID would stay uncovered, and every reconnect would resync again. | Claude (ruling) |
+| What happens to sessions when the PIN is set, changed, or removed (ARCH-110)? | Every session ends, so a lost phone can be signed out without a restart. The device that made the change logs in again, unless it is an exempt localhost. | Keeping sessions: a device that knew the old PIN would stay signed in until it went 30 days unused or the server restarted. | owner |
+| Who may use the server when machine config fails to load (ARCH-110, ARCH-111)? | Localhost only, with no forwarding header, as ARCH-111's Decisions row defines it; `localhostExempt` is unknown, so it is not consulted. Every other device is refused with `auth_required`, so the owner fixes the config in Settings on the host. | Letting every device in: a broken file would turn the lock off for the whole network. Refusing every device: the owner could not reach Settings to fix it. | owner |
+| What counts as localhost (ARCH-111)? | A socket address of `127.0.0.1`, `::1`, or `::ffff:127.0.0.1` (IPv4 loopback on a dual-stack socket), with no `X-Forwarded-For` and no `Forwarded` header, whatever their value. Other `127.x.x.x` addresses are not localhost. | `request.ip` or a `Host` of `localhost`: the client controls the `Host` header, and `request.ip` follows `trustProxy`. All of `127.0.0.0/8`: nothing Mythos expects connects from the rest of it, and a narrow rule is easier to check. | Claude (ruling) |
+| What does the PIN gate read from a request (ARCH-110, CON-113)? | The socket's address (`request.socket.remoteAddress`), the headers, the session cookie, the method, and the matched route pattern (`request.routeOptions.url`). A pattern outside `/api` passes, and so does a request no route matched, which reaches only the not-found handler: the client's `index.html`, or `not_found`. | The raw URL: a test on it can disagree with the router about which route runs, through query strings, duplicate slashes, or encodings. | Claude (ruling) |
 
 ## Open
 
@@ -365,3 +377,7 @@ Per OVR-010, these exist from phase 1 even if unused:
 - **IDs after a restart assume a modest event rate (ARCH-091).** The first ID is the
   server's start time in milliseconds, so a new ID is larger than any the previous
   process issued only if that process averaged fewer than one event per millisecond.
+- **An open event stream outlives its session (ARCH-110, CON-113).** The gate checks
+  the session when the stream connects. After a logout, a PIN change, or the session's
+  expiry, a stream that is already open keeps sending events until it closes; its next
+  reconnect is refused.
