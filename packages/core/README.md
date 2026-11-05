@@ -15,7 +15,7 @@ own (CONV-015): `src/index.ts` is the only public entry point.
 | ---------------- | -------------------------------- | ------------------------------------------------------------------------- |
 | `src/`           |                                  | `index.ts`, `compare.ts` (used by every folder), and `theme.ts` (14-ui)   |
 | `src/rules/`     | 07-rules, 11-gear                | Ruleset checks, gear, and appearance; dice, harm, and clocks to come      |
-| `src/state/`     | 06-turn-engine, 03-contracts §10 | Turn logic, the fold, commit validation, and setup (from P1-T05)          |
+| `src/state/`     | 06-turn-engine, 03-contracts §10 | Turn logic, the fold, and commit validation; setup to come                |
 | `src/knowledge/` | 08-memory, 10-journal            | Display names and common knowledge; retrieval and consolidation to come   |
 | `src/prompts/`   | 09-context, 13-content-settings  | Budgets, transcript rolling, the hard floor, and content-settings wording |
 | `src/time/`      | 12-time-world                    | Calendar math and display; world ticks to come                            |
@@ -49,6 +49,37 @@ own (CONV-015): `src/index.ts` is the only public entry point.
 - **Appearance** (`gear-appearance.ts`): `appearanceOf` builds what others see of a
   character, and lists the items they can't see (GEAR-030, GEAR-060 to GEAR-065).
   Spec: 11-gear §6.
+
+### `state/`
+
+- **Turn logic** (`turn-logic.ts`), over commit sets:
+  - `activeSets` keeps the sets nothing supersedes (CON-081), and `staleStages` lists the
+    stages of a turn whose active set is based on an inactive one (CON-083);
+  - `orderSets(sets, depthByTurnId)` puts sets in application order: turn depth, then
+    stage, then `seq`. It is the only definition of that order (TRN-061, CON-084).
+- **Folded state** (`folded-state.ts`): the `FoldedState` type (the world state,
+  relationships keyed by `relationshipKey(fromId, toId)`, each knower's learned names, and
+  the known observation IDs), the `FoldContext` type (ruleset and slot schema), and
+  `initialState`, the state folding starts from (TRN-064, SCH-118).
+- **Reducers** (`apply-commit.ts`): `applyCommit(state, payload)` returns the state after
+  one commit, without changing its input. A type whose reducer arrives in a later phase
+  throws, naming the phase (TRN-065, CON-085).
+- **Validation** (`validate.ts`, `commit-allowlist.ts`): `commitIssues` lists every
+  reason a commit cannot apply at a point: its stage (03-contracts §10.2), references
+  and their kinds, the gear rules through `validateItemMove`, and each type's
+  invariants (CON-005, CON-070, CON-073, CSET-044).
+- **Fold** (`fold.ts`), over `CommitSetEntry` values (a set and its commits). Both step
+  through a set commit by commit, so a commit sees the earlier ones in its set:
+  - `fold(state, entries, context)` is lenient: it skips a commit that fails and records
+    a `ReplayConflict`, and the rest of the set applies (TRN-065, TRN-071). Give it
+    active sets in `orderSets` order;
+  - `validateSet(state, entry, context)` is strict: any failure, or a witness without a
+    `witnessed` grant, rejects the whole set with `illegal_state_change` and
+    `details: { issues }` (CON-005, CON-071, TRN-070).
+
+  Spec: 06-turn-engine §6 and 03-contracts §7 to §10.
+
+`test-support.ts` holds builders for the state tests and is not exported.
 
 ### `knowledge/`
 
@@ -106,6 +137,9 @@ Node's types.
 
 - [01-architecture.md](../../spec/01-architecture.md) §2
 - [02-conventions.md](../../spec/02-conventions.md) §8
+- [03-contracts.md](../../spec/03-contracts.md) §7 to §10
+- [04-content-schemas.md](../../spec/04-content-schemas.md) §11
+- [06-turn-engine.md](../../spec/06-turn-engine.md) §6
 - [07-rules.md](../../spec/07-rules.md) §4.5, §12
 - [09-context.md](../../spec/09-context.md) §4, §5
 - [10-journal.md](../../spec/10-journal.md) §3, §4
