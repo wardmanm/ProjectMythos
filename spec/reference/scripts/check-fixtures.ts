@@ -18,7 +18,10 @@ import { cmp } from '../core/compare';
 
 const root = resolve(process.argv[2] ?? fileURLToPath(new URL('../../fixtures/', import.meta.url)));
 const problems: string[] = [];
-const say = (file: string, message: string) => problems.push(`${relative(root, file).split('\\').join('/')}: ${message}`);
+const warnings: string[] = [];
+const rel = (file: string) => relative(root, file).split('\\').join('/');
+const say = (file: string, message: string) => problems.push(`${rel(file)}: ${message}`);
+const warn = (file: string, message: string) => warnings.push(`${rel(file)}: ${message}`);
 
 const jsonFiles = (dir: string) =>
   existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).sort(cmp).map((f) => join(dir, f)) : [];
@@ -48,9 +51,18 @@ function loadAll<S extends z.ZodType<{ id: string }>>(dir: string, schema: S): M
   const out = new Map<string, z.infer<S>>();
   for (const f of jsonFiles(dir)) {
     const d = load(f, schema);
-    if (d) out.set(d.id, d);
+    if (!d) continue;
+    // Two files with one ID in one source are an error, never a silent override (SCH-011).
+    if (out.has(d.id)) say(f, `id "${d.id}" is already defined in this folder (SCH-011)`);
+    else out.set(d.id, d);
   }
   return out;
+}
+
+/** Pack definitions first, then the library's; a pack definition that shadows one is a warning (SCH-010). */
+function shadow<T>(dir: string, lib: Map<string, T>, pack: Map<string, T>): Map<string, T> {
+  for (const id of pack.keys()) if (lib.has(id)) warn(join(dir, `${id}.json`), `shadows the library definition "${id}" (SCH-010)`);
+  return new Map([...lib, ...pack]);
 }
 
 // ============================================================== library
@@ -97,11 +109,12 @@ function checkPack(dir: string) {
   if (manifest && manifest.id !== basename(dir)) say(at('pack.json'), `id "${manifest.id}" does not match the folder name`);
   const setting = load(at('setting.json'), C.SettingSchema);
 
-  const calendars = new Map([...libCalendars, ...loadAll(at('calendars'), C.CalendarDefinitionSchema)]);
-  const rulesets = new Map([...libRulesets, ...loadAll(at('rulesets'), C.RulesetSchema)]);
-  const slotSchemas = new Map([...libSlots, ...loadAll(at('slot-schemas'), C.SlotSchemaDefinitionSchema)]);
+  const calendars = shadow(at('calendars'), libCalendars, loadAll(at('calendars'), C.CalendarDefinitionSchema));
+  const rulesets = shadow(at('rulesets'), libRulesets, loadAll(at('rulesets'), C.RulesetSchema));
+  const slotSchemas = shadow(at('slot-schemas'), libSlots, loadAll(at('slot-schemas'), C.SlotSchemaDefinitionSchema));
   const packThemes = loadAll(at('themes'), C.ThemeSchema);
-  const tones = new Map([...libTones, ...loadAll(at('tone-profiles'), C.ToneProfileSchema)]);
+  shadow(at('themes'), libThemes, packThemes);
+  const tones = shadow(at('tone-profiles'), libTones, loadAll(at('tone-profiles'), C.ToneProfileSchema));
   const scenarios = loadAll(at('scenarios'), C.ScenarioSchema);
   for (const f of jsonFiles(at('tone-profiles'))) {
     const t = tones.get(basename(f, '.json'));
@@ -206,7 +219,32 @@ function checkPack(dir: string) {
     }
   }
 
-  // ---- items (SCH-082): placed one by one, containers before their contents
+  // ---- items (SCH-082): references always; slots, stats, and placement need the slot
+  // schema and ruleset. Without them, keep checking what can be checked (SCH-100).
+  const pending: Item[] = [];
+  for (const e of entities.values()) {
+    if (e.kind !== 'item') continue;
+    const f = at('entities', 'items', `${e.id}.json`);
+    need(f, 'ownerId', e.ownerId, ['pc', 'npc', 'faction']);
+    if (slots) {
+      for (const s of [...(e.wearable?.slots ?? []), ...(e.wearable?.covers ?? [])]) {
+        if (!slots.slots.some((x) => x.id === s)) say(f, `wearable: "${s}" is not a slot in ${slots.id}`);
+      }
+    }
+    if (ruleset) for (const b of e.bonuses) if (b.type === 'roll' && b.stat && !statIds.includes(b.stat)) say(f, `bonuses: unknown stat "${b.stat}"`);
+    if (/^(a|an|the) /i.test(e.name)) say(f, `name: "${e.name}" starts with an article (GEAR-065)`);
+    const l = e.startingLocation;
+    if ('characterId' in l) need(f, 'startingLocation.characterId', l.characterId, ['pc', 'npc']);
+    if (l.type === 'placed') need(f, 'startingLocation.placeId', l.placeId, ['place']);
+    if (l.type === 'contained') need(f, 'startingLocation.containerId', l.containerId, ['item']);
+    pending.push({
+      id: e.id, name: e.name, aliases: e.aliases, tags: e.tags, kind: 'item', description: e.description,
+      location: l, ownerId: e.ownerId, quantity: e.quantity, bonuses: e.bonuses,
+      ...(e.weight !== undefined ? { weight: e.weight } : {}), ...(e.size ? { size: e.size } : {}),
+      ...(e.container ? { container: e.container } : {}),
+      ...(e.wearable ? { wearable: { slots: e.wearable.slots, covers: e.wearable.covers } } : {}),
+    });
+  }
   if (ruleset && slots) {
     const characters: Record<string, Character> = {};
     for (const e of entities.values()) {
@@ -216,28 +254,6 @@ function checkPack(dir: string) {
         stats: e.stats, statuses: [], physicalDescription: e.physicalDescription, personality: e.personality,
         goals: e.goals, keyNpc: e.keyNpc, locationId: e.startingLocationId, lifeState: 'alive',
       };
-    }
-    const pending: Item[] = [];
-    for (const e of entities.values()) {
-      if (e.kind !== 'item') continue;
-      const f = at('entities', 'items', `${e.id}.json`);
-      need(f, 'ownerId', e.ownerId, ['pc', 'npc', 'faction']);
-      for (const s of [...(e.wearable?.slots ?? []), ...(e.wearable?.covers ?? [])]) {
-        if (!slots.slots.some((x) => x.id === s)) say(f, `wearable: "${s}" is not a slot in ${slots.id}`);
-      }
-      for (const b of e.bonuses) if (b.type === 'roll' && b.stat && !statIds.includes(b.stat)) say(f, `bonuses: unknown stat "${b.stat}"`);
-      if (/^(a|an|the) /i.test(e.name)) say(f, `name: "${e.name}" starts with an article (GEAR-065)`);
-      const l = e.startingLocation;
-      if ('characterId' in l) need(f, 'startingLocation.characterId', l.characterId, ['pc', 'npc']);
-      if (l.type === 'placed') need(f, 'startingLocation.placeId', l.placeId, ['place']);
-      if (l.type === 'contained') need(f, 'startingLocation.containerId', l.containerId, ['item']);
-      pending.push({
-        id: e.id, name: e.name, aliases: e.aliases, tags: e.tags, kind: 'item', description: e.description,
-        location: l, ownerId: e.ownerId, quantity: e.quantity, bonuses: e.bonuses,
-        ...(e.weight !== undefined ? { weight: e.weight } : {}), ...(e.size ? { size: e.size } : {}),
-        ...(e.container ? { container: e.container } : {}),
-        ...(e.wearable ? { wearable: { slots: e.wearable.slots, covers: e.wearable.covers } } : {}),
-      });
     }
     const placed: Item[] = [];
     while (pending.length) {
@@ -280,8 +296,9 @@ function checkPack(dir: string) {
   // ---- relationships (SCH-092, CON-073)
   const rf = at('relationships.json');
   const rels = existsSync(rf) ? load(rf, C.RelationshipsFileSchema) : null;
-  if (rels && ruleset) {
-    const dims = new Set(ruleset.relationships.dimensions.map((d) => d.id));
+  if (rels) {
+    // Endpoints are checked even without the default ruleset; dimensions need it (SCH-100).
+    const dims = new Set(ruleset ? ruleset.relationships.dimensions.map((d) => d.id) : []);
     const pairs = new Set<string>();
     rels.relationships.forEach((r, n) => {
       const p = `relationships.${n}`;
@@ -290,6 +307,7 @@ function checkPack(dir: string) {
       if (r.fromId === r.toId) say(rf, `${p}: fromId and toId are the same`);
       if (pairs.has(`${r.fromId}>${r.toId}`)) say(rf, `${p}: duplicate relationship ${r.fromId} → ${r.toId}`);
       pairs.add(`${r.fromId}>${r.toId}`);
+      if (!ruleset) return;
       for (const [d, v] of Object.entries(r.dimensions)) {
         if (!dims.has(d)) say(rf, `${p}.dimensions.${d}: not a dimension in ${ruleset.id}`);
         else if (v < ruleset.relationships.min || v > ruleset.relationships.max) say(rf, `${p}.dimensions.${d}: ${v} is outside ${ruleset.relationships.min}..${ruleset.relationships.max}`);
@@ -298,6 +316,7 @@ function checkPack(dir: string) {
   }
 }
 
+for (const w of warnings) console.log(`warning: ${w}`);
 if (problems.length) {
   for (const p of problems) console.log(p);
   console.log(`\n${problems.length} problem${problems.length === 1 ? '' : 's'} in ${root}`);
