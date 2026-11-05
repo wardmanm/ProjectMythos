@@ -375,6 +375,8 @@ Per OVR-010, these exist from phase 1 even if unused:
 | What does the PIN gate read from a request (ARCH-110, CON-113)? | The socket's address (`request.socket.remoteAddress`), the headers, the session cookie, the method, and the matched route pattern (`request.routeOptions.url`). A pattern outside `/api` passes, and so does a request no route matched, which reaches only the not-found handler: the client's `index.html`, or `not_found`. | The raw URL: a test on it can disagree with the router about which route runs, through query strings, duplicate slashes, or encodings. | Claude (ruling) |
 | What may change campaign data without a commit (ARCH-040)? | Only the exceptions ARCH-040 names: branches and the rest of TRN-002's state (the `campaign_state` entries, resolution drafts, and bookmarks), caches, model call records, jobs, and assets. Everything game state derives from is a commit. | Every change as a commit, as ARCH-040 first said: TRN-002, CSET-020, CTX-005, ARCH-061, PRV-062, and MED-010 each already say their data is not commits, and a branch pointer or a job update would need a turn to belong to. | owner |
 | How many transactions does one storage write use (ARCH-041, TRN-123)? | One: each public storage function is one transaction. A command that needs several writes at once gets a dedicated storage function that makes them together, as `insertRootTurn` writes the root turn, its sets, and the first branch. | Exporting `transaction` for callers to wrap several storage calls: SQL concerns would spread into the modules that compose them, and nested calls would need savepoints. | owner |
+| How is the content snapshot stored (ARCH-045, SCH-111)? | In two tables. `canon` has one row per definition, entity, or file: its `kind`, `id`, JSON (parsed on read with the kind's content schema), and Markdown. The kinds are `setting`, `calendar`, `slots`, `tone`, `ruleset`, `scenario`, `theme`, `entity` (runtime form, SCH-005), `history`, and `relationships`. `canon_templates` has the template files by layer and path (CTX-005). The theme is snapshotted because a copied campaign cannot rely on the library (ARCH-031). | One table for both: a template has a layer and a path where an entry has a kind and an ID. A SQL `CHECK` on `kind`: a new kind would need a table rebuild. | Claude (ruling) |
+| How is a model call record's time stored (ARCH-061)? | `model_calls.created_at` is INTEGER milliseconds since 1970 UTC, so the retention prune compares numbers; the record's JSON keeps its `createdAt` string. | A WallTime string: strings with different numbers of fraction digits sort wrongly (02-conventions Traps). | Claude (ruling) |
 
 ## Open
 
@@ -393,3 +395,7 @@ Per OVR-010, these exist from phase 1 even if unused:
   the session when the stream connects. After a logout, a PIN change, or the session's
   expiry, a stream that is already open keeps sending events until it closes; its next
   reconnect is refused.
+- **A newer campaign database has no error code (ARCH-050, CON-090).** A campaign last
+  opened by a newer Mythos is refused with an exception whose message says to update
+  Mythos. No `ErrorCode` fits, so the HTTP layer reports it as `internal_error`. If the
+  library should show that message as it is, the error needs a code of its own.
