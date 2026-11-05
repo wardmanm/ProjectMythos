@@ -1,0 +1,113 @@
+/*
+ * The only global CSS (CONV-101): theme tokens and the base rules that apply them.
+ *
+ * A theme's values never live here. ThemeRoot writes them as custom properties on <html>
+ * from the theme's JSON (UI-032); the values below are fallbacks for the moment before it
+ * runs, as CSS system colors and generic families. Tailwind's own colors and fonts are
+ * cleared, so a component can only name a theme token (UI-032), and shadcn/ui's names are
+ * mapped onto those tokens (14-ui Decisions).
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+/* ThemeRoot puts `dark` on <html> when the applied palette is dark (UI-033). */
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --radius-*: initial;
+
+  /* The 11 palette colors of theme.ts, as ThemeRoot names them. */
+  --color-background: Canvas;
+  --color-surface: Canvas;
+  --color-text: CanvasText;
+  --color-text-muted: GrayText;
+  --color-player-text: LinkText;
+  --color-accent: AccentColor;
+  --color-on-accent: AccentColorText;
+  --color-border: GrayText;
+  --color-positive: CanvasText;
+  --color-caution: CanvasText;
+  --color-negative: CanvasText;
+
+  /* The theme's four faces; display falls back to narration, mechanics to interface. */
+  --font-narration: serif;
+  --font-interface: sans-serif;
+  --font-display: serif;
+  --font-mechanics: sans-serif;
+
+  /* Corners, all derived from the theme's one radius. */
+  --radius-xs: calc(var(--radius) * 0.4);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * shadcn/ui's names for the same tokens (14-ui Decisions). `accent` is both ours and
+ * shadcn's, so a focused menu item takes the theme's accent with onAccent text.
+ * `background` and `border` are the same in both and need no alias.
+ */
+@theme inline {
+  --color-foreground: var(--color-text);
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: var(--color-on-accent);
+  --color-secondary: var(--color-border);
+  --color-secondary-foreground: var(--color-text);
+  --color-muted: var(--color-border);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-accent-foreground: var(--color-on-accent);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-text);
+  --color-input: var(--color-border);
+  --color-ring: var(--color-accent);
+  --color-destructive: var(--color-negative);
+
+  --font-sans: var(--font-interface);
+  --font-heading: var(--font-display);
+}
+
+:root {
+  --radius: 6px;
+  --narration-size: 19px;
+  --narration-line-height: 1.6;
+  --narration-measure: 66ch;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+  html {
+    @apply font-interface;
+  }
+  body {
+    @apply bg-background text-text;
+  }
+  /* UI-110: a visible focus ring in the theme's accent wherever a control has no ring of its own. */
+  :focus-visible {
+    outline-style: solid;
+    outline-width: 2px;
+    outline-offset: 2px;
+  }
+}
+
+/* UI-113: with reduced motion, every transition and animation is instant. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

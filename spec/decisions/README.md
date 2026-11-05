@@ -25,6 +25,7 @@ context, what was decided, and what it costs. Requirements say *what*; records s
 | [ADR-017](ADR-017-spec-is-the-documentation.md) | The spec is the documentation, kept true by each task |
 | [ADR-018](ADR-018-github-mirrors-tasks.md) | GitHub issues mirror the tasks, and each phase is a release |
 | [ADR-019](ADR-019-owner-signs-off-each-release.md) | The owner signs off each feature before a release |
+| [ADR-020](ADR-020-native-build-tools.md) | Native build tools with prebuilt binaries |
 
 ## When to write one
 

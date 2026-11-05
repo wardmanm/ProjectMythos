@@ -145,12 +145,35 @@ const nodeGlobals = [
   message: 'CONV-060: core does no IO; take what it needs as a parameter.',
 }));
 
+// ARCH-122 and ARCH-120: in the client, only src/api calls fetch and only src/events opens
+// an EventSource, so components reach the server through hooks and the query cache.
+const clientFetch = {
+  name: 'fetch',
+  message: 'ARCH-122: components never call fetch; use a hook from src/api.',
+};
+const clientEventSource = {
+  name: 'EventSource',
+  message:
+    'ARCH-120: only src/events opens an EventSource; events reach components through the query cache.',
+};
+
 const tests = ['**/*.test.ts', '**/*.test.tsx'];
 // Files whose tool requires a default export (CONV-005).
 const toolConfigs = ['eslint.config.js', 'vitest.config.ts', 'apps/client/vite.config.ts'];
 
 export default defineConfig(
-  { ignores: ['spec/', 'content-library/', 'content-packs/', '**/dist/', '**/coverage/'] },
+  // .claude/worktrees/ holds full copies of the repository, one per parallel agent
+  // (02-conventions Decisions); each is linted from its own checkout.
+  {
+    ignores: [
+      'spec/',
+      'content-library/',
+      'content-packs/',
+      '**/dist/',
+      '**/coverage/',
+      '.claude/worktrees/**',
+    ],
+  },
 
   tseslint.configs.strictTypeChecked,
   {
@@ -205,6 +228,22 @@ export default defineConfig(
       ],
       'no-restricted-globals': ['error', ...nodeGlobals],
     },
+  },
+  // no-restricted-globals takes one list per file too, so each client folder lists its own.
+  {
+    files: ['apps/client/src/**'],
+    ignores: [...tests, 'apps/client/src/api/**', 'apps/client/src/events/**'],
+    rules: { 'no-restricted-globals': ['error', clientFetch, clientEventSource] },
+  },
+  {
+    files: ['apps/client/src/api/**'],
+    ignores: tests,
+    rules: { 'no-restricted-globals': ['error', clientEventSource] },
+  },
+  {
+    files: ['apps/client/src/events/**'],
+    ignores: tests,
+    rules: { 'no-restricted-globals': ['error', clientFetch] },
   },
   {
     files: toolConfigs,
