@@ -290,6 +290,10 @@ ask "how does this work?", rewrite it.
   `expect.stringContaining(…)` return `any`, so an object literal holding one fails
   strict lint (`no-unsafe-assignment`). Parse the value with its schema, such as an
   error's `details` with `SemanticIssueSchema`, and compare its fields.
+- **`<` on strings is not code-point order (CONV-087).** JavaScript compares strings by
+  UTF-16 code unit, so a character beyond U+FFFF, such as an emoji, sorts before
+  U+E000 to U+FFFF. That differs from code-point order and from SQLite's default
+  `BINARY` collation. Sort with `cmp` from `core`, never with `<` or `localeCompare`.
 
 ## Decisions
 
@@ -298,3 +302,4 @@ ask "how does this work?", rewrite it.
 | Does `pnpm check` enforce Prettier (CONV-120, CONV-122)? | Yes: `check` runs `prettier --check .`. `.prettierignore` also lists `pnpm-lock.yaml`, `CLAUDE.md`, and `.claude/`, which pnpm writes or which arrive with the spec. | Leaving formatting to editors: nothing would enforce CONV-120. | Claude (ruling) |
 | How does lint see `@mythos/*` imports (CONV-121)? | By package name: boundaries' default resolver does not read `exports`, so it classes them as external modules. Each policy names both the package and its folder, so a relative import across packages is caught too. Node built-ins in `core` are blocked the same way, by their `core` origin. | `eslint-import-resolver-typescript`: it brings a native resolver with its own build script, so a second `allowBuilds` entry. | Claude (ruling) |
 | How are dependency versions written (CONV-091)? | Exact versions, except TypeScript `~6.0.3` (ADR-015). A tool that `spec/reference` also uses takes its version there, so the workspace holds one copy. | Ranges: the lockfile pins them anyway, but a range hides which version was reviewed. | Claude (ruling) |
+| How do `core`'s tests read fixtures while `core` stays pure (CONV-060)? | `packages/core` has Node's types (`types: ["node"]`) so its tests can use `node:fs`, `node:path`, and `node:url`. Lint keeps Node out of core source: boundaries blocks Node built-ins, and `no-restricted-globals` blocks `process`, `Buffer`, `fetch`, `global`, `require`, and the timers. | `types: []` with fixtures imported as JSON modules: the tests could not list a folder, so "every theme in `content-library/themes/`" would need each theme named by hand. | Claude (ruling) |
