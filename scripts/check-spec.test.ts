@@ -13,24 +13,28 @@ import { afterEach, describe, expect, it } from 'vitest';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const script = path.join(repoRoot, 'scripts', 'check-spec.ts');
 
-// One file in each source folder; passingRepo() copies each one into the repository.
+// One file in each source folder, and each single-file source; passingRepo() copies each
+// one into the repository.
 const sources: Record<string, string> = {
   'spec/fixtures/library/calendars/gregorian.json': '{ "id": "gregorian" }\n',
   'spec/fixtures/packs/reference/setting.json': '{ "name": "Brinemoor" }\n',
   'spec/reference/contracts/rules.ts': 'export const rules = 1;\n',
   'spec/reference/contracts/content/index.ts': 'export const content = 2;\n',
+  'spec/reference/server-types/providers/types.ts': 'export type ProviderAdapter = object;\n',
 };
-const copyFolders: Record<string, string> = {
+// Where each source is copied, by path prefix: a folder, or a whole file path.
+const copyTargets: Record<string, string> = {
   'spec/fixtures/library/': 'content-library/',
   'spec/fixtures/packs/reference/': 'content-packs/reference/',
   'spec/reference/contracts/': 'packages/contracts/src/',
+  'spec/reference/server-types/providers/types.ts': 'apps/server/src/modules/providers/types.ts',
 };
 
 /** The sources and an exact copy of each: a repository the check passes. */
 function passingRepo(): Map<string, string> {
   const files = new Map(Object.entries(sources));
   for (const [file, text] of Object.entries(sources)) {
-    for (const [from, to] of Object.entries(copyFolders)) {
+    for (const [from, to] of Object.entries(copyTargets)) {
       if (file.startsWith(from)) files.set(to + file.slice(from.length), text);
     }
   }
@@ -129,6 +133,35 @@ describe('spec check: contracts', () => {
     const files = passingRepo();
     files.set('spec/reference/contracts/rules.test.ts', 'export const sourceTest = 5;\n');
     files.set('packages/contracts/src/views.test.ts', 'export const copyTest = 6;\n');
+    expect(runCheck(files).status).toBe(0);
+  });
+});
+
+describe('spec check: server types', () => {
+  it('OVR-033: a server type copy one byte different fails, naming the file', () => {
+    const files = passingRepo();
+    files.set(
+      'apps/server/src/modules/providers/types.ts',
+      'export type ProviderAdapter = Object;\n',
+    );
+    const { status, output } = runCheck(files);
+    expect(output).toContain(
+      'apps/server/src/modules/providers/types.ts differs from spec/reference/server-types/providers/types.ts',
+    );
+    expect(status).toBe(1);
+  });
+
+  it('OVR-033: a server type with no copy is reported', () => {
+    const files = passingRepo();
+    files.delete('apps/server/src/modules/providers/types.ts');
+    const { status, output } = runCheck(files);
+    expect(output).toContain('apps/server/src/modules/providers/types.ts is missing');
+    expect(status).toBe(1);
+  });
+
+  it('OVR-033: other files beside a server type copy are not checked', () => {
+    const files = passingRepo();
+    files.set('apps/server/src/modules/providers/registry.ts', 'export const registry = 7;\n');
     expect(runCheck(files).status).toBe(0);
   });
 });

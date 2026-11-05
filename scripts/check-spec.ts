@@ -1,6 +1,6 @@
-// The spec check: the repository's copies of the spec's fixtures and contracts must match
-// their sources byte for byte (OVR-030, OVR-033). `pnpm check` runs it; it prints every
-// difference, then exits 1 if there are any.
+// The spec check: the repository's copies of the spec's fixtures, contracts, and server
+// types must match their sources byte for byte (OVR-030, OVR-033). `pnpm check` runs it;
+// it prints every difference, then exits 1 if there are any.
 //
 // Usage: tsx scripts/check-spec.ts [repoRoot]
 //
@@ -47,6 +47,20 @@ const copyRules: readonly CopyRule[] = [
   },
 ];
 
+// Implements OVR-033 for server types copied whole. Each entry, `<module>/<file>`, is
+// spec/reference/server-types/<module>/<file>, copied to apps/server/src/modules/<module>/<file>.
+// A file that adds an implementation after the verbatim types, such as the job queue's
+// queue.ts, is not a pure copy and is not listed.
+const serverTypeCopies: readonly string[] = ['providers/types.ts'];
+
+/** A single file in `spec/` and the repository file that copies it. Paths use `/`. */
+type FileCopyRule = { source: string; copy: string };
+
+const fileCopyRules: readonly FileCopyRule[] = serverTypeCopies.map((file) => ({
+  source: `spec/reference/server-types/${file}`,
+  copy: `apps/server/src/modules/${file}`,
+}));
+
 /** Lists the files under `dir`, sorted, as `/`-separated paths relative to it. */
 function listFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
@@ -88,6 +102,20 @@ function compareCopy(repoRoot: string, rule: CopyRule): { files: number; problem
   return { files: sourceFiles.length, problems };
 }
 
+/** Compares one copied file with its source, naming both in any problem. */
+function compareFile(repoRoot: string, rule: FileCopyRule): string[] {
+  if (!existsSync(path.join(repoRoot, rule.source))) {
+    return [`${rule.source} is missing, so ${rule.copy} cannot be checked`];
+  }
+  if (!existsSync(path.join(repoRoot, rule.copy))) {
+    return [`${rule.copy} is missing: copy it from ${rule.source}`];
+  }
+  if (!readBytes(repoRoot, rule.copy).equals(readBytes(repoRoot, rule.source))) {
+    return [`${rule.copy} differs from ${rule.source}`];
+  }
+  return [];
+}
+
 function readBytes(repoRoot: string, file: string): Buffer {
   return readFileSync(path.join(repoRoot, file));
 }
@@ -95,7 +123,10 @@ function readBytes(repoRoot: string, file: string): Buffer {
 const repoRoot =
   process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const results = copyRules.map((rule) => ({ rule, ...compareCopy(repoRoot, rule) }));
-const problems = results.flatMap((result) => result.problems);
+const problems = [
+  ...results.flatMap((result) => result.problems),
+  ...fileCopyRules.flatMap((rule) => compareFile(repoRoot, rule)),
+];
 
 for (const problem of problems) console.log(problem);
 if (problems.length > 0) {
@@ -105,5 +136,8 @@ if (problems.length > 0) {
   );
   process.exit(1);
 }
-const counts = results.map((result) => `${result.rule.copy} (${String(result.files)} files)`);
+const counts = [
+  ...results.map((result) => `${result.rule.copy} (${String(result.files)} files)`),
+  `${String(fileCopyRules.length)} server type file(s)`,
+];
 console.log(`Spec check passed: ${counts.join(', ')} match their sources.`);
