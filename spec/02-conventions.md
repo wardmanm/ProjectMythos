@@ -104,8 +104,9 @@ ask "how does this work?", rewrite it.
 
 - **CONV-060** `packages/core` never calls `Date.now()`, `new Date()`, `Math.random()`,
   or any IO. Time and randomness are parameters.
-- **CONV-061** The server obtains wall-clock time and randomness through injected
-  `Clock` and `Rng` dependencies created in the composition root, so tests can fix them.
+- **CONV-061** The server obtains wall time through an injected `TimeSource` (from
+  `@mythos/contracts`, read as `timeSource.now()`) and randomness through an injected
+  `Rng`, both created in the composition root, so tests can fix them.
 - **CONV-062** Dice rolls record the RNG seed or raw die values in their commit so any
   result can be audited and replayed exactly.
 
@@ -303,3 +304,4 @@ ask "how does this work?", rewrite it.
 | How does lint see `@mythos/*` imports (CONV-121)? | By package name: boundaries' default resolver does not read `exports`, so it classes them as external modules. Each policy names both the package and its folder, so a relative import across packages is caught too. Node built-ins in `core` are blocked the same way, by their `core` origin. | `eslint-import-resolver-typescript`: it brings a native resolver with its own build script, so a second `allowBuilds` entry. | Claude (ruling) |
 | How are dependency versions written (CONV-091)? | Exact versions, except TypeScript `~6.0.3` (ADR-015). A tool that `spec/reference` also uses takes its version there, so the workspace holds one copy. | Ranges: the lockfile pins them anyway, but a range hides which version was reviewed. | Claude (ruling) |
 | How do `core`'s tests read fixtures while `core` stays pure (CONV-060)? | `packages/core` has Node's types (`types: ["node"]`) so its tests can use `node:fs`, `node:path`, and `node:url`. Lint keeps Node out of core source: boundaries blocks Node built-ins, and `no-restricted-globals` blocks `process`, `Buffer`, `fetch`, `global`, `require`, and the timers. | `types: []` with fixtures imported as JSON modules: the tests could not list a folder, so "every theme in `content-library/themes/`" would need each theme named by hand. | Claude (ruling) |
+| What is the injected wall-time dependency called (CONV-061)? | `TimeSource`, `{ now(): number }` in milliseconds since the Unix epoch, exported from `@mythos/contracts` beside `WallTime` so every server module can import it. | `Clock`: the glossary's Clock is the progress tracker, and contracts already exports a `Clock` type for it. A bare `now()` function: next to `Date.now()` it is unclear which one is meant. | owner |

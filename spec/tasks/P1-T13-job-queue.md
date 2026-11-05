@@ -42,7 +42,7 @@ ARCH-080, ARCH-081, ARCH-082, ARCH-083, ARCH-131, PRV-051, PRV-060, PRV-061, PRV
 
 ## Design notes
 
-- Inject a `Clock` and a scheduler (for backoff timers) so tests run instantly and
+- Inject a `TimeSource` and a scheduler (for backoff timers) so tests run instantly and
   deterministically (CONV-061).
 - Devices come from machine config and are re-read on every scheduling decision, so
   config edits apply without restart (PRV-004).

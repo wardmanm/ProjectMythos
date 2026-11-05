@@ -68,12 +68,12 @@ graph LR
 | Package | May depend on | Must never |
 |---|---|---|
 | `contracts` | `zod` only | Contain logic beyond schema definitions and trivial helpers |
-| `core` | `contracts` | Perform IO, read the clock, use randomness directly, import Node or browser APIs |
+| `core` | `contracts` | Perform IO, read the current time, use randomness directly, import Node or browser APIs |
 | `server` | `core`, `contracts` | Be imported by anything |
 | `client` | `contracts` | Import `core` or `server`; call model providers; hold game logic |
 
 - **ARCH-010** `core` MUST be pure: every function is deterministic given its inputs.
-  Randomness is passed in as an `Rng` and time as a `GameTime` or clock parameter.
+  Randomness is passed in as an `Rng` and time as a `GameTime` or `WallTime` value.
 - **ARCH-011** The client is a view. The engine is authoritative for every rule, roll,
   and state change. The client MAY compute display-only values (e.g. formatting).
 - **ARCH-012** The client MUST NOT communicate with model or media providers. All model

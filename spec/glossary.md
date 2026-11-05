@@ -185,6 +185,7 @@ Terms in *italics* inside definitions are defined elsewhere in this glossary.
 | Term | Definition | Avoid |
 |---|---|---|
 | **Game time** | Integer minutes since the campaign epoch. The only internal time value. | timestamp (reserved for real time) |
+| **Wall time** | Real-world time, never used for game logic: a `WallTime` (ISO 8601) in records, read from the injected **time source** (`TimeSource`, `timeSource.now()`) as milliseconds since the Unix epoch. | clock (that's the progress tracker) |
 | **Time skip** | A single advance of at least the setting's `sceneBreakMinutes` (default 4 hours): sleep, travel, "a month passes". Starts a new scene. | fast-forward |
 | **Epoch** | The calendar date at game time 0, set by the setting. | start date |
 | **Time-until table** | Minutes until each time of day, computed by the engine for the adjudicator, so skips need no date math. | — |

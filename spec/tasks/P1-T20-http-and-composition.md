@@ -59,7 +59,7 @@ ARCH-006, ARCH-007, ARCH-022, ARCH-042, ARCH-023, ARCH-100, ARCH-101, ARCH-102, 
 - **Composition root** (ARCH-022): build config, storage, events, auth, content,
   providers (registry with all four adapters, queue, pipeline), context (with its
   `ContextDependencies` built from config and the providers' role routing and
-  calibration, CTX-110), turn, and http in dependency order, with real `Clock` and
+  calibration, CTX-110), turn, and http in dependency order, with a real `TimeSource` and
   `Rng`. Shut down cleanly on SIGINT and SIGTERM: stop accepting
   requests, cancel interactive jobs, close databases.
 - `scripts/dev.ts` runs the server with `tsx watch` and Vite's dev server (whose `/api`

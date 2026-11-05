@@ -26,4 +26,10 @@ export type GameTime = z.infer<typeof GameTimeSchema>;
 export const WallTimeSchema = z.iso.datetime();
 export type WallTime = z.infer<typeof WallTimeSchema>;
 
+/**
+ * Where the server reads wall time: `now()` is milliseconds since the Unix epoch. Injected
+ * so tests can fix it (CONV-061). Not "clock": a clock is the progress tracker.
+ */
+export type TimeSource = { now(): number };
+
 export const SchemaVersionSchema = z.int().positive();
