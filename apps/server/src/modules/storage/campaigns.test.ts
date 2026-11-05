@@ -96,7 +96,7 @@ describe('campaign folders', () => {
 
   it('ARCH-031: touchLastPlayed sets the last-played time to now', async () => {
     let now = TEST_NOW;
-    const store = space.store({ now: () => now });
+    const store = space.store({ timeSource: { now: () => now.getTime() } });
     const campaign = testCampaign();
     const db = await store.createCampaignFolder(campaign);
     now = new Date('2026-11-06T08:30:00.000Z');

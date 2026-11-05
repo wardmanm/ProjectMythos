@@ -7,9 +7,10 @@ imports no other module (ARCH-021): time, retention, and paths come in as parame
 
 ## Public API (`index.ts`)
 
-**Campaigns.** `createCampaignStore({ dataDir, now, modelCallRecordDays })` is called
-once, by the composition root (ARCH-022). The store holds one open connection per
-campaign, so no connection lives in module state.
+**Campaigns.** `createCampaignStore({ dataDir, timeSource, modelCallRecordDays })` is
+called once, by the composition root (ARCH-022), with the injected `TimeSource`
+(CONV-061). The store holds one open connection per campaign, so no connection lives
+in module state.
 
 - `createCampaignFolder(campaign)` makes `<dataDir>/campaigns/<id>/` with `assets/` and
   `campaign.sqlite`, migrates it, writes the `campaign` row, and returns the

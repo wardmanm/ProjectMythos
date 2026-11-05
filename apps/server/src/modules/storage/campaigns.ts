@@ -5,7 +5,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { type AppError, err, IdSchema, ok, type Result } from '@mythos/contracts';
+import { type AppError, err, IdSchema, ok, type Result, type TimeSource } from '@mythos/contracts';
 import { cmp } from '@mythos/core';
 import { migrate } from './migrate';
 import { pruneModelCalls } from './model-calls';
@@ -21,8 +21,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export type CampaignStoreOptions = {
   /** The data directory; campaigns live in its `campaigns/` folder (ARCH-030). */
   dataDir: string;
-  /** Wall-clock time (CONV-061). */
-  now: () => Date;
+  /** Wall time, injected so tests can fix it (CONV-061). */
+  timeSource: TimeSource;
   /** Machine config's `retention.modelCallRecordDays`, read at each open; null keeps all. */
   modelCallRecordDays: () => number | null;
   /** The migrations folder; tests pass their own. */
@@ -97,7 +97,7 @@ export function createCampaignStore(options: CampaignStoreOptions): CampaignStor
       // Implements ARCH-061: old model call records go when the campaign opens.
       const days = options.modelCallRecordDays();
       if (days !== null) {
-        const cutoff = new Date(options.now().getTime() - days * DAY_MS);
+        const cutoff = new Date(options.timeSource.now() - days * DAY_MS);
         pruneModelCalls(db, cutoff.toISOString());
       }
     } catch (error) {
@@ -170,7 +170,7 @@ export function createCampaignStore(options: CampaignStoreOptions): CampaignStor
 
     touchLastPlayed(db) {
       db.prepare('UPDATE campaign SET last_played_at = :now WHERE only_row = 1').run({
-        now: options.now().toISOString(),
+        now: new Date(options.timeSource.now()).toISOString(),
       });
     },
   };

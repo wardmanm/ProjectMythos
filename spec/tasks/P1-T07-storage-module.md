@@ -167,13 +167,15 @@ ARCH-031, ARCH-040, ARCH-041, ARCH-042, ARCH-050, ARCH-051, ARCH-061, ARCH-130, 
   - **CONV-055 and ARCH-040 are checked by `source-rules.test.ts`**, not a lint rule,
     since `eslint.config.js` was changing in parallel branches. 02-conventions
     Decisions.
+  - **Wall time:** the store uses the injected `TimeSource` (Mike's decision,
+    CONV-061) for `touchLastPlayed` and the retention cutoff.
   - **API additions** to the design notes' list: `createCampaignStore` holds the
-    connection cache (ARCH-022), with `closeCampaign` and `closeAll`, and takes `now`
-    and `modelCallRecordDays` (a getter, read at each open); `createCampaignFolder`
-    takes the campaign record and writes its row; `insertRootTurn`; `listCanon`;
-    `readSetsForRead(db, point)` takes the branch from the point; `writeState` takes
-    its `createdAt`; `isOpen` on `Database`. `CampaignRecordSchema` and
-    `PersistedJobSchema` are storage's own schemas.
+    connection cache (ARCH-022), with `closeCampaign` and `closeAll`, and takes
+    `timeSource` and `modelCallRecordDays` (a getter, read at each open);
+    `createCampaignFolder` takes the campaign record and writes its row;
+    `insertRootTurn`; `listCanon`; `readSetsForRead(db, point)` takes the branch from
+    the point; `writeState` takes its `createdAt`; `isOpen` on `Database`.
+    `CampaignRecordSchema` and `PersistedJobSchema` are storage's own schemas.
   - **Invariant breaches throw** (CONV-041): a turn that isn't the head's child, a set
     on the wrong turn, superseding an inactive set or one on another turn, a second
     root turn, a corrupt row. `openCampaign` returns `not_found` for an ID that isn't a

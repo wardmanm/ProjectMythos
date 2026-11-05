@@ -11,7 +11,7 @@ import type { CampaignRecord } from './rows';
 import type { Database } from './sqlite';
 import type { NewCommitSet } from './turns';
 
-/** A fixed wall-clock time for records made in tests. */
+/** A fixed wall time for records made in tests. */
 export const TEST_NOW = new Date('2026-11-05T12:00:00.000Z');
 
 /**
@@ -34,7 +34,7 @@ export function createTestSpace() {
     store(options: Partial<CampaignStoreOptions> = {}): CampaignStore {
       const store = createCampaignStore({
         dataDir: options.dataDir ?? this.folder(),
-        now: options.now ?? (() => TEST_NOW),
+        timeSource: options.timeSource ?? { now: () => TEST_NOW.getTime() },
         modelCallRecordDays: options.modelCallRecordDays ?? (() => null),
         ...(options.migrationsDir === undefined ? {} : { migrationsDir: options.migrationsDir }),
       });
