@@ -798,4 +798,10 @@ CONV-116), and each cites its requirement IDs.
 | Question | Decision | Rejected and why | Decided by |
 |---|---|---|---|
 | Does the database enforce TRN-001? | Yes. `0001-initial.sql` has triggers that `RAISE(ABORT)` on any UPDATE or DELETE of `commits`, of `commit_sets` except `active`, and of `turns` except `status`. Applied migrations are not hash-checked. | Code review alone: nothing would stop a stray UPDATE from rewriting history. | owner |
-| Who puts sets in TRN-061's order? | Core's `orderSets` is the only definition of it. Storage's `readSetsForRead` returns the sets inside a read point sorted by depth, then set `seq`, then commit `seq`, and the caller applies `orderSets` before folding. | Sorting by stage in SQL too: two definitions of one order, free to drift apart. | owner |
+| Where is TRN-061's application order defined? | Only in `orderSets(sets, depthByTurnId)` in `core`: turn depth, then stage, then the set's `seq`. Storage's `readSetsForRead` returns a read point's sets with their turn's depth, sorted by depth, then set `seq`, then commit `seq`, and not by stage; the caller applies `orderSets`, and the fold applies sets in the order it is given, without sorting them again. | Sorting by stage in SQL as well: two definitions of one order, which can drift apart. | owner |
+| When does the folded state gain wiki sections, notes, and beliefs (TRN-064)? | With their reducers: wiki page learned sections with `wiki.patch` in phase 4, and journal notes and beliefs with `note.*` and `belief.*` in phase 5. Phase 1's folded state holds the world state, relationships, learned names, and known observation IDs. | Adding them in phase 1: no reducer would fill them until those phases. | owner |
+
+## Open
+
+- **Wiki sections, notes, and beliefs in the folded state (TRN-064).** They arrive with
+  their reducers in phases 4 and 5 (Decisions).

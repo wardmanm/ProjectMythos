@@ -1763,6 +1763,7 @@ All paths are under `/api`.
 | What does a `rate_limited` error carry (`POST /session`, ARCH-110)? | `details: { retryAfterSeconds }`, the whole seconds until the address may try again. The http module also sends the value as the `Retry-After` header. | The header alone: the client reads the error body and branches on its `code` (CON-090), so the wait belongs in the body too. | Claude (ruling) |
 | What does `SessionState.authenticated` mean (§14.1)? | The request carries a live session cookie, whether or not this device needs a PIN. The client shows the PIN screen when `pinRequired` is true and `authenticated` is false. | "May use the API": for an exempt localhost or with no PIN set it would only repeat `pinRequired`, and say nothing about the session. | Claude (ruling) |
 | What does `POST /session` return when no PIN is set (§14.2)? | `204` with no cookie: there is nothing to check, and every route already passes. | `auth_failed`: the client would show a wrong-PIN message for a lock that does not exist. A session anyway: it would grant nothing. | Claude (ruling) |
+| Which relationships does CON-073 allow while the ruleset has no switch for factions? | Between characters only: `fromId` and `toId` must both be a pc or npc. | Allowing characters to factions now: CON-073 makes that the ruleset's choice, and no ruleset field records it yet. | owner |
 
 ## Open
 
@@ -1770,3 +1771,6 @@ All paths are under `/api`.
   to commits, is defined in `08-memory.md`, under CON-003 and CON-004.
 - **Scene records.** Scenes are currently only an ID plus `scene.start` commits. If
   scenes need summaries or titles for retrieval, that is added in `08-memory.md`.
+- **Relationships to factions (CON-073).** The ruleset has no switch yet for allowing
+  relationships from characters to factions, so validation accepts characters only
+  (Decisions).
