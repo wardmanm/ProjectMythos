@@ -1748,12 +1748,18 @@ All paths are under `/api`.
   where the copy cannot be edited. A lint error there is fixed in the reference file and
   its code block in the documents, then copied again. Run
   `pnpm exec eslint --no-ignore spec/reference/contracts` before changing a contract.
+- **`onmessage` never fires on the event stream (UI-101, UI-132).** Every frame names
+  its event with the payload type (`event: narration.delta`), and `EventSource` fires
+  `onmessage` only for frames with no `event:` line. A client adds a listener for each
+  payload type, `resync.required` included:
+  `source.addEventListener('narration.delta', …)`.
 
 ## Decisions
 
 | Question | Decision | Rejected and why | Decided by |
 |---|---|---|---|
 | Where does a saved placeholder get its secret back from (CON-111)? | The provider with the same `id` in the stored config; the PIN hash from `server.pin.hash`. | The same array index: deleting or reordering providers in settings would shift the indexes and could give one provider another's API key, sending it to the wrong endpoint. | owner |
+| What does the event stream send on the wire (§14.2, CON-114)? | Each event is one frame: `id: <id>`, `event: <payload type>`, and `data:` with the whole `ServerEvent` as JSON, then a blank line, every line ending in `\n`. Narration with line breaks stays on one `data` line, because JSON escapes them. The idle keep-alive is the comment `: keep-alive`, after 15 seconds with nothing sent. | `data` holding only the payload: the client parses each frame with `ServerEventSchema`, which needs the ID and campaign too. Splitting text with line breaks over several `data:` lines: JSON already keeps it on one, and the client would have to rejoin them. | Claude (ruling) |
 
 ## Open
 
