@@ -33,14 +33,14 @@ async function setup(options: Setup = {}) {
     homedir: dir,
     cwd: dir,
   });
-  const clock = { at: 0 };
+  const time = { at: 0, now: () => time.at };
   const secureCookies = options.secureCookies ?? false;
-  const auth = createAuth({ config: store, now: () => clock.at, secureCookies });
+  const auth = createAuth({ config: store, timeSource: time, secureCookies });
   if (options.pin !== undefined) {
     const localhostExempt = options.localhostExempt ?? true;
     expect((await auth.setPin({ pin: options.pin, localhostExempt })).ok).toBe(true);
   }
-  return { auth, clock, store };
+  return { auth, time, store };
 }
 
 function request(overrides: Partial<AuthRequest> = {}): AuthRequest {
@@ -97,14 +97,14 @@ describe('createAuth: the PIN and sessions', () => {
   });
 
   it('ARCH-110: after 5 failures the 6th attempt is refused, even with the right PIN', async () => {
-    const { auth, clock } = await setup({ pin: PIN });
+    const { auth, time } = await setup({ pin: PIN });
     for (let i = 0; i < 5; i++) await auth.login(loginRequest(), { pin: '0000' });
     const refused = await auth.login(loginRequest(), { pin: PIN });
     expect(codeOf(refused)).toBe('rate_limited');
     const details = refused.ok ? null : refused.error.details;
     expect(z.object({ retryAfterSeconds: z.int() }).parse(details).retryAfterSeconds).toBe(300);
     expect(codeOf(await auth.login(loginRequest('192.168.1.21'), { pin: PIN }))).toBe('ok');
-    clock.at = 5 * MINUTE;
+    time.at = 5 * MINUTE;
     expect(codeOf(await auth.login(loginRequest(), { pin: PIN }))).toBe('ok');
   });
 
@@ -117,13 +117,13 @@ describe('createAuth: the PIN and sessions', () => {
   });
 
   it('ARCH-110: a session expires after 30 idle days, and slides with use', async () => {
-    const { auth, clock } = await setup({ pin: PIN });
+    const { auth, time } = await setup({ pin: PIN });
     const sessionToken = (await logIn(auth)).value;
-    clock.at = 29 * DAY;
+    time.at = 29 * DAY;
     expect(gate(auth, { sessionToken })).toBe('session');
-    clock.at = 58 * DAY;
+    time.at = 58 * DAY;
     expect(gate(auth, { sessionToken })).toBe('session');
-    clock.at = 88 * DAY;
+    time.at = 88 * DAY;
     expect(gate(auth, { sessionToken })).toBe('auth_required');
     expect(auth.sessionState(withToken(sessionToken)).authenticated).toBe(false);
   });

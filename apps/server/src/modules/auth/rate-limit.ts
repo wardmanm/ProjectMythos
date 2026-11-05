@@ -1,6 +1,6 @@
 // Login attempts per remote address: after 5 failures within 5 minutes, every attempt
 // is refused for 5 minutes, even one with the right PIN (ARCH-110).
-import { type AppError, type Result, err, ok } from '@mythos/contracts';
+import { type AppError, type Result, type TimeSource, err, ok } from '@mythos/contracts';
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 5 * 60 * 1000;
@@ -23,7 +23,7 @@ export type RateLimiter = {
 };
 
 /** One limiter per server, built by `createAuth` (ARCH-022). Implements ARCH-110. */
-export function createRateLimiter(now: () => number): RateLimiter {
+export function createRateLimiter(timeSource: TimeSource): RateLimiter {
   const entries = new Map<string, Entry>();
 
   // Forgets every address that is neither locked nor has an attempt in the window.
@@ -43,7 +43,7 @@ export function createRateLimiter(now: () => number): RateLimiter {
 
   return {
     begin(address) {
-      const at = now();
+      const at = timeSource.now();
       pruneIdle(at);
       const entry = entries.get(address) ?? { attempts: [], lockedUntil: null };
       entries.set(address, entry);
@@ -58,7 +58,7 @@ export function createRateLimiter(now: () => number): RateLimiter {
       return ok(undefined);
     },
     recordFailure(address) {
-      const at = now();
+      const at = timeSource.now();
       pruneIdle(at);
       const entry = entries.get(address);
       if (entry === undefined || entry.lockedUntil !== null) return;
@@ -66,7 +66,7 @@ export function createRateLimiter(now: () => number): RateLimiter {
       if (recent.length >= MAX_ATTEMPTS) lock(entry, at);
     },
     recordSuccess(address) {
-      pruneIdle(now());
+      pruneIdle(timeSource.now());
       entries.delete(address);
     },
   };

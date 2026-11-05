@@ -4,8 +4,8 @@ import { clearedSessionCookie, createSessionStore, sessionCookie } from './sessi
 const DAY = 24 * 60 * 60 * 1000;
 
 function storeAt(start: number) {
-  const clock = { at: start };
-  return { clock, store: createSessionStore(() => clock.at) };
+  const time = { at: start, now: () => time.at };
+  return { time, store: createSessionStore(time) };
 }
 
 describe('createSessionStore', () => {
@@ -20,25 +20,25 @@ describe('createSessionStore', () => {
   });
 
   it('ARCH-110: a session expires after 30 idle days, and slides with use', () => {
-    const { clock, store } = storeAt(1_000);
+    const { time, store } = storeAt(1_000);
     const token = store.create();
-    clock.at += 29 * DAY;
+    time.at += 29 * DAY;
     expect(store.touch(token)).toBe(true);
-    clock.at += 29 * DAY; // 58 days after it started, 29 after its last use
+    time.at += 29 * DAY; // 58 days after it started, 29 after its last use
     expect(store.touch(token)).toBe(true);
-    clock.at += 30 * DAY - 1;
+    time.at += 30 * DAY - 1;
     expect(store.isLive(token)).toBe(true);
-    clock.at += 1;
+    time.at += 1;
     expect(store.isLive(token)).toBe(false);
     expect(store.touch(token)).toBe(false);
   });
 
   it('ARCH-110: checking a session without using it does not slide its expiry', () => {
-    const { clock, store } = storeAt(0);
+    const { time, store } = storeAt(0);
     const token = store.create();
-    clock.at = 20 * DAY;
+    time.at = 20 * DAY;
     expect(store.isLive(token)).toBe(true);
-    clock.at = 30 * DAY;
+    time.at = 30 * DAY;
     expect(store.isLive(token)).toBe(false);
   });
 
@@ -52,13 +52,13 @@ describe('createSessionStore', () => {
   });
 
   it('ARCH-110: prune forgets expired sessions and keeps live ones', () => {
-    const { clock, store } = storeAt(0);
+    const { time, store } = storeAt(0);
     const old = store.create();
-    clock.at = 10 * DAY;
+    time.at = 10 * DAY;
     const recent = store.create();
-    clock.at = 30 * DAY;
+    time.at = 30 * DAY;
     store.prune();
-    clock.at = 0; // were the old one still held, it would be live again here
+    time.at = 0; // were the old one still held, it would be live again here
     expect(store.isLive(old)).toBe(false);
     expect(store.isLive(recent)).toBe(true);
   });

@@ -10,10 +10,10 @@ The lock is convenience, not security (OVR-004). A restart signs every device ou
 
 ## Public API (`index.ts`)
 
-- `createAuth({ config, now, secureCookies })` builds the lock, with its sessions and
-  rate limiter inside. The composition root calls it once (ARCH-022), with the
-  `ConfigStore`, a wall-clock `now()` in milliseconds, and whether the running server
-  speaks HTTPS. `secureCookies` comes from how the server started, not from
+- `createAuth({ config, timeSource, secureCookies })` builds the lock, with its
+  sessions and rate limiter inside. The composition root calls it once (ARCH-022), with
+  the `ConfigStore`, the injected `TimeSource` that session expiry and the rate limit
+  read wall time from (CONV-061), and whether the running server speaks HTTPS. `secureCookies` comes from how the server started, not from
   `server.https` in the config, which applies only after a restart.
 - `Auth`:
   - `checkRequest(request)` returns `ok(cookie)` when a session let the request in,
@@ -37,6 +37,8 @@ The module has no logger, so it can never log a PIN or a token (CONV-072). Never
 
 ## Wiring it in (P1-T20)
 
+- **Construct it** in `app.ts` with the composition root's real `TimeSource`; tests
+  pass one they can move by hand.
 - **The gate** is an `onRequest` hook. It builds the `AuthRequest` from:
   - `request.method`;
   - `request.routeOptions.url`, the matched route pattern, such as

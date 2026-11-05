@@ -7,8 +7,8 @@ const MINUTE = 60 * 1000;
 const phone = '192.168.1.20';
 
 function limiterAt(start: number) {
-  const clock = { at: start };
-  return { clock, limiter: createRateLimiter(() => clock.at) };
+  const time = { at: start, now: () => time.at };
+  return { time, limiter: createRateLimiter(time) };
 }
 
 const RetryAfterSchema = z.object({ retryAfterSeconds: z.int() });
@@ -29,26 +29,26 @@ function fail(limiter: ReturnType<typeof createRateLimiter>, address: string, ti
 
 describe('createRateLimiter', () => {
   it('ARCH-110: after 5 failures the 6th attempt is refused for 5 minutes', () => {
-    const { clock, limiter } = limiterAt(0);
+    const { time, limiter } = limiterAt(0);
     fail(limiter, phone, 5);
     expect(retryAfter(limiter.begin(phone))).toBe(300);
-    clock.at = 2 * MINUTE + 500;
+    time.at = 2 * MINUTE + 500;
     expect(retryAfter(limiter.begin(phone))).toBe(180);
   });
 
   it('ARCH-110: the refusal lifts after 5 minutes', () => {
-    const { clock, limiter } = limiterAt(0);
+    const { time, limiter } = limiterAt(0);
     fail(limiter, phone, 5);
-    clock.at = 5 * MINUTE - 1;
+    time.at = 5 * MINUTE - 1;
     expect(limiter.begin(phone).ok).toBe(false);
-    clock.at = 5 * MINUTE;
+    time.at = 5 * MINUTE;
     expect(limiter.begin(phone).ok).toBe(true);
   });
 
   it("ARCH-110: failures older than 5 minutes don't count", () => {
-    const { clock, limiter } = limiterAt(0);
+    const { time, limiter } = limiterAt(0);
     fail(limiter, phone, 4);
-    clock.at = 5 * MINUTE;
+    time.at = 5 * MINUTE;
     fail(limiter, phone, 4);
     expect(limiter.begin(phone).ok).toBe(true);
   });

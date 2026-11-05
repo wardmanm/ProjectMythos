@@ -65,7 +65,7 @@ ARCH-110, ARCH-111, OVR-004, CON-113, CONV-072
   - `apps/server/src/modules/auth/`: `auth.ts`, `pin.ts`, `sessions.ts`,
     `rate-limit.ts`, `index.ts`, and `README.md`, with 34 tests in four files. The module
     imports only config's public API, uses only `node:crypto`, and has no logger.
-  - `createAuth({ config, now, secureCookies })` gives P1-T20 `checkRequest`,
+  - `createAuth({ config, timeSource, secureCookies })` gives P1-T20 `checkRequest`,
     `sessionState`, `login`, `logout`, and `setPin`, plus `SESSION_COOKIE_NAME` and the
     `SessionCookie` and `AuthRequest` types. The README says how to wire them into
     Fastify and how to recover a forgotten PIN.
@@ -124,8 +124,9 @@ ARCH-110, ARCH-111, OVR-004, CON-113, CONV-072
     and a salt and hash of 16 to 64 bytes, with `maxmem` at 64 MiB, so a hand-edited
     file cannot make scrypt throw or claim more memory. An empty hash is malformed,
     since an empty key would equal it.
-  - **Time is `now: () => number`**, not CONV-061's `Clock`, because the glossary's
-    Clock is the progress tracker.
+  - **Wall time comes from the injected `TimeSource`** (Mike's decision, CONV-061):
+    `createAuth`, `createSessionStore`, and `createRateLimiter` each take a
+    `timeSource` and call `timeSource.now()`.
   - **Tokens and salts come from `crypto.randomBytes`**, not the dice `Rng`, which is
     seedable so rolls can be replayed (CONV-062).
   - **The rate limit:** an attempt counts when it starts, before the async hash check.

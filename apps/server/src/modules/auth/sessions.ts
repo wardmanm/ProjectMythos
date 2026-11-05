@@ -1,6 +1,7 @@
 // Sessions: a random token in a cookie, held in memory with a sliding 30-day expiry. A
 // restart signs every device out, which is acceptable for a convenience lock (OVR-004).
 import { randomBytes } from 'node:crypto';
+import type { TimeSource } from '@mythos/contracts';
 
 export const SESSION_COOKIE_NAME = 'mythos_session';
 
@@ -68,18 +69,18 @@ export type SessionStore = {
  * The in-memory sessions, each a token and when it expires. One store per server, built
  * by the composition root through `createAuth` (ARCH-022). Implements ARCH-110.
  */
-export function createSessionStore(now: () => number): SessionStore {
+export function createSessionStore(timeSource: TimeSource): SessionStore {
   const expiresAt = new Map<string, number>();
 
   function isLive(token: string): boolean {
     const expiry = expiresAt.get(token);
-    return expiry !== undefined && now() < expiry;
+    return expiry !== undefined && timeSource.now() < expiry;
   }
 
   return {
     create() {
       const token = randomBytes(TOKEN_BYTES).toString('base64url');
-      expiresAt.set(token, now() + SESSION_IDLE_MS);
+      expiresAt.set(token, timeSource.now() + SESSION_IDLE_MS);
       return token;
     },
     isLive,
@@ -88,7 +89,7 @@ export function createSessionStore(now: () => number): SessionStore {
         expiresAt.delete(token);
         return false;
       }
-      expiresAt.set(token, now() + SESSION_IDLE_MS);
+      expiresAt.set(token, timeSource.now() + SESSION_IDLE_MS);
       return true;
     },
     remove(token) {
@@ -98,7 +99,7 @@ export function createSessionStore(now: () => number): SessionStore {
       expiresAt.clear();
     },
     prune() {
-      const at = now();
+      const at = timeSource.now();
       for (const [token, expiry] of expiresAt) {
         if (at >= expiry) expiresAt.delete(token);
       }

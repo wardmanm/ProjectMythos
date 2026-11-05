@@ -9,6 +9,7 @@ import {
   type Result,
   type SessionStateSchema,
   type SetPinCommandSchema,
+  type TimeSource,
   err,
   ok,
 } from '@mythos/contracts';
@@ -42,7 +43,8 @@ export type AuthRequest = {
 
 export type AuthOptions = {
   config: Pick<ConfigStore, 'current' | 'save'>;
-  now: () => number;
+  /** Wall time, for session expiry and the rate limit (CONV-061). */
+  timeSource: TimeSource;
   /** Whether the running server speaks HTTPS, which makes the cookie `Secure`. */
   secureCookies: boolean;
 };
@@ -78,9 +80,9 @@ const authFailed: AppError = { code: 'auth_failed', message: 'That PIN is not ri
  * composition root (ARCH-022). Implements ARCH-110 and ARCH-111.
  */
 export function createAuth(options: AuthOptions): Auth {
-  const { config, now, secureCookies } = options;
-  const sessions = createSessionStore(now);
-  const limiter = createRateLimiter(now);
+  const { config, timeSource, secureCookies } = options;
+  const sessions = createSessionStore(timeSource);
+  const limiter = createRateLimiter(timeSource);
 
   /**
    * Whether a request may go ahead. `ok(cookie)` when a session let it in: the http
