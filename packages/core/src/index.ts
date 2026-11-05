@@ -40,3 +40,13 @@ export {
   inputBudget,
   transcriptBoundary,
 } from './prompts/context';
+export { activeSets, orderSets, staleStages } from './state/turn-logic';
+export {
+  type FoldContext,
+  type FoldedState,
+  initialState,
+  relationshipKey,
+} from './state/folded-state';
+export { applyCommit } from './state/apply-commit';
+export { commitIssues } from './state/validate';
+export { type CommitSetEntry, fold, validateSet } from './state/fold';
