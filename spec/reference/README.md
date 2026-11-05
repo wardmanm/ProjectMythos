@@ -43,7 +43,7 @@ pnpm treats this folder as a workspace of its own.
 |---|---|---|
 | `contracts/` | Every Zod schema. Identical to the code blocks in `03-contracts.md`, `04-content-schemas.md`, and later documents | `packages/contracts/src/`, copied verbatim |
 | `server-types/` | Public interface types for three server modules, as shown in `05-providers.md`, `08-memory.md`, and `09-context.md` | `apps/server/src/modules/{providers,memory,context}/`, copied verbatim |
-| `core/` | Pure logic and its tests | `packages/core/src/`, ported (below) |
+| `core/` | Pure logic and its tests | `packages/core/src/`, ported (below), each file in the folder of its governing document (01-architecture Decisions) |
 | `scripts/check-fixtures.ts` | A complete fixture validator | A starting point for the content loader's cross-reference checks (SCH §10) |
 | `scripts/check-drift.ts` | Spec-to-code drift check | The basis of the repository's spec check (OVR-030) |
 | `scripts/check-docs.ts`, `scripts/docs/` | The docs check and `pnpm trace` (OVR-037, OVR-038), with its tests. Unlike the rest of this folder, it is written to the conventions | Stays here and is not ported; the root `check` and `trace` scripts run it (P1-T02) |

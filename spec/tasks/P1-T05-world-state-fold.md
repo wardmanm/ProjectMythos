@@ -31,8 +31,8 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
 
 ## Outputs
 
-- `packages/core/src/turn-logic.ts`: `orderSets` and `activeSets` ported, with tests
-- `packages/core/src/fold/`: `state.ts` (folded state type, `initialState`), `apply-commit.ts` (reducers), `validate.ts` (strict-on-write checks), `fold.ts`, `index.ts`, with tests
+- `packages/core/src/state/turn-logic.ts`: `orderSets` and `activeSets` ported, with tests
+- `packages/core/src/state/`: `folded-state.ts` (folded state type, `initialState`), `apply-commit.ts` (reducers), `validate.ts` (strict-on-write checks), and `fold.ts`, with tests. The folder has no `index.ts` of its own (CONV-015)
 - `packages/core/src/index.ts` exports
 
 ## Do not touch
