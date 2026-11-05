@@ -112,7 +112,7 @@ a folder with a single public entry point.
 | `world` | Game time advancement, time skips, world ticks, rumor propagation |
 | `journal` | Player-scoped views of knowledge; notes and beliefs |
 | `media` | Asset storage and versions; image and speech jobs (later phases) |
-| `events` | SSE event bus and per-session replay buffer |
+| `events` | SSE event bus and per-campaign replay buffer |
 | `auth` | Optional PIN lock and session cookie |
 | `http` | Fastify routes; maps HTTP to module calls; no game logic |
 
@@ -350,3 +350,18 @@ Per OVR-010, these exist from phase 1 even if unused:
 | How is `packages/core/src/` organized (§2.1)? | In folders by governing spec document: `rules/` (07-rules, 11-gear), `state/` (06-turn-engine, 03-contracts §10), `knowledge/` (08-memory, 10-journal), `prompts/` (09-context, 13-content-settings), `time/` (12-time-world), and `media/` (15-media) from phase 9. `compare.ts`, `theme.ts`, and `index.ts` stay at the top. A folder has no `index.ts` of its own, so `src/index.ts` is the only entry point (CONV-015). | One flat folder: about 40 files by the end of phase 1. A folder per spec document: ten folders, several holding one or two files. | owner |
 | Is the event stream per client session or per campaign (ARCH-090)? | Per campaign a client has open, as ARCH-090, UI-101, and the `GET /campaigns/:campaignId/events` route say. ADR-001's wording, "one stream per client session", is corrected to match. | Per client session: one stream for every campaign would contradict the route and UI-101, and each client would filter out other campaigns' events. | owner |
 | Where does a new stream start (ARCH-091)? | With no `Last-Event-ID`, the route first writes `formatPosition(bus.lastId())`: an `id:` line and no `data:`, which sets the browser's last event ID without firing an event. A client that drops before its first event then reconnects with a covered ID and misses nothing. | Starting with nothing: a client that drops before its first event reconnects with no `Last-Event-ID` and silently misses whatever was published while it was away. Sending `resync.required` on every first connect: the client has only just fetched. | owner |
+| How do event IDs and replay coverage work (ARCH-091)? | One ID counter for the whole process, starting at `firstId`, so a campaign's IDs can skip numbers. Each campaign's buffer remembers `lastDroppedId`, the last ID it evicted (`firstId - 1` at first); a `Last-Event-ID` is covered when `lastDroppedId <= id <= lastId()`, since the buffer holds every event of the campaign after `lastDroppedId`. `resync.required` takes an ID of its own and is not buffered. | Coverage by the oldest buffered ID: other campaigns' IDs fall in the gaps, so a client that missed nothing would be told to resync. A counter per campaign: `lastId()` would need a campaign, and the contract numbers IDs per process. Buffering `resync.required`: a later replay would make another client refetch for nothing. Giving it no ID: the client's last ID would stay uncovered, and every reconnect would resync again. | Claude (ruling) |
+
+## Open
+
+- **No back-pressure on event streams (ARCH-090).** The bus delivers each event to
+  every subscriber synchronously, and a slow client's frames wait in Node's socket
+  buffer, which grows without limit. A suggestion for the events route (P1-T20): close
+  a stream whose response `writableLength` passes a limit; the client's `EventSource`
+  reconnects with its last event ID and is replayed from the buffer, or told to resync.
+- **Replay buffers are never freed (ARCH-091).** Each campaign's buffer, up to 1,000
+  events, stays in memory until the server restarts, including after the campaign is
+  deleted.
+- **IDs after a restart assume a modest event rate (ARCH-091).** The first ID is the
+  server's start time in milliseconds, so a new ID is larger than any the previous
+  process issued only if that process averaged fewer than one event per millisecond.
