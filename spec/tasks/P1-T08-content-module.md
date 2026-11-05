@@ -152,5 +152,8 @@ SCH-001, SCH-002, SCH-003, SCH-004, SCH-005, SCH-010, SCH-011, SCH-012, SCH-020,
     - (b) the setting's default tone profile's `slotSchemaId` when it has one, matching a
       campaign created with the defaults;
     - (c) both, when they differ.
+
+    Decided 2026-11-05: (a), the setting's slot schema. SCH-082 is reworded to say so, and
+    04-content-schemas' Decisions records it.
 - **Not tested:** None. Every listed behavioral requirement has a test named by its ID.
 - **Dependencies:** None.

@@ -756,8 +756,9 @@ export type AuthoredEntity = z.infer<typeof AuthoredEntitySchema>;
   character is present. Everything longer belongs in the canon Markdown file.
 - **SCH-081** A character with non-empty `goals` is an active NPC for world ticks.
 - **SCH-082** Authored item locations follow the same invariants as runtime ones
-  (CON-042, CON-043), including carrying limits (GEAR-053), checked against the
-  campaign's resolved slot schema and ruleset.
+  (CON-042, CON-043), including carrying limits (GEAR-053). When a pack loads they are
+  checked against the setting's slot schema and default ruleset; at campaign creation, an
+  item worn in a slot the campaign's resolved slot schema lacks is moved (GEAR-090).
 - **SCH-083** `keyNpc: true` marks a character who, whenever involved in a turn, is
   voiced by a separate call that sees only their own knowledge (CTX-060). Use it for
   characters whose secrets drive the story. Characters holding a relevant secret are
@@ -1223,6 +1224,7 @@ Excerpt: the first of the fixture's ten relationships.
 | What may a library tone profile's `themeId` and `slotSchemaId` name? | A usable definition in the libraries. Otherwise the tone profile has a problem of its own, and no pack offers it. | Looking them up in each pack too: the same library tone profile would be offered by one pack and not another. | Claude (ruling) |
 | Are starting statuses and item bonuses checked when a pack loads (CON-020, CON-024)? | Yes: a harm has a level and a condition none, a level is at most the fatal level, and every tag and stat is the default ruleset's. | Leaving them to the fold at campaign creation (P1-T17): the pack would load and then fail. | Claude (ruling) |
 | In what order does `listThemes` offer themes (UI-031)? | The built-in library's, then the user library's, then each pack's by pack ID; the first theme with an ID wins, and a theme with issues is left out. | Pack, then user, then built-in, as SCH-010 resolves inside a pack: outside a campaign there is no pack to start from. | Claude (ruling) |
+| Which slot schema are a pack's starting items checked against when it loads (SCH-082)? | The setting's slot schema, with the setting's default ruleset. A campaign whose tone profile overrides the slot schema has its items moved at creation (GEAR-090). | The default tone profile's override: a pack would be refused for a schema its campaigns may not use. Both: refuses packs whose items are moved correctly at creation anyway. | owner |
 | What happens to a pack folder whose name is not a pack ID (SCH-020)? | It is skipped, with a warning logged. | Listing it with its issues: `PackSummary.packId` must be a slug, so the client could not parse the list. | Claude (ruling) |
 
 ## Open
@@ -1230,7 +1232,3 @@ Excerpt: the first of the fixture's ten relationships.
 - **Pack fonts.** The loader does not read a pack's `fonts/` folder yet, so `themeIssues`
   gets no pack fonts and a pack theme that names one is reported as using an unknown font.
   UI-034's check that each font has a license file is in no task yet.
-- **Items and a tone profile's slot schema.** Starting items are checked against the
-  setting's slot schema, not the override of the setting's default tone profile (SCH-082).
-  A campaign that uses an override is checked when it is created. P1-T08 raised this for
-  the owner.
