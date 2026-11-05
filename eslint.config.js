@@ -162,7 +162,18 @@ const tests = ['**/*.test.ts', '**/*.test.tsx'];
 const toolConfigs = ['eslint.config.js', 'vitest.config.ts', 'apps/client/vite.config.ts'];
 
 export default defineConfig(
-  { ignores: ['spec/', 'content-library/', 'content-packs/', '**/dist/', '**/coverage/'] },
+  // .claude/worktrees/ holds full copies of the repository, one per parallel agent
+  // (02-conventions Decisions); each is linted from its own checkout.
+  {
+    ignores: [
+      'spec/',
+      'content-library/',
+      'content-packs/',
+      '**/dist/',
+      '**/coverage/',
+      '.claude/worktrees/**',
+    ],
+  },
 
   tseslint.configs.strictTypeChecked,
   {

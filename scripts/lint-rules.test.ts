@@ -199,6 +199,15 @@ describe('server module boundaries', () => {
   });
 });
 
+describe('ignored paths', () => {
+  it("CONV-122: lint skips other agents' worktrees under .claude/worktrees", async () => {
+    const inWorktree = '.claude/worktrees/agent-1/apps/server/src/modules/storage/a.ts';
+    expect(await eslint.isPathIgnored(path.join(treeRoot, inWorktree))).toBe(true);
+    const own = 'apps/server/src/modules/storage/a.ts';
+    expect(await eslint.isPathIgnored(path.join(treeRoot, own))).toBe(false);
+  });
+});
+
 describe('code restrictions', () => {
   const coreFile = 'packages/core/src/clock.ts';
   const coreTest = 'packages/core/src/clock.test.ts';
