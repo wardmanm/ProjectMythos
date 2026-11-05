@@ -67,8 +67,10 @@ ARCH-031, ARCH-040, ARCH-041, ARCH-042, ARCH-050, ARCH-051, ARCH-061, ARCH-130, 
   `openCampaign`, `listCampaigns`, `deleteCampaign`, `readCampaign`, `touchLastPlayed`;
   canon: `writeCanon`, `readCanon`, `readTemplates`; turns: `insertTurn`,
   `appendSet` (a set and its commits on an existing turn), `setTurnStatus`,
-  `readTurn`, `readTurnsOnBranch(branchId, beforeDepth, limit)`, `readSetsForRead(branchId,
-  point)` (every set and commit a read point needs, in TRN-061 order); branches:
+  `readTurn`, `readTurnsOnBranch(branchId, beforeDepth, limit)`, `readSetsForRead(point)`
+  (every active set and commit a read point needs, each set with its turn's depth,
+  sorted by depth and then set `seq`; core's `orderSets` applies TRN-061's order);
+  branches:
   `createBranch`, `readBranch`, `listBranches`; state: `readState(key)`,
   `writeState(key, value)` (a new version), `readStateHistory(key)`; model calls:
   `insertModelCall`, `listModelCalls(turnId)`, `readModelCall(id)`,
@@ -79,7 +81,8 @@ ARCH-031, ARCH-040, ARCH-041, ARCH-042, ARCH-050, ARCH-051, ARCH-061, ARCH-130, 
   contract schema they hold (CONV-030).
 - **Turns repository.** `insertTurn` writes the turn, its sets, and their commits,
   moves the branch head, and adds the `branch_turns` row, in one transaction
-  (TRN-011, ARCH-041). Reads return sets and commits in TRN-061 order. Only
+  (TRN-011, ARCH-041). Reads return sets by depth, then set `seq`, then commit `seq`;
+  TRN-061's stage order is core's `orderSets`, which the caller applies. Only
   `turns.status` and `commit_sets.active` are ever updated (TRN-001).
 - **Campaign folders.** `createCampaignFolder`, `openCampaign` (one cached connection
   per campaign), `listCampaigns`, `deleteCampaign` (close the connection before

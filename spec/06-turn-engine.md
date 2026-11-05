@@ -792,3 +792,10 @@ CONV-116), and each cites its requirement IDs.
   `commit_sets.active`, and `replay_conflicts` exactly.
 - **TRN-148** Every query a module exposes returns different results on two branches
   that diverge, and on the same branch at two `asOf` points.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| Does the database enforce TRN-001? | Yes. `0001-initial.sql` has triggers that `RAISE(ABORT)` on any UPDATE or DELETE of `commits`, of `commit_sets` except `active`, and of `turns` except `status`. Applied migrations are not hash-checked. | Code review alone: nothing would stop a stray UPDATE from rewriting history. | owner |
+| Who puts sets in TRN-061's order? | Core's `orderSets` is the only definition of it. Storage's `readSetsForRead` returns the sets inside a read point sorted by depth, then set `seq`, then commit `seq`, and the caller applies `orderSets` before folding. | Sorting by stage in SQL too: two definitions of one order, free to drift apart. | owner |
