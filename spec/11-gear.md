@@ -216,3 +216,10 @@ in phase 4.
 - **GEAR-104** Encumbrance: load and capacity; the encumbered condition added and
   removed in the crossing set; the hard limit.
 - **GEAR-105** A theft changes possession but not ownership; a gift changes both.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| What does GEAR-053's "the destination exists" cover in `validateItemMove`? | Slots and containers, which are gear's own data. Whether a character or place named by the move exists is an entity reference, which commit validation (P1-T05) and the pack loader (P1-T08) check. | Checking characters and places in `validateItemMove` too: it is given no places, and a missing reference would be reported twice. | Claude (ruling) |
+| How does the hard limit (GEAR-052) weigh a move? | By the load of whoever has the item after the move, counting everything inside a moved container (GEAR-050). The move is refused if that load is above `capacity × hardLimitMultiplier`, so a character already over the limit can still drop or place things, but not rearrange what they carry. | Refusing only moves that raise the load: the pack loader checks each starting item as a move to where it already is, so an over-limit starting inventory would pass. Counting only the moved item's own weight, as the reference did: a full pack would move as if empty. | Claude (ruling) |

@@ -164,3 +164,9 @@ every setting, for every role, and cannot be configured, overridden, or reworded
 - **CSET-062** The floor survives every template override in the fixtures (CSET-046).
 - **CSET-063** No commit type changes `ageCategory` (a schema test over every commit
   payload type).
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| What repeats the floor in the task tier while a minor is involved (CSET-042)? | `appendFloorToTask(task, role, minor)` in `core`, called last on the rendered task tier, after the output-format instructions. All floor text is appended by `core`: `appendLocked` adds it to the instructions tier. | The context module appending `HARD_FLOOR` itself: the floor's rules would live in two packages. | Claude (ruling) |
