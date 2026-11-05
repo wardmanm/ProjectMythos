@@ -1,0 +1,6 @@
+{
+  "text": "{\"observations\":[]}",
+  "thinking": null,
+  "usage": { "inputTokens": 620, "outputTokens": 6, "cachedInputTokens": null },
+  "finishReason": "stop"
+}
