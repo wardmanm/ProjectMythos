@@ -6,7 +6,7 @@ import { fold, initialState, toDate } from '@mythos/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type CampaignRecord, readCanon, readSetsForRead, readTurn } from '../storage';
 import { createCampaign } from './create-campaign';
-import { arrivalCommand, createTestSpace, setupPayloads, TEST_NOW } from './testing';
+import { arrivalCommand, createTestSpace, seededIds, setupPayloads, TEST_NOW } from './testing';
 
 const space = createTestSpace();
 afterEach(() => {
@@ -185,5 +185,13 @@ describe('createCampaign', () => {
     expect(deps.logger.entries.map(({ level, message }) => [level, message])).toEqual([
       ['error', 'campaign creation failed'],
     ]);
+  });
+
+  it('TRN-123: a campaign ID already in use is refused, and the campaign holding it is kept', async () => {
+    const { deps, view } = await arrival();
+    // The same seeded IDs again, so the new campaign would take the first one's ID.
+    const again = createCampaign({ ...deps, newId: seededIds() }, arrivalCommand());
+    await expect(again).rejects.toThrow(`campaign ${view.campaignId} already exists`);
+    expect(await deps.store.listCampaigns()).toEqual([view.campaignId]);
   });
 });

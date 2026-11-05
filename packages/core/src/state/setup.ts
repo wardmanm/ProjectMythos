@@ -148,7 +148,7 @@ function moves(
       entity.kind === 'pc' || entity.kind === 'npc' ? [[entity.id, entity]] : [],
     ),
   );
-  const ids = [pcId, ...presentEntityIds.filter((id) => id !== pcId)];
+  const ids = [...new Set([pcId, ...presentEntityIds])];
   return ids.flatMap((characterId): CommitPayload[] =>
     characters.get(characterId)?.locationId === startPlaceId
       ? []

@@ -2,6 +2,8 @@
 // and validate the setup set, then write the campaign folder, its canon, its first
 // campaign state, and its root turn on branch Main. Every expected failure is found before
 // anything is written (CON-112, TRN-070).
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import {
   type AppError,
   type CampaignView,
@@ -163,6 +165,10 @@ async function writeCampaign(
   record: CampaignRecord,
   start: CampaignStart,
 ): Promise<void> {
+  // A folder with this ID is another campaign's, so it must not be removed on failure.
+  if (existsSync(path.join(deps.store.campaignsDir, record.id))) {
+    throw new Error(`campaign ${record.id} already exists`);
+  }
   try {
     const db = await deps.store.createCampaignFolder(record);
     writeCampaignStart(db, start);
