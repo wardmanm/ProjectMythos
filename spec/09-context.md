@@ -119,10 +119,11 @@ Every prompt is built from up to eight **tiers**, always in this order:
 | `user` | transcript | yes |
 | `user` | state, knowledge, turn, task | — |
 
-- **CTX-011** Adapters that require alternating roles (Anthropic) merge consecutive
-  same-role messages into one message with one content block per original message,
-  keeping each block's cache breakpoint (PRV-041). Adapters for local runtimes pass
-  them through; identical prefixes are reused by the runtime's own cache.
+- **CTX-011** The Anthropic adapter merges consecutive same-role messages into one
+  message with one content block per original message, keeping each block's cache
+  breakpoint (PRV-041). Its API would combine them itself; merging first keeps the
+  request explicit (PRV-043). Adapters for local runtimes pass them through; identical
+  prefixes are reused by the runtime's own cache.
 - **CTX-012** Tiers 1–4 MUST be deterministic: the same inputs produce the same bytes.
   No wall-clock time, no unordered iteration, no random sampling. Characters are listed
   in the order they joined the scene, then by ID; numbers and dates use fixed formats.

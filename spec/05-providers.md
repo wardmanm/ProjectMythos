@@ -518,9 +518,10 @@ others. Support for schema-constrained output varies by server and version.
   stable prefix (09-context) is billed and processed as cached input.
 - **PRV-042** The adapter targets the current API shape at implementation time. Its
   README links the API documentation it was written against.
-- **PRV-043** An adapter whose API requires alternating roles merges consecutive
-  same-role messages into one message with one content block each, keeping each
-  block's breakpoint (CTX-011).
+- **PRV-043** The Anthropic adapter merges consecutive same-role messages into one
+  message with one content block each, keeping each block's breakpoint (CTX-011). The
+  API would combine them itself, but merging first keeps the request the adapter sends,
+  and where each breakpoint falls in it, explicit.
 
 **Mock** — see §8.
 
@@ -789,8 +790,8 @@ export type JobQueue = {
   context window. Ollama 0.40.14 counts the whole prompt in `prompt_eval_count` and the
   cached part in `prompt_eval_cached_count`, which its documentation does not say but
   its source does (read for P1-T11 on 2026-11-05), and OpenAI's `prompt_tokens`
-  includes its `cached_tokens`. Anthropic's behavior is to be confirmed when P1-T12
-  writes its adapter.
+  includes its `cached_tokens`. Anthropic's behavior is confirmed below ("Anthropic
+  reports usage in pieces").
 - **A handler that ignores its signal holds its device (PRV-064, ARCH-083).**
   Preemption, `cancel`, and `stop()` only abort `JobContext.signal`, and the slot frees
   when the run settles (Decisions). A handler, and the work given to `runInteractive`,
@@ -799,6 +800,19 @@ export type JobQueue = {
 - **Register every handler before `resume()` (PRV-062, PRV-066).** A stored job whose
   type has no handler when `resume()` runs is marked `failed` and never runs, so the
   composition root registers every job type first.
+- **Anthropic reports usage in pieces (PRV-071, `adapters/anthropic-stream.ts`).**
+  Confirmed in its documentation on 2026-11-05: `input_tokens` leaves out
+  `cache_read_input_tokens` and `cache_creation_input_tokens`, and the whole prompt is the
+  sum of the three. `message_start` carries the input counts; `message_delta` counts are
+  cumulative and may repeat them. Reading only `message_delta`, or only `input_tokens`,
+  undercounts the prompt.
+- **Anthropic's thinking is empty unless asked for (PRV-046).** Current models default
+  to `display: 'omitted'` and stream thinking blocks with no text, so a profile with
+  thinking `on` must send `display: 'summarized'`, or `thinking` is always null.
+- **An Anthropic spend-cap 429 is not worth retrying (PRV-013).** A usage tier's monthly
+  spend cap answers with a 429 that has no `retry-after` and keeps failing until access
+  resumes. PRV-013 calls every 429 retryable, so the queue retries it up to
+  `maxAttempts`; the message quotes Anthropic's, which says what happened.
 
 ## Decisions
 
@@ -848,6 +862,17 @@ export type JobQueue = {
 | Which API version does the Anthropic adapter send, and what of the profile's sampling (PRV-042)? | `anthropic-version: 2026-10-21`. It never sends `temperature`, `top_p`, or `top_k`, which that version rejects on every model, so Anthropic ignores the profile's and the role's sampling, as the providers README says. | Staying on `2023-06-01` to keep sampling: the newest models accept only their default sampling on any version, and new API features arrive on the new one. | owner |
 | What does the Anthropic adapter send for each `thinking` setting (PRV-046)? | `off` sends `{ type: 'disabled' }`, `on` sends `{ type: 'adaptive', display: 'summarized' }`, and `provider-default` leaves the field out. A model that cannot turn thinking off, such as Claude Opus 5.5, Sonnet 5.5, or Fable 5.1, answers `off` with a 400. That is `provider_rejected`, with a message a player can act on: Anthropic's own explanation, then the setting to change, the profile's thinking to `provider-default`. | Sending something else for `off` where a model refuses `disabled`, such as leaving the field out: the profile would think while its setting says off, and the adapter would need a list of models. | owner |
 | How does the Anthropic adapter carry out the `tool-call` method (PRV-040)? | One tool named after the schema, with `strict: true`, forced with `tool_choice: { type: 'tool', name }`; the answer is its input. A model that refuses forced tool use, such as Claude Opus 5.5, Sonnet 5.5, or Fable 5.1, answers with a 400, which is `provider_rejected`, so PRV-053 falls back to `prompt-only`, and the probe suggests `json-schema`. | `tool_choice: auto` with the tool named in the prompt: the model could answer without calling it, so the method would no longer guarantee a call. | owner |
+| Where do system messages go in an Anthropic request (PRV-041)? | The leading system messages become `system` text blocks. A system message after a user or assistant message throws (CONV-041), since CTX-010 never builds one. | Sending it as a mid-conversation system message: only some models accept one, and nothing in the engine produces it. | Claude (ruling) |
+| How does the Anthropic adapter lay out messages that CTX-010 did not foresee (PRV-043)? | More than four breakpoints throws (CONV-041). A message with no visible text is left out, since the API refuses an empty block, and its breakpoint moves to the block before it. | Sending the empty block: every call with one would fail with a 400. | Claude (ruling) |
+| How does the Anthropic adapter count usage (PRV-071)? | `inputTokens` is `input_tokens + cache_read_input_tokens + cache_creation_input_tokens`, and `cachedInputTokens` is `cache_read_input_tokens`; for each count, the latest event that reports it wins. A stream cancelled before its `message_delta` estimates its output tokens from the profile's `charsPerToken`. | `input_tokens` alone: it leaves out the cached prefix (Traps). | Claude (ruling) |
+| What `finishReason` does each Anthropic `stop_reason` give? | `max_tokens` and `model_context_window_exceeded` are `length`; `refusal` is `refusal`, returned as `ok` (CSET-050); `end_turn`, `stop_sequence`, `tool_use`, `pause_turn`, and any reason added later are `stop`. | An error for an unknown reason: a new reason would fail calls whose text arrived whole. | Claude (ruling) |
+| What is an `error` event in an Anthropic stream (PRV-013)? | It is mapped by its `error.type`: `overloaded_error` and `api_error` are `provider_unavailable`, `rate_limit_error` is `rate_limited` with no wait, `timeout_error` is `provider_timeout`, and any other is `provider_rejected`. It is an error even after text has arrived, as is a body that ends before `message_stop`; only an abort returns partial text (PRV-047). | Returning the partial text as `ok`: the turn would keep narration the provider cut off as if it were complete. | Claude (ruling) |
+| Does the Anthropic adapter stream when the profile's `streaming` is false (PRV-045)? | Always: every request sends `stream: true`, so one parser reads every response, and each answer delta goes to `onDelta` whenever one is given. Sending the text as one delta for a profile with streaming off is `streamText`'s job (P1-T14). | A second, unstreamed code path: twice the parsing for the same result. | Claude (ruling) |
+| Which structured-output method does an adapter use for a JSON request (PRV-040)? | The profile's `structuredOutput`, whenever `format.type` is `json`. The probe forces a method by passing a copy of the profile with that method (PRV-092). | A method field on `TextRequest`: the copied `types.ts` has none (OVR-033). | Claude (ruling) |
+| What does the Anthropic adapter keep of thinking (PRV-046)? | The text of `thinking` blocks. Signatures and `redacted_thinking` blocks are dropped, since the engine never sends a model's thinking back, and empty thinking is `null`. Inline `<think>` tags are not looked for: Anthropic's models put thinking in blocks. | Keeping signatures for a later replay: no prompt sends a model's own turn back with its thinking. | Claude (ruling) |
+| How does `health` check an Anthropic provider (PRV-091)? | `GET /v1/models?limit=1`, which needs a working key, timed with the `TimeSource`. A 401 or 403 is `reachable: false`, with a message that says to check the key. | A one-token Messages call: it costs money, and it needs a model name, which a provider config does not have. | Claude (ruling) |
+| What is an `anthropic` provider's `baseUrl`? | The API's origin without `/v1`, as Anthropic's SDKs take it, and `https://api.anthropic.com` when absent. A trailing slash is ignored. | Including `/v1`, as `openai-compatible` does: an address copied from an Anthropic SDK's settings would lack it. | Claude (ruling) |
+| How does the Anthropic adapter tell that a 400 is about thinking (PRV-013)? | It does not: every 400 on a profile whose thinking is `off` gets the hint, worded to fit any 400: "This profile turns thinking off, which some Anthropic models do not allow; if that is the problem, set the profile's thinking to provider-default in Settings." | Matching Anthropic's message text: code never branches on message text (CONV-042), and a rewording would drop the hint with no test failing. | Claude (ruling) |
 
 ## Open
 
@@ -892,3 +917,12 @@ export type JobQueue = {
   cannot turn thinking off, so a profile with `thinking: 'off'` fails on them, with a
   message that names `provider-default` (Decisions). P1-T24's settings screen should
   suggest `provider-default` for Anthropic profiles, and P1-T15's probe shows the message.
+- **No `anthropic-workspace-id`.** Anthropic's `anthropic-workspace-id` header picks the
+  workspace for a credential that can act on more than one. An `anthropic` provider has no
+  field for it, so the adapter never sends it; adding one changes `ProviderConfigSchema`.
+- **PRV-052 leaves out some of Anthropic's limits.** Its structured outputs, read
+  2026-11-05, also refuse array constraints beyond a `minItems` of 0 or 1 (so `maxItems`
+  too), recursive schemas, regex backreferences, lookaround, and word boundaries, enums of
+  complex values, and external `$ref`. A request may hold at most 20 strict tools, 24
+  optional parameters, and 16 parameters with union types. P1-T14's adaptation should
+  handle these.
