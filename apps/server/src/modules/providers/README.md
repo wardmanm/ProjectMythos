@@ -23,26 +23,29 @@ later. It imports no other module yet; ARCH-021 allows `config`, `storage`, and 
   Each error has the `retryable` and `httpStatus` PRV-013 gives its code.
 - `estimateTokens(text, charsPerToken)` is `ceil(length / ratio)`, with no margin.
 - `openCalibration(dataDir)` returns `{ calibration, problem }`. The composition root
-  opens it once and logs `problem` if the file was corrupt. `calibration.charsPerToken(
-  profile)` gives the ratio to estimate with, and `calibration.calibrate(profile,
-  estimated, reported)` folds one call into it.
+  opens it once and logs `problem` if the file was corrupt. A `Calibration` has:
+  - `charsPerToken(profile)`, the ratio to estimate with;
+  - `calibrate(profile, estimated, reported)`, which folds one call into it.
 
 ## The mock
 
 A call is answered in one of three modes:
 
-| Mode | When | Each call |
-|---|---|---|
-| Scripted | Once a test has called `script` | Takes the next outcome queued for its role. An empty queue throws, naming the role and the call. |
-| Fixture | `fixturesDir` is set | Reads `<fixturesDir>/<seq>-<role>.json`, where `seq` counts that role's calls from `001`. See [the fixture README](../../../test/fixtures/model/README.md). |
-| Default | Otherwise | Short placeholder text for the role, or the placeholder in `jsonPlaceholders` for a JSON schema. An unknown schema is `provider_rejected`. |
+- **Scripted**, once a test has called `script`: each call takes the next outcome
+  queued for its role. An empty queue throws, naming the role and the call.
+- **Fixture**, when `fixturesDir` is set: each call reads
+  `<fixturesDir>/<seq>-<role>.json`, where `seq` counts that role's calls from `001`.
+  [The fixture README](../../../test/fixtures/model/README.md) has the layout.
+- **Default**, otherwise: short placeholder text for the role, or the placeholder in
+  `jsonPlaceholders` for a JSON schema. An unknown schema is `provider_rejected`.
 
 In every mode the text streams to `onDelta` a word at a time, with a pause of `delayMs`
 after each word. A call that is not streamed, or has no text, pauses once. Thinking is
-never streamed. An abort after some text returns that text with `finishReason:
-'cancelled'`; before any, the `cancelled` error. The pauses use the global
-`setTimeout`, so Vitest's fake timers control them. `embed` returns deterministic unit
-vectors of the profile's `embeddingDimensions`. The mock never calls `fetch`.
+never streamed. An abort after some text returns that text, with `finishReason` set to
+`'cancelled'`; an abort before any returns the `cancelled` error. The pauses use the
+global `setTimeout`, so Vitest's fake timers control them. `embed` returns
+deterministic unit vectors of the profile's `embeddingDimensions`. The mock never calls
+`fetch`.
 
 ## Calibration
 
