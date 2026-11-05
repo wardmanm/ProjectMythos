@@ -94,9 +94,12 @@ CON-005, CON-070, CON-071, CON-073, CON-080, CON-081, CON-082, CON-083, CON-084,
     - TRN-070: a set with a stage violation, a missing place, and full hands is
       rejected with all three, each at its path, and returns no state;
     - CON-085: one type from each later phase throws `<type> arrives in phase N`.
-  - `pnpm check` passes. The workspace has `Tests  248 passed (248)` and
-    `spec/reference` `Tests  271 passed (271)`, and it ends with
-    `Docs check passed: 834 requirements, 25 tasks (6 done), 19 ADRs, 75 markdown files, 332 citations in code.`
+  - `pnpm check` passes, after rebasing onto the merges of P1-T09, P1-T16, P1-T10, and
+    P1-T07. The workspace has `Tests  399 passed (399)` and `spec/reference` `Tests  271
+    passed (271)`, and it ends with `Docs check passed: 834 requirements, 25 tasks (10
+    done), 19 ADRs, 80 markdown files, 521 citations in code.`
+  - At the rebase, P1-T07's and this task's 06-turn-engine Decisions rows on TRN-061's
+    order were the same decision of Mike's, so they are one row.
 - **Rulings:**
   - **Mike's decisions** (`P1-T05: spec: owner: TRN-061's order, CON-073's factions,
     TRN-064's later parts`), each a row in its document's Decisions:
