@@ -41,6 +41,7 @@ const treeFiles = [
   'apps/server/src/main.ts',
   'apps/server/src/cli/tool.ts',
   'apps/client/src/view.ts',
+  'content-library/themes/theme.house.json',
   'scripts/tool.ts',
   ...serverModules.flatMap((name) => [
     `apps/server/src/modules/${name}/index.ts`,
@@ -137,10 +138,14 @@ describe('package boundaries', () => {
     await expectImport(file, '@mythos/contracts', true);
     await expectImport(file, 'react', true);
     await expectImport(file, './view', true);
+    await expectImport(file, '@/view', true);
     await expectImport(file, '@mythos/core', false);
     await expectImport(file, '@mythos/server', false);
     await expectImport(file, '../../../packages/core/src/index', false);
     await expectImport(file, '../../server/src/app', false);
+    // The house theme is read from the built-in library at build time (UI-032).
+    const theme = 'apps/client/src/theme/house-theme.ts';
+    await expectImport(theme, '../../../../content-library/themes/theme.house.json', true);
   });
 
   it('CONV-121: the server imports core and contracts, never the client', async () => {
@@ -223,6 +228,20 @@ describe('code restrictions', () => {
         quiet: [coreTest, serverFile],
       });
     }
+  });
+
+  it('ARCH-120, ARCH-122: in the client, only src/api calls fetch and only src/events opens an EventSource', async () => {
+    const screen = 'apps/client/src/features/play/play-screen.tsx';
+    const api = 'apps/client/src/api/client.ts';
+    const events = 'apps/client/src/events/campaign-events.ts';
+    await expectRule('no-restricted-globals', "export const r = fetch('/api/campaigns');\n", {
+      reports: [screen, events, 'apps/client/src/app/app.tsx', 'apps/client/src/main.tsx'],
+      quiet: [api, 'apps/client/src/features/play/play-screen.test.tsx', serverFile],
+    });
+    await expectRule('no-restricted-globals', "export const s = new EventSource('/api/x');\n", {
+      reports: [screen, api, 'apps/client/src/stores/notice-store.ts'],
+      quiet: [events, 'apps/client/src/app/app.test.tsx', serverFile],
+    });
   });
 
   it('CONV-070: console is allowed only in scripts and the server cli', async () => {
