@@ -171,6 +171,7 @@ ARCH-120, ARCH-121, ARCH-122, UI-001, UI-030, UI-032, UI-033, UI-034, UI-040, UI
   - Accept ADR-020 (native build tools: `@tailwindcss/oxide`, `rolldown`,
     `lightningcss`). Options: accept it; or reject it, which means a different CSS and
     bundling setup than Tailwind 4 and Vite 8. Blocks: the merge, not the task.
+    Decided 2026-11-05: accepted; ADR-020's status is Accepted.
 - **Not tested:**
   - ARCH-121: the only store holds a notice, text written for the player, not server
     data; there is no behavior to show.
@@ -184,7 +185,7 @@ ARCH-120, ARCH-121, ARCH-122, UI-001, UI-030, UI-032, UI-033, UI-034, UI-040, UI
     `lucide-react` 1.68.0, `@fontsource/literata` 5.3.0,
     `@fontsource/atkinson-hyperlegible` 5.3.0, `cn` 0.5.2, and `zod` 4.6.5.
   - Tooling: `tailwindcss` 4.3.4 and `@tailwindcss/vite` 4.3.4, which brings the native
-    `@tailwindcss/oxide` (ADR-020, Proposed); `shadcn` 4.23.0; `tw-animate-css` 1.4.0;
+    `@tailwindcss/oxide` (ADR-020); `shadcn` 4.23.0; `tw-animate-css` 1.4.0;
     `jsdom` 30.1.3, `@testing-library/react` 16.3.3, and `@testing-library/user-event`
     14.6.8, for component tests; `@testing-library/dom` 10.4.2, the required peer of
     `@testing-library/react`.

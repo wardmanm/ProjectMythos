@@ -1,6 +1,6 @@
 # ADR-020: Native build tools with prebuilt binaries
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-05
 - **Requirements:** CONV-084, OVR-001
 
