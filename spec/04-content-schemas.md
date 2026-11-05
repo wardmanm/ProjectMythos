@@ -1192,6 +1192,22 @@ Excerpt: the first of the fixture's ten relationships.
   scenario's start place, and the first scene's ID, which setup's `scene.start` then
   records.
 
+## Traps
+
+- **Directory listings come back in a different order on each OS (SCH-103).** `readdir`
+  follows the file system, so Windows and macOS disagree. The content module's `read.ts`
+  sorts every listing, and then the whole file list by path, with `cmp`. Sorting folder by
+  folder is not enough: `a-b.json` sorts before `a/z.md` as a path, but after the `a`
+  folder as a name.
+- **CRLF and a BOM (CONV-083).** A pack saved on Windows may have CRLF line endings or a
+  UTF-8 BOM, which `JSON.parse` rejects and which would make canon differ between machines.
+  `read.ts` drops the BOM and turns every line ending into LF before anything is parsed.
+- **Nested runtime schemas are not strict (SCH-001).** `media`, `voice`,
+  `startingLocation`, `container`, and `bonuses` use runtime schemas from 03-contracts §6,
+  which are `z.object`, so Zod drops an unknown key inside them without a word. The content
+  module's `parse.ts` checks their keys itself (`nestedUnknownKeys`). A new non-strict
+  object in an authored schema must be added there too.
+
 ## Decisions
 
 | Question | Decision | Rejected and why | Decided by |
@@ -1201,3 +1217,20 @@ Excerpt: the first of the fixture's ten relationships.
 | What is `PackIssue.file` for a library file (SCH-101)? | A relative path starting with the library's folder: `content-library/…` for the built-in library, `library/…` for the user library. Never absolute. | Absolute paths: they differ between machines and between Windows and macOS, so the same files would not give the same errors (SCH-103). | owner |
 | Both pack folders hold a pack with the same ID (§2). | The data directory's pack is used, and a warning is logged. | The repository's pack: an edited copy in the data directory would be ignored. Refusing both: a copy could break the reference pack. | owner |
 | May a history claim's `aboutRef` name a later entry (SCH-090)? | No: it names an earlier entry in `history.json`, and the loader reports one that names a later entry. Setup adds history in file order and the fold checks each commit against what came before it (SCH-117), so a claim about a later entry would load and then fail at campaign creation. | Resolving `aboutRef` after every entry is added: setup would need a second pass over history. | owner |
+| Which ruleset are seed relationships checked against when a pack loads (SCH-092)? | The setting's default ruleset (SCH-114): an unknown dimension or a value out of its range is an error. Dropping and clamping happen at campaign creation, with the campaign's ruleset. | Dropping and clamping at load time: there is no campaign yet, and a typo would vanish into a warning. | Claude (ruling) |
+| What path do `core`'s checks report (TIME-004, RUL-002, UI-031)? | `''`: `calendarIssues`, `rulesetIssues`, and `themeIssues` name the field inside each message. Dates and gear use the loader's own paths, such as `epoch`, `entries.3.when`, and `startingLocation`. | Taking the path out of the message text: it would break when a message is reworded, and branching on message text is forbidden (CONV-042). | Claude (ruling) |
+| Does a library definition that failed to parse still shadow one with its ID (SCH-010)? | Yes, by its file name, so the pack sees the broken copy and its problems, and no pack offers either. | Falling through to the next source: a typo in a user's copy would silently bring back the built-in definition. | Claude (ruling) |
+| What may a library tone profile's `themeId` and `slotSchemaId` name? | A usable definition in the libraries. Otherwise the tone profile has a problem of its own, and no pack offers it. | Looking them up in each pack too: the same library tone profile would be offered by one pack and not another. | Claude (ruling) |
+| Are starting statuses and item bonuses checked when a pack loads (CON-020, CON-024)? | Yes: a harm has a level and a condition none, a level is at most the fatal level, and every tag and stat is the default ruleset's. | Leaving them to the fold at campaign creation (P1-T17): the pack would load and then fail. | Claude (ruling) |
+| In what order does `listThemes` offer themes (UI-031)? | The built-in library's, then the user library's, then each pack's by pack ID; the first theme with an ID wins, and a theme with issues is left out. | Pack, then user, then built-in, as SCH-010 resolves inside a pack: outside a campaign there is no pack to start from. | Claude (ruling) |
+| What happens to a pack folder whose name is not a pack ID (SCH-020)? | It is skipped, with a warning logged. | Listing it with its issues: `PackSummary.packId` must be a slug, so the client could not parse the list. | Claude (ruling) |
+
+## Open
+
+- **Pack fonts.** The loader does not read a pack's `fonts/` folder yet, so `themeIssues`
+  gets no pack fonts and a pack theme that names one is reported as using an unknown font.
+  UI-034's check that each font has a license file is in no task yet.
+- **Items and a tone profile's slot schema.** Starting items are checked against the
+  setting's slot schema, not the override of the setting's default tone profile (SCH-082).
+  A campaign that uses an override is checked when it is created. P1-T08 raised this for
+  the owner.
