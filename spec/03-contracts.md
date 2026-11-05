@@ -1244,7 +1244,7 @@ may contain any world-state or memory commit type (TRN-056).
 | `flag.set` | world state | resolution, extraction, world-tick, player-edit |
 | `observation.add` | memory | extraction, world-tick, consolidation, player-edit |
 | `observation.amend` | memory | player-edit |
-| `knowledge.grant` | memory | extraction, world-tick, player-edit |
+| `knowledge.grant` | memory | extraction, world-tick, consolidation, player-edit |
 | `knowledge.revoke` | memory | player-edit |
 | `knowledge.name` | memory | extraction, world-tick, player-edit (and setup) |
 | `relationship.adjust` | memory | extraction, world-tick, player-edit |
@@ -1764,6 +1764,9 @@ All paths are under `/api`.
 | What does `SessionState.authenticated` mean (§14.1)? | The request carries a live session cookie, whether or not this device needs a PIN. The client shows the PIN screen when `pinRequired` is true and `authenticated` is false. | "May use the API": for an exempt localhost or with no PIN set it would only repeat `pinRequired`, and say nothing about the session. | Claude (ruling) |
 | What does `POST /session` return when no PIN is set (§14.2)? | `204` with no cookie: there is nothing to check, and every route already passes. | `auth_failed`: the client would show a wrong-PIN message for a lock that does not exist. A session anyway: it would grant nothing. | Claude (ruling) |
 | Which relationships does CON-073 allow while the ruleset has no switch for factions? | Between characters only: `fromId` and `toId` must both be a pc or npc. | Allowing characters to factions now: CON-073 makes that the ruleset's choice, and no ruleset field records it yet. | owner |
+| Where is CON-071 enforced? | When a set is written: `validateSet` in `core` rejects a set in which a witness of an observation it adds has no `witnessed` grant. The set builders, setup (SCH-117) and extraction (08-memory), add the grants. Replay does not check it. | Adding the grants inside the fold: the grants would exist only in folded state, not as commits, so row projections would not see them. | Claude (ruling) |
+| What does a `null` mean in `relationship.set` and `flag.set`? | A `null` summary in `relationship.set` leaves the summary unchanged, and a new relationship's summary is `''`. A `null` value in `flag.set` removes the flag. | A `null` summary clearing the summary: `relationship.adjust` already uses `null` for "unchanged". | Claude (ruling) |
+| What are an `illegal_state_change` error's `details`? | `{ issues: SemanticIssue[] }`, like `validation_failed` (CON-091), every issue at once. Each `path` is a dotted path into the set's entry, such as `commits.2.payload.to`. | A bare array: the client would read the two codes' details differently. | Claude (ruling) |
 
 ## Open
 
