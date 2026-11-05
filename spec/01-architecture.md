@@ -298,8 +298,9 @@ All model and media work goes through one queue in the `providers` module.
 
 ### 6.4 Auth
 
-- **ARCH-110** When a PIN is configured, all `/api` routes except the PIN check require
-  a valid session cookie. The PIN is stored hashed. Failed attempts are rate-limited.
+- **ARCH-110** When a PIN is configured, all `/api` routes except the session routes
+  CON-113 lists (`GET` and `POST /session`) require a valid session cookie. The PIN is
+  stored hashed. Failed attempts are rate-limited.
 - **ARCH-111** Localhost MAY be exempted from the PIN by machine config.
 
 ## 7. Client architecture
