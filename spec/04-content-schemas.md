@@ -827,7 +827,7 @@ export const RelationshipsFileSchema = z.strictObject({
 **Invariants**
 
 - **SCH-090** History `ref`s are unique within the file; `aboutRef` references an
-  existing entry.
+  earlier entry in the file, since setup adds history in file order (SCH-117).
 - **SCH-091** A dated entry's `when` is at or after the setting's `epoch`. Undated
   entries are background, stored at game time 0.
 - **SCH-092** Seed relationships follow CON-073 and use dimensions from the ruleset's
@@ -1200,3 +1200,4 @@ Excerpt: the first of the fixture's ten relationships.
 | Which library problems does a pack report (SCH-100)? | Only problems in library definitions the pack uses (its calendar, slot schema, default tone profile and ruleset, and the themes and slot schemas its tone profiles name), each under the library file. A broken library definition is offered to no pack, and is logged. | Every library problem in every pack: one broken user ruleset would block every pack, even those that never use it. | owner |
 | What is `PackIssue.file` for a library file (SCH-101)? | A relative path starting with the library's folder: `content-library/…` for the built-in library, `library/…` for the user library. Never absolute. | Absolute paths: they differ between machines and between Windows and macOS, so the same files would not give the same errors (SCH-103). | owner |
 | Both pack folders hold a pack with the same ID (§2). | The data directory's pack is used, and a warning is logged. | The repository's pack: an edited copy in the data directory would be ignored. Refusing both: a copy could break the reference pack. | owner |
+| May a history claim's `aboutRef` name a later entry (SCH-090)? | No: it names an earlier entry in `history.json`, and the loader reports one that names a later entry. Setup adds history in file order and the fold checks each commit against what came before it (SCH-117), so a claim about a later entry would load and then fail at campaign creation. | Resolving `aboutRef` after every entry is added: setup would need a second pass over history. | owner |

@@ -288,8 +288,13 @@ function checkPack(dir: string) {
         h.claim.audienceIds.forEach((a, i) => need(hf, `${p}.claim.audienceIds.${i}`, a, ['pc', 'npc']));
       }
     });
+    // Setup adds history in file order, so a claim is about an earlier entry (SCH-090, SCH-117).
     history.entries.forEach((h, n) => {
-      if (h.claim?.aboutRef && !refs.has(h.claim.aboutRef)) say(hf, `entries.${n} (${h.ref}).claim.aboutRef: no entry "${h.claim.aboutRef}"`);
+      const about = h.claim?.aboutRef;
+      if (!about) return;
+      const p = `entries.${n} (${h.ref}).claim.aboutRef`;
+      if (!refs.has(about)) say(hf, `${p}: no entry "${about}"`);
+      else if (!history.entries.slice(0, n).some((e) => e.ref === about)) say(hf, `${p}: "${about}" names a later entry; a claim must come after the entry it is about`);
     });
   }
 
