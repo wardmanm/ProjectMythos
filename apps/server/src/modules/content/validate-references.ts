@@ -1,6 +1,6 @@
 // Pass 2 of SCH-100: every reference resolves. Definition IDs go through the lookup order
 // (SCH-010); entity IDs must name an entity of the right kind in the pack.
-import type { AuthoredEntity, ToneProfile } from '@mythos/contracts/content';
+import type { AuthoredEntity, HistoryEntry, ToneProfile } from '@mythos/contracts/content';
 import { defaultRulesetId } from './resolve';
 import type { DefinitionSet, EntityFile, PackContent, PackIssue } from './types';
 import { withArticle } from './validate-files';
@@ -158,12 +158,29 @@ function entityReferences(entities: Entities, { file, entity }: EntityFile): Pac
   }
 }
 
-// Implements SCH-090: aboutRef names an entry in the same file.
+/**
+ * A claim's `aboutRef` names an earlier entry, because setup adds history in file order and
+ * each commit must point at one already made (SCH-117). Implements SCH-090 (owner decision).
+ */
+function aboutRefIssues(
+  file: string,
+  entries: readonly HistoryEntry[],
+  index: number,
+  aboutRef: string | null,
+): PackIssue[] {
+  if (aboutRef === null) return [];
+  const path = `entries.${String(index)}.claim.aboutRef`;
+  if (entries.slice(0, index).some((entry) => entry.ref === aboutRef)) return [];
+  const message = entries.some((entry) => entry.ref === aboutRef)
+    ? `"${aboutRef}" names a later entry; a claim must come after the entry it is about`
+    : `"${aboutRef}" is not the ref of an entry in this file`;
+  return [{ file, path, message }];
+}
+
 function historyReferences(content: PackContent): PackIssue[] {
   const { history, entities } = content;
   if (history === null) return [];
   const { file } = history;
-  const refs = new Set(history.value.map((entry) => entry.ref));
   return history.value.flatMap((entry, index) => {
     const at = `entries.${String(index)}`;
     const issues = [
@@ -186,10 +203,7 @@ function historyReferences(content: PackContent): PackIssue[] {
       issues.push(
         ...needEach(entities, file, `${at}.claim.audienceIds`, claim.audienceIds, CHARACTER),
       );
-      if (claim.aboutRef !== null && !refs.has(claim.aboutRef)) {
-        const message = `"${claim.aboutRef}" is not the ref of an entry in this file`;
-        issues.push({ file, path: `${at}.claim.aboutRef`, message });
-      }
+      issues.push(...aboutRefIssues(file, history.value, index, claim.aboutRef));
     }
     return issues;
   });

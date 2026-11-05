@@ -77,6 +77,24 @@ describe('reference checks', () => {
     });
   });
 
+  it('SCH-090: a claim whose aboutRef names a later entry is an issue', () => {
+    // entries.2's claim is about merrow-lost (entries.0); wardens-suspect is entries.10.
+    const broken = withReplaced(
+      pack,
+      'history.json',
+      '"aboutRef": "merrow-lost"',
+      '"aboutRef": "wardens-suspect"',
+    );
+    expect(validate(broken, builtIn).issues).toEqual([
+      {
+        file: 'history.json',
+        path: 'entries.2.claim.aboutRef',
+        message:
+          '"wardens-suspect" names a later entry; a claim must come after the entry it is about',
+      },
+    ]);
+  });
+
   it("SCH-010: a setting's definitions resolve through the pack and both libraries", () => {
     const broken = withReplaced(
       pack,
