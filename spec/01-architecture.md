@@ -334,7 +334,8 @@ apps/client/src/
 
 Per OVR-010, these exist from phase 1 even if unused:
 
-- **ARCH-130** The `assets` folder and an `assets` projection in the campaign schema.
+- **ARCH-130** The `assets` folder and the `assets` and `asset_versions` tables in the
+  campaign schema. Assets are campaign-level state, not a projection (MED-010).
 - **ARCH-131** Device assignment and priority on every job.
 - **ARCH-132** A `media` field on entity schemas and a `voiceProfile` field on character
   schemas (optional, validated, ignored until their phases).
