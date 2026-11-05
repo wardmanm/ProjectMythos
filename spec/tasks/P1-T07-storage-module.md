@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Phase** | 1 |
-| **Status** | Not started |
+| **Status** | Done |
 | **Depends on** | P1-T06 |
 | **Branch** | `p1-t07-storage-module` |
 
@@ -67,8 +67,10 @@ ARCH-031, ARCH-040, ARCH-041, ARCH-042, ARCH-050, ARCH-051, ARCH-061, ARCH-130, 
   `openCampaign`, `listCampaigns`, `deleteCampaign`, `readCampaign`, `touchLastPlayed`;
   canon: `writeCanon`, `readCanon`, `readTemplates`; turns: `insertTurn`,
   `appendSet` (a set and its commits on an existing turn), `setTurnStatus`,
-  `readTurn`, `readTurnsOnBranch(branchId, beforeDepth, limit)`, `readSetsForRead(branchId,
-  point)` (every set and commit a read point needs, in TRN-061 order); branches:
+  `readTurn`, `readTurnsOnBranch(branchId, beforeDepth, limit)`, `readSetsForRead(point)`
+  (every active set and commit a read point needs, each set with its turn's depth,
+  sorted by depth and then set `seq`; core's `orderSets` applies TRN-061's order);
+  branches:
   `createBranch`, `readBranch`, `listBranches`; state: `readState(key)`,
   `writeState(key, value)` (a new version), `readStateHistory(key)`; model calls:
   `insertModelCall`, `listModelCalls(turnId)`, `readModelCall(id)`,
@@ -79,7 +81,8 @@ ARCH-031, ARCH-040, ARCH-041, ARCH-042, ARCH-050, ARCH-051, ARCH-061, ARCH-130, 
   contract schema they hold (CONV-030).
 - **Turns repository.** `insertTurn` writes the turn, its sets, and their commits,
   moves the branch head, and adds the `branch_turns` row, in one transaction
-  (TRN-011, ARCH-041). Reads return sets and commits in TRN-061 order. Only
+  (TRN-011, ARCH-041). Reads return sets by depth, then set `seq`, then commit `seq`;
+  TRN-061's stage order is core's `orderSets`, which the caller applies. Only
   `turns.status` and `commit_sets.active` are ever updated (TRN-001).
 - **Campaign folders.** `createCampaignFolder`, `openCampaign` (one cached connection
   per campaign), `listCampaigns`, `deleteCampaign` (close the connection before
@@ -93,21 +96,106 @@ ARCH-031, ARCH-040, ARCH-041, ARCH-042, ARCH-050, ARCH-051, ARCH-061, ARCH-130, 
 
 ## Acceptance
 
-- [ ] ARCH-050: opening a database twice runs each migration once; a migration that fails rolls back.
-- [ ] ARCH-041: an error thrown inside `transaction` leaves no rows behind.
-- [ ] TRN-003, ARCH-042: after inserting a chain of turns, a rebuild produces the same `branch_turns` rows.
-- [ ] CONV-051: a row with a corrupt JSON column fails with a clear parse error, not a crash later.
+- [x] ARCH-050: opening a database twice runs each migration once; a migration that fails rolls back.
+- [x] ARCH-041: an error thrown inside `transaction` leaves no rows behind.
+- [x] TRN-003, ARCH-042: after inserting a chain of turns, a rebuild produces the same `branch_turns` rows.
+- [x] CONV-051: a row with a corrupt JSON column fails with a clear parse error, not a crash later.
 - [ ] Deleting an open campaign works on Windows (CI).
-- [ ] Storage tests each use a fresh database in `os.tmpdir()` (CONV-116).
-- [ ] `pnpm check` passes.
+- [x] Storage tests each use a fresh database in `os.tmpdir()` (CONV-116).
+- [x] `pnpm check` passes.
 
 ## Completion notes
 
-_Written when the task is done (CONV-135). Replace this line and fill in each part;
-a part with nothing in it says "None"._
-
 - **Done:**
+  - `apps/server/src/modules/storage/`: `sqlite.ts`, `migrate.ts`,
+    `migrations/0001-initial.sql`, `rows.ts`, `campaigns.ts`, `turns.ts`,
+    `branches.ts`, `read-sets.ts`, `rebuild.ts`, `campaign-state.ts`, `canon.ts`,
+    `model-calls.ts`, `jobs.ts`, `testing.ts`, `index.ts`, and `README.md`, with 61
+    tests in 13 files. The module imports no other module; time, retention, and paths
+    are parameters.
+  - Acceptance, by test:
+    - ARCH-050: `opening a database twice runs each migration once`, `a migration that
+      fails rolls back, and so does its migrations row`, and `a database from a newer
+      Mythos is refused with a clear message`;
+    - ARCH-041: `an error thrown inside leaves no rows behind`, plus nesting, a failing
+      statement, and an async `fn`;
+    - TRN-003, ARCH-042: `rebuilding after a chain of turns reproduces branch_turns and
+      active`, on a consistent database and on emptied projections;
+    - CONV-051: `a commit with corrupt JSON fails at read time, naming the table and
+      row`, and the same for canon and campaign state;
+    - deleting an open campaign: `deleting an open campaign closes it and removes its
+      folder` passes on macOS; CI runs it on `windows-latest` when the branch is pushed;
+    - CONV-116: `source-rules.test.ts` checks that every storage test gets its folders
+      from `createTestSpace()` (`mkdtempSync` in `os.tmpdir()`) and calls
+      `space.cleanUp()`, which closes every database before removing its folder.
+  - Vitest loads `node:sqlite` with no flag and no warning (checked before coding).
+  - Verified, then reverted: without the supersession update, four tests fail;
+    without the commits update trigger, the TRN-001 test fails; without
+    `insertTurn`'s transaction, the TRN-011 rollback test fails.
+  - `pnpm check` passes, after rebasing onto the merges of P1-T09, P1-T16, and P1-T10. The
+    workspace has `Tests  351 passed (351)` and `spec/reference` `Tests  271 passed (271)`,
+    and it ends with `Docs check passed: 834 requirements, 25 tasks (9 done), 19 ADRs, 80
+    markdown files, 451 citations in code.`
 - **Rulings:**
-- **Pending decisions:**
+  - **Owner's decisions** (Mike, on the plan, 2026-11-05), each in its own
+    `P1-T07: spec: owner:` commit and a Decisions row:
+    - ARCH-040 is reworded: game state and its history change only through commits,
+      and the exceptions are named. Beyond Mike's list (branches, `campaign_state`,
+      model call records, jobs, assets), it also names what the spec already says is
+      not a commit, so the documents agree: the rest of TRN-002's state (resolution
+      drafts, bookmarks) and the caches (snapshots, ARCH-044; suggestions, TRN-059).
+      The section's introduction names the content snapshot (ARCH-045). 01-architecture
+      Decisions. `CLAUDE.md`'s Never line still paraphrases the old wording.
+    - `sqlite.ts` imports `DatabaseSync`; ADR-012 is amended. 02-conventions Decisions.
+    - Each public storage write is one transaction; `insertRootTurn` is the first
+      dedicated multi-write function. 01-architecture Decisions.
+    - TRN-001 triggers in 0001, with no migration hash check, and a Trap about adding
+      columns (02-conventions, with the other migration traps). 06-turn-engine
+      Decisions.
+    - TRN-061's order belongs to core's `orderSets`; `readSetsForRead` sorts by depth
+      and set `seq` only. This task's design notes say so. 06-turn-engine Decisions.
+  - **ARCH-130, spec fix** (`P1-T07: spec: ARCH-130 …`): it called assets a projection;
+    MED-010 makes them campaign-level state. It now reserves the `assets` and
+    `asset_versions` tables.
+  - **`seq` columns** (CONV-054) on `model_calls` and `jobs`, which the task's column
+    list left out, and on `branches`, `bookmarks`, `assets`, and `asset_versions`, so
+    no later migration adds them. 02-conventions Decisions.
+  - **`model_calls.created_at` is INTEGER milliseconds**, with a 02-conventions Trap on
+    WallTime strings. 01-architecture Decisions.
+  - **Canon in two tables**, `canon` and `canon_templates`, with SCH-111's kinds plus
+    `theme`; each kind's JSON is parsed with its content schema. 01-architecture
+    Decisions.
+  - **CONV-055 and ARCH-040 are checked by `source-rules.test.ts`**, not a lint rule,
+    since `eslint.config.js` was changing in parallel branches. 02-conventions
+    Decisions.
+  - **Wall time:** the store uses the injected `TimeSource` (Mike's decision,
+    CONV-061) for `touchLastPlayed` and the retention cutoff.
+  - **API additions** to the design notes' list: `createCampaignStore` holds the
+    connection cache (ARCH-022), with `closeCampaign` and `closeAll`, and takes
+    `timeSource` and `modelCallRecordDays` (a getter, read at each open);
+    `createCampaignFolder` takes the campaign record and writes its row;
+    `insertRootTurn`; `listCanon`; `readSetsForRead(db, point)` takes the branch from
+    the point; `writeState` takes its `createdAt`; `isOpen` on `Database`.
+    `CampaignRecordSchema` and `PersistedJobSchema` are storage's own schemas.
+  - **Invariant breaches throw** (CONV-041): a turn that isn't the head's child, a set
+    on the wrong turn, superseding an inactive set or one on another turn, a second
+    root turn, a corrupt row. `openCampaign` returns `not_found` for an ID that isn't a
+    UUID or has no `campaign.sqlite`.
+  - **02-conventions Traps:** a missing named parameter binds as NULL (`undefined` and
+    `true` bind too); opening a missing file creates it; close before deleting on
+    Windows; `@types/node` declares only the `…Sync` names; migrations run inside a
+    transaction.
+  - **01-architecture Open:** a database from a newer Mythos throws; no `ErrorCode`
+    fits, so the client sees `internal_error`.
+  - **Extra files** (CONV-132): `branches.ts`, `read-sets.ts`, `rebuild.ts`,
+    `testing.ts`, and `source-rules.test.ts`.
+- **Pending decisions:** None.
 - **Not tested:**
-- **Dependencies:**
+  - ARCH-061: excluding records from exports; exports don't exist yet. Retention is
+    tested.
+  - PRV-062: re-enqueueing unfinished jobs when a campaign opens is the job queue's
+    (P1-T13). Storing and listing them is tested.
+  - TRN-003: rewind's and copy-on-write's rewrites of a depth range arrive with those
+    operations in phase 2. Insert, fork, and the rebuild are tested.
+- **Dependencies:** None. `node:sqlite` is built in (ADR-012), and the module uses only
+  `zod`, `@mythos/contracts`, and `@mythos/core`, which `apps/server` already has.

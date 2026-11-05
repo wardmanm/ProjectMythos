@@ -295,6 +295,32 @@ ask "how does this work?", rewrite it.
   UTF-16 code unit, so a character beyond U+FFFF, such as an emoji, sorts before
   U+E000 to U+FFFF. That differs from code-point order and from SQLite's default
   `BINARY` collation. Sort with `cmp` from `core`, never with `<` or `localeCompare`.
+- **A missing named parameter binds as NULL (CONV-055).** `node:sqlite` binds a
+  `:name` that the parameters object leaves out as NULL, and TypeScript cannot see the
+  gap, since the parameters are a record. At runtime `undefined` also binds as NULL and
+  `true` as 1, though the types allow neither. Pass every parameter, and booleans as 0
+  or 1. An extra, unknown parameter does throw.
+- **Opening a missing database file creates it (CONV-055).** `new DatabaseSync(file)`
+  makes an empty database where there is none. Code that opens an existing campaign
+  checks that `campaign.sqlite` exists first, as `openCampaign` does.
+- **Close a database before deleting its folder (OVR-001, CONV-116).** Windows will not
+  delete an open file, and a WAL database also holds its `-wal` and `-shm` files open.
+  `deleteCampaign` closes the connection first, and storage tests close every database
+  in `cleanUp` before removing their folders.
+- **`@types/node` declares only `DatabaseSync` and `StatementSync` (ADR-012).**
+  `Database` and `Statement` exist at runtime but do not typecheck.
+- **WallTime strings do not sort as text (CONV-054).** `WallTimeSchema` accepts any
+  number of fraction digits, so `…T12:00:00Z` sorts after `…T12:00:00.500Z` as text,
+  though it is earlier. A time that a query compares is stored as INTEGER milliseconds,
+  as `model_calls.created_at` is, and ordering uses `seq` columns.
+- **TRN-001's triggers name their columns (CONV-052).** The update triggers on `turns`
+  and `commit_sets` list the columns that may not change (`UPDATE OF …`). A migration
+  that adds a column to either table must drop and recreate that trigger to cover it,
+  or the new column can be edited freely.
+- **Each migration runs inside a transaction (CONV-052).** The runner wraps each file
+  in `BEGIN IMMEDIATE`, where `PRAGMA foreign_keys` has no effect, so a migration that
+  rebuilds a table uses `PRAGMA defer_foreign_keys = ON` instead. A migration never
+  contains `BEGIN` or `COMMIT`.
 
 ## Decisions
 
@@ -305,3 +331,6 @@ ask "how does this work?", rewrite it.
 | How are dependency versions written (CONV-091)? | Exact versions, except TypeScript `~6.0.3` (ADR-015). A tool that `spec/reference` also uses takes its version there, so the workspace holds one copy. | Ranges: the lockfile pins them anyway, but a range hides which version was reviewed. | Claude (ruling) |
 | How do `core`'s tests read fixtures while `core` stays pure (CONV-060)? | `packages/core` has Node's types (`types: ["node"]`) so its tests can use `node:fs`, `node:path`, and `node:url`. Lint keeps Node out of core source: boundaries blocks Node built-ins, and `no-restricted-globals` blocks `process`, `Buffer`, `fetch`, `global`, `require`, and the timers. | `types: []` with fixtures imported as JSON modules: the tests could not list a folder, so "every theme in `content-library/themes/`" would need each theme named by hand. | Claude (ruling) |
 | What is the injected wall-time dependency called (CONV-061)? | `TimeSource`, `{ now(): number }` in milliseconds since the Unix epoch, exported from `@mythos/contracts` beside `WallTime` so every server module can import it. | `Clock`: the glossary's Clock is the progress tracker, and contracts already exports a `Clock` type for it. A bare `now()` function: next to `Date.now()` it is unclear which one is meant. | owner |
+| Which `node:sqlite` class does `sqlite.ts` import (CONV-055, ADR-012)? | `DatabaseSync`. `@types/node` 26.6.4 declares no `Database`, and at runtime the two names are the same class. The import moves to `Database` once the types declare it; only `sqlite.ts` changes. | `Database`, as ADR-012 first said: it does not typecheck. A hand-written declaration for it: a second copy of the driver's types to keep in step. | owner |
+| Which tables get a `seq` column (CONV-054)? | Every table whose rows are listed in order: `commit_sets` (CON-084), `branches`, `model_calls`, `jobs`, `bookmarks`, `assets`, and `asset_versions`. Storage assigns it in the inserting statement as `MAX(seq) + 1`, starting at 0. A commit's `seq` is its position in its set. | Ordering by `created_at` or rowid: CONV-054 rules out both, and two rows made in one millisecond tie. | Claude (ruling) |
+| How are CONV-055 and ARCH-040's projection writes enforced? | By `apps/server/src/modules/storage/source-rules.test.ts`: it fails if any file under `apps`, `packages`, or `scripts` other than `sqlite.ts` imports `node:sqlite`, or if any server file other than storage's `turns.ts`, `branches.ts`, and `rebuild.ts` writes `branch_turns`, `commit_sets.active`, or `replay_conflicts`. | A `no-restricted-imports` lint rule for CONV-055: as good, but `eslint.config.js` was changing in parallel branches; the test can become a rule later. | Claude (ruling) |

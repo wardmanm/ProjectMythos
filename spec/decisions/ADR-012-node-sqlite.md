@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-13
+- **Amended:** 2026-11-05 (P1-T07): the wrapper imports `DatabaseSync`, because `@types/node` declares no `Database`
 - **Requirements:** ARCH-002, CONV-055, CONV-084, CONV-091
 
 ## Context
@@ -15,7 +16,8 @@ synchronous, like `better-sqlite3`.
 
 Node 26 becomes Active LTS on 2026-10-28. In 26.11.0 (released 2026-10-08) the classes were renamed
 `Database` and `Statement`; `DatabaseSync` and `StatementSync` remain as deprecated
-aliases (DEP0210, DEP0211).
+aliases (DEP0210, DEP0211). At runtime each pair is one class, and using the old names
+prints no warning. `@types/node` 26.6.4 declares only the old names.
 
 Checked on Node 26.11.1 (bundled SQLite 3.53.4): `exec`, `prepare` with `run`, `get`,
 and `all`; transactions with `BEGIN`, `COMMIT`, and `ROLLBACK`; WAL mode; `STRICT`
@@ -24,7 +26,9 @@ warning is printed.
 
 ## Decision
 
-- Require Node 26.11.0 or later, and use `node:sqlite`'s `Database` class.
+- Require Node 26.11.0 or later. `sqlite.ts` imports `DatabaseSync`, the name
+  `@types/node` declares, which is the same class as `Database`. It moves to
+  `Database` once the types declare it.
 - Only `apps/server/src/modules/storage/sqlite.ts` imports `node:sqlite`. It exposes a
   thin wrapper (open, close, exec, prepared statements, and `transaction(fn)` using
   `BEGIN IMMEDIATE`) that the rest of `storage` uses (CONV-055).
@@ -36,7 +40,8 @@ warning is printed.
 - No native dependencies at all, and nothing compiles at install time.
 - The module is still a release candidate, so its API may change; only one file would
   change with it.
-- Node 26.0 to 26.10 are not supported, because they lack the `Database` name.
+- Node 26.0 to 26.10 are not supported, because they lack the `Database` name the
+  wrapper moves to.
 
 ## Alternatives considered
 

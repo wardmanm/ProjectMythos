@@ -172,13 +172,21 @@ a folder with a single public entry point.
 
 ### 4.2 Event sourcing
 
-All campaign history is an append-only **event log** of **commits**. Everything else
-in the campaign database is a **projection**: a derived table that can be rebuilt by
-replaying commits.
+All campaign history is an append-only **event log** of **commits**. A **projection**
+is a derived table that can be rebuilt by replaying commits. The rest of the campaign
+database is the content snapshot (ARCH-045) and the mutable state ARCH-040 names.
 
-- **ARCH-040** Every change to campaign data MUST be expressed as a commit belonging to
-  exactly one turn. There are no direct writes to projection tables outside the commit
-  application path.
+- **ARCH-040** Game state and its history MUST change only through commits, each
+  belonging to exactly one turn, and only the commit application path writes
+  projection tables. The deliberate exceptions are mutable state, not commits, because
+  no game state derives from them:
+  - branches and their heads, and the rest of TRN-002's state: `campaign_state`
+    entries, such as the current branch (TRN-101), the content settings (CSET-020),
+    and template overrides (CTX-005), plus resolution drafts and bookmarks;
+  - caches: snapshots (ARCH-044) and suggested actions (TRN-059);
+  - model call records (ARCH-061);
+  - jobs (PRV-062);
+  - assets (MED-010).
 - **ARCH-041** A turn's commits MUST be applied in a single SQLite transaction: all or
   nothing.
 - **ARCH-042** Projections MUST be rebuildable from the event log by a single command.
@@ -326,7 +334,8 @@ apps/client/src/
 
 Per OVR-010, these exist from phase 1 even if unused:
 
-- **ARCH-130** The `assets` folder and an `assets` projection in the campaign schema.
+- **ARCH-130** The `assets` folder and the `assets` and `asset_versions` tables in the
+  campaign schema. Assets are campaign-level state, not a projection (MED-010).
 - **ARCH-131** Device assignment and priority on every job.
 - **ARCH-132** A `media` field on entity schemas and a `voiceProfile` field on character
   schemas (optional, validated, ignored until their phases).
@@ -364,6 +373,10 @@ Per OVR-010, these exist from phase 1 even if unused:
 | Who may use the server when machine config fails to load (ARCH-110, ARCH-111)? | Localhost only, with no forwarding header, as ARCH-111's Decisions row defines it; `localhostExempt` is unknown, so it is not consulted. Every other device is refused with `auth_required`, so the owner fixes the config in Settings on the host. | Letting every device in: a broken file would turn the lock off for the whole network. Refusing every device: the owner could not reach Settings to fix it. | owner |
 | What counts as localhost (ARCH-111)? | A socket address of `127.0.0.1`, `::1`, or `::ffff:127.0.0.1` (IPv4 loopback on a dual-stack socket), with no `X-Forwarded-For` and no `Forwarded` header, whatever their value. Other `127.x.x.x` addresses are not localhost. | `request.ip` or a `Host` of `localhost`: the client controls the `Host` header, and `request.ip` follows `trustProxy`. All of `127.0.0.0/8`: nothing Mythos expects connects from the rest of it, and a narrow rule is easier to check. | Claude (ruling) |
 | What does the PIN gate read from a request (ARCH-110, CON-113)? | The socket's address (`request.socket.remoteAddress`), the headers, the session cookie, the method, and the matched route pattern (`request.routeOptions.url`). A pattern outside `/api` passes, and so does a request no route matched, which reaches only the not-found handler: the client's `index.html`, or `not_found`. | The raw URL: a test on it can disagree with the router about which route runs, through query strings, duplicate slashes, or encodings. | Claude (ruling) |
+| What may change campaign data without a commit (ARCH-040)? | Only the exceptions ARCH-040 names: branches and the rest of TRN-002's state (the `campaign_state` entries, resolution drafts, and bookmarks), caches, model call records, jobs, and assets. Everything game state derives from is a commit. | Every change as a commit, as ARCH-040 first said: TRN-002, CSET-020, CTX-005, ARCH-061, PRV-062, and MED-010 each already say their data is not commits, and a branch pointer or a job update would need a turn to belong to. | owner |
+| How many transactions does one storage write use (ARCH-041, TRN-123)? | One: each public storage function is one transaction. A command that needs several writes at once gets a dedicated storage function that makes them together, as `insertRootTurn` writes the root turn, its sets, and the first branch. | Exporting `transaction` for callers to wrap several storage calls: SQL concerns would spread into the modules that compose them, and nested calls would need savepoints. | owner |
+| How is the content snapshot stored (ARCH-045, SCH-111)? | In two tables. `canon` has one row per definition, entity, or file: its `kind`, `id`, JSON (parsed on read with the kind's content schema), and Markdown. The kinds are `setting`, `calendar`, `slots`, `tone`, `ruleset`, `scenario`, `theme`, `entity` (runtime form, SCH-005), `history`, and `relationships`. `canon_templates` has the template files by layer and path (CTX-005). The theme is snapshotted because a copied campaign cannot rely on the library (ARCH-031). | One table for both: a template has a layer and a path where an entry has a kind and an ID. A SQL `CHECK` on `kind`: a new kind would need a table rebuild. | Claude (ruling) |
+| How is a model call record's time stored (ARCH-061)? | `model_calls.created_at` is INTEGER milliseconds since 1970 UTC, so the retention prune compares numbers; the record's JSON keeps its `createdAt` string. | A WallTime string: strings with different numbers of fraction digits sort wrongly (02-conventions Traps). | Claude (ruling) |
 
 ## Open
 
@@ -382,3 +395,7 @@ Per OVR-010, these exist from phase 1 even if unused:
   the session when the stream connects. After a logout, a PIN change, or the session's
   expiry, a stream that is already open keeps sending events until it closes; its next
   reconnect is refused.
+- **A newer campaign database has no error code (ARCH-050, CON-090).** A campaign last
+  opened by a newer Mythos is refused with an exception whose message says to update
+  Mythos. No `ErrorCode` fits, so the HTTP layer reports it as `internal_error`. If the
+  library should show that message as it is, the error needs a code of its own.
