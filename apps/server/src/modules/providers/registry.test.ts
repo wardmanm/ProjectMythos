@@ -15,27 +15,20 @@ describe('createAdapter', () => {
     expect(await adapter.listModels(signal)).toEqual({ ok: true, value: ['mock'] });
   });
 
-  it.each([
-    [
-      { id: 'ollama', type: 'ollama', baseUrl: 'http://localhost:11434', deviceId: 'gpu' },
-      'P1-T11',
-    ],
-    [
-      {
-        id: 'lm-studio',
-        type: 'openai-compatible',
-        baseUrl: 'http://localhost:1234/v1',
-        deviceId: 'gpu',
-      },
-      'P1-T11',
-    ],
-    [{ id: 'claude', type: 'anthropic', deviceId: 'cloud', apiKey: { env: 'KEY' } }, 'P1-T12'],
-    [
-      { id: 'comfy', type: 'comfyui', baseUrl: 'http://localhost:8188', deviceId: 'gpu' },
-      'phase 9',
-    ],
-  ])('ARCH-133: an adapter still to come throws, naming when it arrives', (input, arrives) => {
-    const config: ProviderConfig = ProviderConfigSchema.parse(input);
+  const toCome: [type: string, rest: Record<string, unknown>, arrives: string][] = [
+    ['ollama', { baseUrl: 'http://localhost:11434' }, 'P1-T11'],
+    ['openai-compatible', { baseUrl: 'http://localhost:1234/v1' }, 'P1-T11'],
+    ['anthropic', { apiKey: { env: 'ANTHROPIC_API_KEY' } }, 'P1-T12'],
+    ['comfyui', { baseUrl: 'http://localhost:8188' }, 'phase 9'],
+  ];
+
+  it.each(toCome)('ARCH-133: the %s adapter throws until it arrives', (type, rest, arrives) => {
+    const config: ProviderConfig = ProviderConfigSchema.parse({
+      id: 'later',
+      type,
+      deviceId: 'gpu',
+      ...rest,
+    });
     expect(() => createAdapter(config)).toThrow(arrives);
   });
 });
