@@ -1,6 +1,7 @@
 // The storage module's public API (ARCH-020): campaign folders and databases, and the
 // repositories for everything stored in them. It imports no other module (ARCH-021).
 export { type CampaignStore, type CampaignStoreOptions, createCampaignStore } from './campaigns';
+export { type CampaignStart, writeCampaignStart } from './campaign-start';
 export {
   type CanonEntry,
   type CanonKind,

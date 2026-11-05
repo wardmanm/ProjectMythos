@@ -51,32 +51,40 @@ export const CanonTemplateSchema = z.object({
 });
 export type CanonTemplate = z.infer<typeof CanonTemplateSchema>;
 
+/** The content snapshot: every canon entry and template file. */
+export type CanonSnapshot = { entries: readonly CanonEntry[]; templates: readonly CanonTemplate[] };
+
 /**
- * Writes the content snapshot, every entry and template in one transaction. Canon is
- * never replaced: writing an entry that exists throws.
+ * Inserts every entry and template. Must run inside a transaction: `writeCanon` and
+ * `writeCampaignStart` provide one. An entry that exists already throws.
  */
-export function writeCanon(
-  db: Database,
-  snapshot: { entries: readonly CanonEntry[]; templates: readonly CanonTemplate[] },
-): void {
+export function insertCanon(db: Database, snapshot: CanonSnapshot): void {
   const insertEntry = db.prepare(
     'INSERT INTO canon (kind, id, json, markdown) VALUES (:kind, :id, :json, :markdown)',
   );
   const insertTemplate = db.prepare(
     'INSERT INTO canon_templates (layer, path, text) VALUES (:layer, :path, :text)',
   );
+  for (const entry of snapshot.entries) {
+    insertEntry.run({
+      kind: entry.kind,
+      id: entry.id,
+      json: JSON.stringify(entry.value),
+      markdown: entry.markdown,
+    });
+  }
+  for (const template of snapshot.templates) {
+    insertTemplate.run({ layer: template.layer, path: template.path, text: template.text });
+  }
+}
+
+/**
+ * Writes the content snapshot, every entry and template in one transaction. Canon is
+ * never replaced: writing an entry that exists throws.
+ */
+export function writeCanon(db: Database, snapshot: CanonSnapshot): void {
   db.transaction(() => {
-    for (const entry of snapshot.entries) {
-      insertEntry.run({
-        kind: entry.kind,
-        id: entry.id,
-        json: JSON.stringify(entry.value),
-        markdown: entry.markdown,
-      });
-    }
-    for (const template of snapshot.templates) {
-      insertTemplate.run({ layer: template.layer, path: template.path, text: template.text });
-    }
+    insertCanon(db, snapshot);
   });
 }
 
