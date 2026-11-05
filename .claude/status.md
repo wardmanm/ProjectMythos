@@ -1,13 +1,20 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: e91c590 · Branch: main
+Updated: 2026-11-04 · Through: d48241f · Branch: main
 
 ## Current focus
-Phase 1 (Foundation): 3 of 25 tasks done. P1-T06 merged in PR #28. Ready to start, and independent
-of each other: P1-T03 (port core: compare, calendar, theme), P1-T07 (server storage module), P1-T09
-(server events module), P1-T10 (provider types, mock adapter, token estimation), P1-T16 (auth module), and
-P1-T21 (client foundation). Parallel tasks run in separate worktrees, one task each. No branch open.
+Phase 1 (Foundation): 4 of 25 tasks done. P1-T03 merged in PR #29. Ready to start, and independent
+of each other: P1-T04 (port core: hard floor, ruleset and gear checks, names, budgets), P1-T07
+(server storage module), P1-T09 (server events module), P1-T10 (provider types, mock adapter, token
+estimation), P1-T16 (auth module), and P1-T21 (client foundation). T04 is next on the longest chain
+(T04, T08, campaign creation and context, the turn module, T20). No branch open.
 
 ## Recent changes
+- 2026-11-04: P1-T03 merged (#29): `packages/core` has `cmp`, calendar math (`toDate`, `fromDate`, leap
+  rules, festivals, weekdays), date and duration display, and theme contrast checks; all 518 truth-table
+  dates and all six built-in themes pass. Rulings: the reference `cmp` compared UTF-16 code units, so it
+  and the port now compare code points (spec fix; 02-conventions Trap); `packages/core` has Node's types
+  for its tests, and lint bans Node globals in core source (02-conventions Decisions);
+  `calendar-display.ts` split out to keep `calendar.ts` under 300 lines.
 - 2026-11-04: P1-T06 merged (#28): the config module finds the data directory (flag, then config, then
   OS default), writes the default machine config, checks it with every issue at a dotted path, saves
   atomically into a store whose edits apply at once, and keeps inline keys and the PIN hash out of
@@ -50,8 +57,6 @@ P1-T21 (client foundation). Parallel tasks run in separate worktrees, one task e
 - 2026-11-02: Mike's decisions: development is Mike and Claude only, and the docs model goes in as
   proposed (ADR-017: spec as the only description, rulings and pending decisions, `pnpm trace`, the docs
   check, this log, and the `status` and `docs` skills). Qwen stays as the game's local model.
-- 2026-10-13: Handoff delivered: the spec (00-overview to 15-media), 16 ADRs, the phase 1 plan and 27
-  tasks, the fixtures, and the reference code with its checks.
 
 ## Pending decisions
 - None.
