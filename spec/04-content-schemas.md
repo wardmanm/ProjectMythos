@@ -43,7 +43,7 @@ Three sources, searched in this order when resolving a definition ID:
 
 | Source | Location | Contains |
 |---|---|---|
-| **Pack** | `<dataDir>/content-packs/<packId>/` | A setting and everything specific to it |
+| **Pack** | `<dataDir>/content-packs/<packId>/`, and `content-packs/<packId>/` in the repo, which ships the reference pack | A setting and everything specific to it |
 | **User library** | `<dataDir>/library/` | Reusable definitions the player saved (tone profiles, rulesets, calendars, slot schemas) |
 | **Built-in library** | `content-library/` in the repo, shipped with the app | Defaults: `calendar.gregorian`, four rulesets (`ruleset.standard` and three examples), `slots.simple`, four starter tone profiles, six themes |
 
@@ -830,9 +830,11 @@ export const RelationshipsFileSchema = z.strictObject({
   existing entry.
 - **SCH-091** A dated entry's `when` is at or after the setting's `epoch`. Undated
   entries are background, stored at game time 0.
-- **SCH-092** Seed relationships follow CON-073 and use dimensions from the campaign's
-  chosen ruleset (`relationships.dimensions`). Dimensions not in that ruleset are
-  dropped with a warning at campaign creation, and values are clamped to its range.
+- **SCH-092** Seed relationships follow CON-073 and use dimensions from the ruleset's
+  `relationships.dimensions`. When the pack loads, they are checked against the
+  setting's default ruleset (SCH-114): a dimension it does not define, or a value outside
+  its range, is an error. At campaign creation, dimensions not in the campaign's chosen
+  ruleset are dropped with a warning, and values are clamped to its range.
 
 ## 9. Examples (reference pack)
 
