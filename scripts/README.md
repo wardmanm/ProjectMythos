@@ -8,8 +8,11 @@ Windows and macOS (CONV-081). There are no shell scripts.
 - `check-spec.ts`: the spec check, run by `pnpm check`. It fails if `content-library/` or
   `content-packs/reference/` is missing a fixture file or differs from it by a byte
   (OVR-030), or if `packages/contracts/src/` and `spec/reference/contracts/` do not hold
-  the same files with the same bytes (OVR-033). Each message names the file. Its test,
-  `check-spec.test.ts`, runs it on small fake repositories.
+  the same files with the same bytes (OVR-033). It also compares each server type file
+  copied whole, listed in `serverTypeCopies` as `<module>/<file>`, with
+  `spec/reference/server-types/<module>/<file>` (OVR-033). A file that adds an
+  implementation after its verbatim types is not listed. Each message names the file.
+  Its test, `check-spec.test.ts`, runs it on small fake repositories.
 - `lint-rules.test.ts`: proves that each boundary and restriction in `eslint.config.js`
   fires. It lints small code strings under fake file paths in a throwaway copy of the
   repository layout, so a change to the lint config that weakens a rule fails the tests.

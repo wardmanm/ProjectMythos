@@ -1,0 +1,6 @@
+{
+  "text": "The fishmonger looks up, then quickly away.",
+  "thinking": "The fishmonger knows the player character by sight, not by name.",
+  "usage": { "inputTokens": 455, "outputTokens": 11, "cachedInputTokens": 380 },
+  "finishReason": "stop"
+}

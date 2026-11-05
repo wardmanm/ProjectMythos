@@ -330,9 +330,10 @@ Per OVR-010, these exist from phase 1 even if unused:
 - **ARCH-131** Device assignment and priority on every job.
 - **ARCH-132** A `media` field on entity schemas and a `voiceProfile` field on character
   schemas (optional, validated, ignored until their phases).
-- **ARCH-133** Provider adapters implement a common interface with a `kind`
-  (`text`, `embedding`, `image`, `speech-output`, `speech-input`) so new kinds need no
-  queue changes.
+- **ARCH-133** Provider adapters implement one common interface, `ProviderAdapter`
+  (05-providers.md §3). Its optional members are the kinds an adapter serves (`text`,
+  `embedding`, and later `image`, `speech-output`, `speech-input`), so a new kind is a
+  new member and needs no queue changes.
 
 ## Traps
 

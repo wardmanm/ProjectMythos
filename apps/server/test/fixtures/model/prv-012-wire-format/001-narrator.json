@@ -1,0 +1,8 @@
+{
+  "model": "qwen3.6:35b-a3b",
+  "message": { "role": "assistant", "content": "The harbour bell rings." },
+  "done": true,
+  "done_reason": "stop",
+  "prompt_eval_count": 412,
+  "eval_count": 6
+}

@@ -14,6 +14,8 @@ Nothing imports it.
   table in [01-architecture.md §3](../../spec/01-architecture.md) allows (ARCH-021).
 - `src/cli/`: command-line tools, which get their modules from `app.ts` and import
   nothing else from the server (ARCH-007, ARCH-022).
+- `test/fixtures/model/`: the mock provider's recorded fixtures (PRV-081), described in
+  [its README](test/fixtures/model/README.md).
 
 Lint enforces these boundaries.
 

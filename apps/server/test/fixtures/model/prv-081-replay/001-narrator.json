@@ -1,0 +1,6 @@
+{
+  "text": "The harbour bell rings as you step onto the quay.",
+  "thinking": null,
+  "usage": { "inputTokens": 412, "outputTokens": 13, "cachedInputTokens": null },
+  "finishReason": "stop"
+}
