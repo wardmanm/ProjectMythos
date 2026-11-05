@@ -132,9 +132,10 @@ ARCH-031, ARCH-040, ARCH-041, ARCH-042, ARCH-050, ARCH-051, ARCH-061, ARCH-130, 
   - Verified, then reverted: without the supersession update, four tests fail;
     without the commits update trigger, the TRN-001 test fails; without
     `insertTurn`'s transaction, the TRN-011 rollback test fails.
-  - `pnpm check` passes. The workspace has `Tests  261 passed (261)` and
-    `spec/reference` `Tests  271 passed (271)`, and it ends with `Docs check passed: 834 requirements, 25
-    tasks (6 done), 19 ADRs, 76 markdown files, 337 citations in code.`
+  - `pnpm check` passes, after rebasing onto the merges of P1-T09, P1-T16, and P1-T10. The
+    workspace has `Tests  351 passed (351)` and `spec/reference` `Tests  271 passed (271)`,
+    and it ends with `Docs check passed: 834 requirements, 25 tasks (9 done), 19 ADRs, 80
+    markdown files, 451 citations in code.`
 - **Rulings:**
   - **Owner's decisions** (Mike, on the plan, 2026-11-05), each in its own
     `P1-T07: spec: owner:` commit and a Decisions row:
