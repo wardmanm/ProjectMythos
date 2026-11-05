@@ -37,8 +37,8 @@ const allExplicit: ContentSettings = {
   sexual: 'explicit',
   language: 'explicit',
   disturbing: 'explicit',
-  lines: ['harm to children', 'spiders'],
-  veils: ['torture'],
+  lines: ['harm to children'],
+  veils: ['torture', 'self-harm'],
 };
 
 const person = (id: string, kind: 'pc' | 'npc', ageCategory: 'adult' | 'minor'): Character => ({
@@ -177,8 +177,8 @@ describe('content-settings wording', () => {
 
   it('CSET-002, CSET-060: lines and veils render verbatim, after the categories', () => {
     expect(renderContentSettings(allExplicit).split('\n').slice(5)).toEqual([
-      '- Never include, under any circumstances: harm to children; spiders.',
-      '- These may happen in the story but only off-page, never described: torture.',
+      '- Never include, under any circumstances: harm to children.',
+      '- These may happen in the story but only off-page, never described: torture; self-harm.',
     ]);
   });
 
