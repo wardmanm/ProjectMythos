@@ -1,14 +1,22 @@
 # Status: Mythos
-Updated: 2026-11-04 · Through: d48241f · Branch: main
+Updated: 2026-11-05 · Through: 129bc99 · Branch: main
 
 ## Current focus
-Phase 1 (Foundation): 4 of 25 tasks done. P1-T03 merged in PR #29. Ready to start, and independent
-of each other: P1-T04 (port core: hard floor, ruleset and gear checks, names, budgets), P1-T07
-(server storage module), P1-T09 (server events module), P1-T10 (provider types, mock adapter, token
-estimation), P1-T16 (auth module), and P1-T21 (client foundation). T04 is next on the longest chain
-(T04, T08, campaign creation and context, the turn module, T20). No branch open.
+Phase 1 (Foundation): 5 of 25 tasks done. P1-T04 merged in PR #30. Ready to start, and independent
+of each other: P1-T05 (world-state fold and commit validation), P1-T07 (server storage module),
+P1-T08 (server content module), P1-T09 (server events module), P1-T10 (provider types, mock adapter,
+token estimation), P1-T16 (auth module), and P1-T21 (client foundation). P1-T07, P1-T09, and P1-T10
+head the longest chain (P1-T13 job queue, P1-T14, P1-T18 context, P1-T19, P1-T20); P1-T05 and P1-T08
+lead to campaign creation (P1-T17). No branch open.
 
 ## Recent changes
+- 2026-11-05: P1-T04 merged (#30): `packages/core` has the hard floor and content wording,
+  ruleset checks, gear checks and appearance, display names, and prompt budgets. Mike's
+  decisions: CTX-030's margin is 10% of `contextWindow − maxOutputTokens`; CTX-031's caps
+  apply to trimmable tiers only; `core`'s files go in folders by spec document (`rules/`,
+  `state/`, `knowledge/`, `prompts/`, `time/`), so P1-T05 and P1-T17 now name `state/`.
+  Rulings: four reference bugs fixed; new `appendFloorToTask` and `inputBudget`; the hard
+  limit weighs the holder's load after the move, contents included (11-gear Decisions).
 - 2026-11-04: P1-T03 merged (#29): `packages/core` has `cmp`, calendar math (`toDate`, `fromDate`, leap
   rules, festivals, weekdays), date and duration display, and theme contrast checks; all 518 truth-table
   dates and all six built-in themes pass. Rulings: the reference `cmp` compared UTF-16 code units, so it
@@ -49,14 +57,6 @@ estimation), P1-T16 (auth module), and P1-T21 (client foundation). T04 is next o
   `pnpm-workspace.yaml` approves esbuild's build with `allowBuilds`, since pnpm 11 and later ignore
   `pnpm.onlyBuiltDependencies` in `package.json`. Recorded in 01-architecture's Decisions table; the
   P1-T01 design notes, `spec/reference/package.json`, and its README follow it.
-- 2026-11-04: Mike's decision: merged the tasks cut small for Qwen. P1-T11 now covers both local adapters
-  (Ollama and OpenAI-compatible) and P1-T23 the play screen with its inspector. The tasks after them are
-  renumbered, so phase 1 has 25 tasks: the old T13 to T27 are now T12 to T25. T03 and T04 stay separate.
-- 2026-11-02: Mike's decision: stay on TypeScript 6.0 until typescript-eslint supports 7. ADR-015 already
-  says this, so nothing changes.
-- 2026-11-02: Mike's decisions: development is Mike and Claude only, and the docs model goes in as
-  proposed (ADR-017: spec as the only description, rulings and pending decisions, `pnpm trace`, the docs
-  check, this log, and the `status` and `docs` skills). Qwen stays as the game's local model.
 
 ## Pending decisions
 - None.
