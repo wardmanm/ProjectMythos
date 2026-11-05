@@ -477,10 +477,11 @@ export type ProviderAdapter = {
 - **PRV-012** Adapters translate provider responses and errors into `TextResponse` and
   `ProviderError`. Nothing outside an adapter knows a provider's wire format.
 - **PRV-013** Error mapping: connection refused / DNS failure → `provider_unavailable`
-  (retryable); timeout → `provider_timeout` (retryable); HTTP 429 → `rate_limited`
-  (retryable, honoring `retry-after`); HTTP 5xx → `provider_unavailable` (retryable);
-  other 4xx and content refusals → `provider_rejected` (not retryable); abort →
-  `cancelled`.
+  (retryable); timeout, when nothing arrives for the profile's `timeoutMs` (no response
+  headers, or no next chunk of the body) → `provider_timeout` (retryable); HTTP 429 →
+  `rate_limited` (retryable, honoring `retry-after`); HTTP 5xx → `provider_unavailable`
+  (retryable); other 4xx and content refusals → `provider_rejected` (not retryable);
+  abort → `cancelled`.
 
 ### 3.1 Adapter specifics
 
@@ -820,6 +821,9 @@ export type JobQueue = {
 | What does `wait` return for a job the queue does not hold (§6)? | A `not_found` error, at once. The queue forgets a job when it ends, so this includes a job that has finished; a background job's stored row keeps its last status. | Keeping finished jobs in memory to answer late calls: the map would grow for the life of the process. | Claude (ruling) |
 | When does a preempted job's slot free (PRV-064)? | When its run settles after the abort, not at the abort. Until then the interactive job waits, nothing else starts on the device, and no second job there is preempted. | Freeing the slot at the abort: a handler slow to notice its signal would run beside the interactive job on a device that has room for one. | Claude (ruling) |
 | How does a caller cancel an interactive job (PRV-061, ARCH-083)? | By aborting the signal it passed to `callStructured` or `streamText`, which then calls `cancel(jobId)`; the queue aborts the `JobContext` signal the work runs under. `InteractiveOptions` takes no signal. | Giving `runInteractive` the caller's signal: the code block's `InteractiveOptions` has none, and one job would have two ways to be cancelled. | Claude (ruling) |
+| What does a profile's `timeoutMs` bound (PRV-013)? | Idle time, in every adapter: the wait for the response headers, then each wait for the next chunk of the body. It never bounds the whole call, so a long narration that keeps streaming never times out, and a server that goes quiet fails after `timeoutMs`. | A bound on the whole call: it would cut off a long but healthy stream, or, set high enough for the slowest generation, take that long to notice a dead server. | owner |
+| What usage does an adapter report when the provider reports none (PRV-070, PRV-071)? | Each count it leaves out is estimated from the profile's `charsPerToken`, as the mock does, so `TextResponse.usage` is always complete. A cancelled call's usage is always estimated, so P1-T14 does not calibrate from cancelled calls (Open). | Zero for a missing count: calibration would read it as a huge error. Making the counts nullable: a change to the contract for a case the estimate covers. | owner |
+| How does Ollama's `tool-call` method work (PRV-023, PRV-030)? | The adapter offers one tool, named after the schema, with the schema as its parameters, and reads the answer from the tool call's arguments. Ollama cannot force a tool, so when the model answers in plain text instead, that text is the answer, and validation (PRV-050) judges it. | Failing a call with no tool call: a model that writes valid JSON as text would fail for no gain. | owner |
 
 ## Open
 
@@ -843,3 +847,7 @@ export type JobQueue = {
   server start to read its stored jobs, and the campaign store keeps every connection
   open until shutdown. The queue cannot close one, since it does not know whether
   anything else is using it.
+- **Cancelled calls and calibration.** A cancelled call's usage is an estimate made with
+  the ratio calibration would correct (Decisions), so folding it in would pull the ratio
+  toward itself. P1-T14's `streamText` and `callStructured` skip calibration when
+  `finishReason` is `'cancelled'` (PRV-071).
