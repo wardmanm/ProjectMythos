@@ -358,6 +358,11 @@ Per OVR-010, these exist from phase 1 even if unused:
   adds none by default, so P1-T21 sets `xfwd: true` on it; any other proxy must add
   `X-Forwarded-For` or `Forwarded`. Never decide localhost from `request.ip`, which
   follows Fastify's `trustProxy`.
+- **`pnpm add` can quietly exempt a new release (ARCH-001, CONV-091).** pnpm 12 holds
+  back versions published too recently (`minimumReleaseAge`). Asked for one by its exact
+  version, it does not fail: it adds the version to `minimumReleaseAgeExclude` in
+  `pnpm-workspace.yaml` and installs it. Check `git diff pnpm-workspace.yaml` after
+  adding a dependency, and take the newest version old enough to pass instead.
 
 ## Decisions
 
@@ -377,6 +382,7 @@ Per OVR-010, these exist from phase 1 even if unused:
 | How many transactions does one storage write use (ARCH-041, TRN-123)? | One: each public storage function is one transaction. A command that needs several writes at once gets a dedicated storage function that makes them together, as `insertRootTurn` writes the root turn, its sets, and the first branch. | Exporting `transaction` for callers to wrap several storage calls: SQL concerns would spread into the modules that compose them, and nested calls would need savepoints. | owner |
 | How is the content snapshot stored (ARCH-045, SCH-111)? | In two tables. `canon` has one row per definition, entity, or file: its `kind`, `id`, JSON (parsed on read with the kind's content schema), and Markdown. The kinds are `setting`, `calendar`, `slots`, `tone`, `ruleset`, `scenario`, `theme`, `entity` (runtime form, SCH-005), `history`, and `relationships`. `canon_templates` has the template files by layer and path (CTX-005). The theme is snapshotted because a copied campaign cannot rely on the library (ARCH-031). | One table for both: a template has a layer and a path where an entry has a kind and an ID. A SQL `CHECK` on `kind`: a new kind would need a table rebuild. | Claude (ruling) |
 | How is a model call record's time stored (ARCH-061)? | `model_calls.created_at` is INTEGER milliseconds since 1970 UTC, so the retention prune compares numbers; the record's JSON keeps its `createdAt` string. | A WallTime string: strings with different numbers of fraction digits sort wrongly (02-conventions Traps). | Claude (ruling) |
+| Does the client's dev server mark the requests it proxies as forwarded (ARCH-006, ARCH-111)? | Yes: Vite's `/api` proxy sets `xfwd: true`, so each request carries `X-Forwarded-For`, and the PIN lock never exempts a forwarded request as localhost. A LAN device using the dev server needs the PIN, as it would with `pnpm start`; so does the host machine itself in development, when a PIN is set. | No `xfwd`: every request through the dev server would reach the server from 127.0.0.1, and the localhost exemption would let any LAN device in without the PIN. | Claude (ruling) |
 
 ## Open
 
