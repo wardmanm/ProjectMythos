@@ -2,6 +2,8 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-13
+- **Amended:** 2026-11-05, wording only: one stream per campaign a client has open, not per
+  client session, as ARCH-090 says (P1-T09)
 - **Requirements:** ARCH-090, ARCH-091, ARCH-092, ARCH-100
 
 ## Context
@@ -14,8 +16,9 @@ action, an accept, an edit.
 
 ## Decision
 
-- One Server-Sent Events stream per client session carries every server-to-client
-  event. Commands are ordinary HTTP `POST`, `PATCH`, and `DELETE` requests.
+- One Server-Sent Events stream per campaign a client has open carries every
+  server-to-client event for that campaign. Commands are ordinary HTTP `POST`, `PATCH`,
+  and `DELETE` requests.
 - Every event has a monotonically increasing ID. A reconnecting client sends
   `Last-Event-ID`; the server replays from a bounded buffer, or tells the client to
   refetch when the buffer no longer covers the gap.
