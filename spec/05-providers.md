@@ -737,8 +737,9 @@ export type JobQueue = {
 - **PRV-080** The mock adapter has two modes: **scripted** (tests enqueue exact
   responses per role, in order) and **fixture** (responses are read from recorded
   files).
-- **PRV-081** Fixtures are keyed by test name, role, and call sequence number within
-  the test, not by prompt text, so template edits do not invalidate them. Fixture files
+- **PRV-081** Fixtures are keyed by test name, role, and the call's sequence number
+  among that role's calls within the test, not by prompt text, so template edits do not
+  invalidate them. Fixture files
   are committed (CONV-114). The mock learns the role from `TextRequest.role`, and each
   test gives its mock a fixture scope named after the test.
 - **PRV-082** The server's `record-fixtures` command (`apps/server/src/cli/`,
@@ -766,6 +767,17 @@ export type JobQueue = {
   the profile's device with `campaignId: null`. Nothing is recorded: model call
   records belong to campaigns (ARCH-060).
 
+## Traps
+
+- **Reported input tokens can leave out the cached part of the prompt (PRV-071,
+  `TokenUsage.inputTokens`).** Anthropic's `input_tokens` excludes cache reads and
+  writes, which it reports in separate fields, and Ollama's `prompt_eval_count` may
+  leave out a prefix it reused from the previous call. An adapter must report the whole
+  prompt in `inputTokens` (Decisions). Left unfixed, each cached call makes the
+  calibrated ratio drift high, estimates fall short, and prompts overflow the context
+  window. Both behaviors should be confirmed against the providers' current
+  documentation when P1-T11 and P1-T12 write the adapters.
+
 ## Decisions
 
 | Question | Decision | Rejected and why | Decided by |
@@ -778,6 +790,8 @@ export type JobQueue = {
 | How is the copied `providers/types.ts` kept equal to its code block (OVR-033)? | The repository's spec check, `scripts/check-spec.ts`, compares it byte for byte with `spec/reference/server-types/providers/types.ts`, as it does the contracts. A later pure copy is one more entry in its `serverTypeCopies`. Copies that add an implementation after the verbatim types, such as P1-T13's `queue.ts`, are not compared yet. | Relying on review alone: a hand edit to the copy would pass `pnpm check`. | owner |
 | What key is a calibrated ratio stored under (PRV-071)? | The profile's ID and its model, so changing a profile's model starts again from the profile's own `charsPerToken`. | The profile ID alone: a ratio learned for one model would carry over to a model with a different tokenizer. | owner |
 | Where does `estimateTokens` live (PRV-070)? | In the providers module, for now. Whether it moves to `core` is considered when P1-T18 is planned (Open). | Moving it to `core` now, before the context module that budgets with it is planned. | owner |
+| What does a fixture's sequence number count (PRV-081)? | The calls of that fixture's role within the test, from `001`: `002-narrator.json` is the second narrator call, whatever other roles ran between. | One count across all roles: background extraction interleaves with interactive calls in no fixed order, so the numbers would change from run to run. | Claude (ruling) |
+| What does `TokenUsage.inputTokens` count (PRV-071)? | The whole prompt, cached tokens included; `cachedInputTokens` is the cached part of it. Calibration compares it with the estimate, which is for the whole prompt. | Only the uncached tokens: a cached prefix would make the reported count much smaller than the estimate, so calibration would drift until prompts overflow (Traps). | Claude (ruling) |
 
 ## Open
 
@@ -788,3 +802,7 @@ export type JobQueue = {
   module budgets with it but imports neither `config` nor `providers` (CTX-110), so
   whether it moves to `core`, or reaches context through `ContextDependencies`, is
   considered when P1-T18 is planned.
+- **The mock's embeddings cannot be scripted or recorded.** `embed` always returns
+  deterministic placeholder vectors, whatever the mode (PRV-080, PRV-081). Retrieval
+  tests that need chosen similarities arrive in phase 4, which adds scripted and fixture
+  embeddings.
