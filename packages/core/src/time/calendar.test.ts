@@ -14,7 +14,7 @@ import {
   toDate,
 } from './calendar';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 const readJson = (...parts: string[]): unknown =>
   JSON.parse(readFileSync(path.join(repoRoot, ...parts), 'utf8'));
 

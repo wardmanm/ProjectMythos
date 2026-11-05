@@ -21,7 +21,7 @@ import {
   usesExplicitRoles,
 } from './content';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 const tone = ToneProfileSchema.parse(
   JSON.parse(
     readFileSync(

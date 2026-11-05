@@ -12,8 +12,8 @@ export {
   monthDays,
   timeOfDay,
   toDate,
-} from './calendar';
-export { formatDate, formatDuration } from './calendar-display';
+} from './time/calendar';
+export { formatDate, formatDuration } from './time/calendar-display';
 export { CONTRAST_RULES, contrast, themeIssues } from './theme';
 export {
   type ContentCategory,
@@ -27,11 +27,11 @@ export {
   minorInvolved,
   renderContentSettings,
   usesExplicitRoles,
-} from './content';
-export { rulesetIssues, rulingLimitsFor } from './ruleset-check';
-export { containerUse, loadOf, possessor, validateItemMove } from './gear';
-export { type Appearance, appearanceOf } from './gear-appearance';
-export { commonKnowledge, displayName } from './journal';
+} from './prompts/content';
+export { rulesetIssues, rulingLimitsFor } from './rules/ruleset-check';
+export { containerUse, loadOf, possessor, validateItemMove } from './rules/gear';
+export { type Appearance, appearanceOf } from './rules/gear-appearance';
+export { commonKnowledge, displayName } from './knowledge/journal';
 export {
   type BudgetOverflow,
   type TierBudgets,
@@ -39,4 +39,4 @@ export {
   allocateBudgets,
   inputBudget,
   transcriptBoundary,
-} from './context';
+} from './prompts/context';

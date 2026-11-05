@@ -5,6 +5,21 @@ validation, calendar math, retrieval scoring, and context budget allocation
 ([01-architecture.md §2.1](../../spec/01-architecture.md)). It depends on
 `@mythos/contracts` only.
 
+## Layout
+
+Files are grouped by the spec document that governs them, so a new file goes in the
+folder of its document (01-architecture Decisions). Folders have no `index.ts` of their
+own (CONV-015): `src/index.ts` is the only public entry point.
+
+| Folder           | Governing spec                   | Holds                                                                     |
+| ---------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| `src/`           |                                  | `index.ts`, `compare.ts` (used by every folder), and `theme.ts` (14-ui)   |
+| `src/rules/`     | 07-rules, 11-gear                | Ruleset checks, gear, and appearance; dice, harm, and clocks to come      |
+| `src/state/`     | 06-turn-engine, 03-contracts §10 | Turn logic, the fold, commit validation, and setup (from P1-T05)          |
+| `src/knowledge/` | 08-memory, 10-journal            | Display names and common knowledge; retrieval and consolidation to come   |
+| `src/prompts/`   | 09-context, 13-content-settings  | Budgets, transcript rolling, the hard floor, and content-settings wording |
+| `src/time/`      | 12-time-world                    | Calendar math and display; world ticks to come                            |
+
 ## Public API
 
 `@mythos/core`, exported from `src/index.ts` as TypeScript source (ARCH-005).
@@ -12,31 +27,11 @@ validation, calendar math, retrieval scoring, and context budget allocation
 - **Ordering** (`compare.ts`): `cmp(a, b)` orders strings by code point. Use it for every
   sort that reaches stored data, prompts, or tests, never `localeCompare` or plain `<`
   (CONV-087, ADR-011).
-- **Calendars** (`calendar.ts`), for converting game time (minutes since the epoch):
-  - `toDate` and `fromDate` convert between game time and dates;
-  - `isLeap`, `monthDays`, `dayMinutes`, and `timeOfDay` describe a calendar;
-  - `minutesUntil` gives the minutes to the next start of a named time of day;
-  - `dateIssues` and `calendarIssues` list what's wrong with a date or a calendar;
-  - the `ResolvedDate` type.
-
-  Spec: 12-time-world §2, TIME-001 to TIME-004, TIME-011, and TIME-021.
-
-- **Calendar display** (`calendar-display.ts`): `formatDate` and `formatDuration`, for
-  showing time to the player (TIME-010, TIME-012).
 - **Themes** (`theme.ts`): `contrast` gives the WCAG contrast ratio. `CONTRAST_RULES` lists
   the pairs every palette must meet, and `themeIssues` lists everything that stops a
   theme being applied (UI-031).
-- **Content settings and the hard floor** (`content.ts`):
-  - `HARD_FLOOR` is the floor's normative text; never reword it (CSET-040, ADR-014);
-  - `appendLocked` adds it to the end of the instructions tier for each role in
-    `FLOOR_ROLES`, and `appendFloorToTask` repeats it at the end of the task tier while
-    a minor is involved (CSET-042);
-  - `minorInvolved`, `effectiveSettings`, and `usesExplicitRoles` apply automatic
-    tightening (CSET-042, CSET-043);
-  - `renderContentSettings` renders the default partial from `DEFAULT_WORDING`, one line
-    per category in `CONTENT_CATEGORIES`, then lines and veils (CSET-010).
 
-  Spec: 13-content-settings §2, §3, §5.
+### `rules/`
 
 - **Ruleset checks** (`ruleset-check.ts`): `rulesetIssues` lists every cross-field problem
   in a ruleset (RUL-002, SCH-062), and `rulingLimitsFor` narrows the model-facing ruling
@@ -54,9 +49,27 @@ validation, calendar math, retrieval scoring, and context budget allocation
 - **Appearance** (`gear-appearance.ts`): `appearanceOf` builds what others see of a
   character, and lists the items they can't see (GEAR-030, GEAR-060 to GEAR-065).
   Spec: 11-gear §6.
+
+### `knowledge/`
+
 - **Journal names** (`journal.ts`): `displayName` gives the name a knower uses for an
   entity (JRN-020), and `commonKnowledge` takes the public section of an entity's canon
   (JRN-031). Spec: 10-journal §3 and §4.
+
+### `prompts/`
+
+- **Content settings and the hard floor** (`content.ts`):
+  - `HARD_FLOOR` is the floor's normative text; never reword it (CSET-040, ADR-014);
+  - `appendLocked` adds it to the end of the instructions tier for each role in
+    `FLOOR_ROLES`, and `appendFloorToTask` repeats it at the end of the task tier while
+    a minor is involved (CSET-042);
+  - `minorInvolved`, `effectiveSettings`, and `usesExplicitRoles` apply automatic
+    tightening (CSET-042, CSET-043);
+  - `renderContentSettings` renders the default partial from `DEFAULT_WORDING`, one line
+    per category in `CONTENT_CATEGORIES`, then lines and veils (CSET-010).
+
+  Spec: 13-content-settings §2, §3, §5.
+
 - **Context budgets** (`context.ts`):
   - `inputBudget` gives a prompt's input budget from a model profile (CTX-030);
   - `allocateBudgets` splits it among the tiers, or reports the fixed tiers that don't
@@ -65,6 +78,20 @@ validation, calendar math, retrieval scoring, and context budget allocation
     chunks (CTX-041).
 
   Spec: 09-context §4 and §5.
+
+### `time/`
+
+- **Calendars** (`calendar.ts`), for converting game time (minutes since the epoch):
+  - `toDate` and `fromDate` convert between game time and dates;
+  - `isLeap`, `monthDays`, `dayMinutes`, and `timeOfDay` describe a calendar;
+  - `minutesUntil` gives the minutes to the next start of a named time of day;
+  - `dateIssues` and `calendarIssues` list what's wrong with a date or a calendar;
+  - the `ResolvedDate` type.
+
+  Spec: 12-time-world §2, TIME-001 to TIME-004, TIME-011, and TIME-021.
+
+- **Calendar display** (`calendar-display.ts`): `formatDate` and `formatDuration`, for
+  showing time to the player (TIME-010, TIME-012).
 
 ## Rules
 

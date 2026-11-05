@@ -2,7 +2,7 @@
 // description, visible gear, and visible harm, plus the items they cannot see.
 import type { Character, Item } from '@mythos/contracts';
 import type { Ruleset, SlotSchemaDefinition } from '@mythos/contracts/content';
-import { cmp } from './compare';
+import { cmp } from '../compare';
 import { indexById, isBulky, possessor } from './gear';
 
 /** What others can see of a character, and which of their items are hidden from them. */

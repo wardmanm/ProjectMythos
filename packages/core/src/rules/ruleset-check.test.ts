@@ -7,7 +7,7 @@ import { rulesetIssues, rulingLimitsFor } from './ruleset-check';
 
 const rulesetsDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../../../content-library/rulesets',
+  '../../../../content-library/rulesets',
 );
 const load = (file: string): Ruleset =>
   RulesetSchema.parse(JSON.parse(readFileSync(path.join(rulesetsDir, file), 'utf8')));

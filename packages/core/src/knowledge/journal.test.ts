@@ -7,7 +7,7 @@ import { commonKnowledge, displayName } from './journal';
 
 const packDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../../../content-packs/reference',
+  '../../../../content-packs/reference',
 );
 
 const character = (id: string, name: string, aliases: string[]): Character => ({

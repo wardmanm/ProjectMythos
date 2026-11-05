@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { fromDate, toDate } from './calendar';
 import { formatDate, formatDuration } from './calendar-display';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 const readJson = (...parts: string[]): unknown =>
   JSON.parse(readFileSync(path.join(repoRoot, ...parts), 'utf8'));
 

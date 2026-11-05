@@ -18,7 +18,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { containerUse, loadOf, possessor, validateItemMove } from './gear';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 const packDir = path.join(repoRoot, 'content-packs/reference');
 const readJson = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
 
