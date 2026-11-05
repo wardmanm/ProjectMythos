@@ -17,9 +17,19 @@ describe('createAdapter', () => {
     expect(await adapter.listModels(signal)).toEqual({ ok: true, value: ['mock'] });
   });
 
+  it.each([
+    ['ollama', { baseUrl: 'http://127.0.0.1:11434' }],
+    ['openai-compatible', { baseUrl: 'http://127.0.0.1:1234/v1' }],
+  ])('ARCH-133: builds the %s adapter with a text member', (type, rest) => {
+    const config = ProviderConfigSchema.parse({ id: 'local', type, deviceId: 'gpu', ...rest });
+    const adapter = createAdapter(config, deps);
+
+    expect(adapter.config).toBe(config);
+    expect(typeof adapter.text?.generate).toBe('function');
+    expect(adapter.embedding).toBeUndefined();
+  });
+
   const toCome: [type: string, rest: Record<string, unknown>, arrives: string][] = [
-    ['ollama', { baseUrl: 'http://localhost:11434' }, 'P1-T11'],
-    ['openai-compatible', { baseUrl: 'http://localhost:1234/v1' }, 'P1-T11'],
     ['anthropic', { apiKey: { env: 'ANTHROPIC_API_KEY' } }, 'P1-T12'],
     ['comfyui', { baseUrl: 'http://localhost:8188' }, 'phase 9'],
   ];

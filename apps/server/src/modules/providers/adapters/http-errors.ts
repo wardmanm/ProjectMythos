@@ -170,6 +170,26 @@ export function statusError(
 }
 
 /**
+ * An error the provider reported inside a 200 response, such as an `error` line in an
+ * Ollama stream or an `error` event in an SSE stream: `provider_unavailable`, retryable,
+ * since the status could no longer say it. `body` is the line or event's data, which
+ * holds the provider's message. Implements PRV-013.
+ */
+export function streamError(
+  provider: string,
+  body: string,
+  secrets: readonly string[],
+): ProviderError {
+  const said = providerMessage(body, secrets);
+  return {
+    code: 'provider_unavailable',
+    message: `${provider} stopped with an error${said === null ? '.' : `: ${said}`}`,
+    retryable: true,
+    httpStatus: null,
+  };
+}
+
+/**
  * Seconds to wait from a `retry-after` header: a number of seconds, or an HTTP date
  * measured from `timeSource`, never below 0. Null when absent or unreadable.
  */

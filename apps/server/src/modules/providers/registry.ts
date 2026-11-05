@@ -2,6 +2,8 @@
 // types.ts, whose optional members are the kinds it serves (ARCH-133).
 import type { ProviderConfig, TimeSource } from '@mythos/contracts';
 import type { DataDirEnv } from '../config';
+import { createOllamaAdapter } from './adapters/ollama';
+import { createOpenAiCompatibleAdapter } from './adapters/openai-compatible';
 import { createMockAdapter } from './mock-adapter';
 import type { ProviderAdapter } from './types';
 
@@ -20,14 +22,14 @@ export type AdapterDependencies = {
  * have not arrived yet throw, naming the task that brings them. The mock needs none of
  * `deps`. Implements ARCH-133.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- until the first real adapter (P1-T11, P1-T12) takes deps
 export function createAdapter(config: ProviderConfig, deps: AdapterDependencies): ProviderAdapter {
   switch (config.type) {
     case 'mock':
       return createMockAdapter(config);
     case 'ollama':
+      return createOllamaAdapter(config, deps);
     case 'openai-compatible':
-      throw new Error(`The ${config.type} adapter arrives in P1-T11.`);
+      return createOpenAiCompatibleAdapter(config, deps);
     case 'anthropic':
       throw new Error('The anthropic adapter arrives in P1-T12.');
     case 'comfyui':
