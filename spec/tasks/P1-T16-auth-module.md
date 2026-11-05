@@ -81,9 +81,10 @@ ARCH-110, ARCH-111, OVR-004, CON-113, CONV-072
     change, accept an empty hash, count attempts only when they fail, exempt `DELETE
     /session`, stop sessions sliding, lengthen the lockout, and save `localhostExempt` as always
     true.
-  - `pnpm check` passes. The workspace has `Tests  234 passed (234)` and
-    `spec/reference` `Tests  271 passed (271)`, and it ends with `Docs check passed: 834
-    requirements, 25 tasks (6 done), 19 ADRs, 76 markdown files, 311 citations in code.`
+  - `pnpm check` passes, after rebasing onto P1-T09's merge. The workspace has `Tests  250
+    passed (250)` and `spec/reference` `Tests  271 passed (271)`, and it ends with `Docs
+    check passed: 834 requirements, 25 tasks (7 done), 19 ADRs, 77 markdown files, 331
+    citations in code.`
 - **Rulings:**
   - **Extra file** (CONV-132): `auth.ts` holds `createAuth` and the localhost and
     exempt-route rules, which fit none of the four listed files. The design notes'
