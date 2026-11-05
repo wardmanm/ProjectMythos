@@ -1226,9 +1226,20 @@ Excerpt: the first of the fixture's ten relationships.
 | In what order does `listThemes` offer themes (UI-031)? | The built-in library's, then the user library's, then each pack's by pack ID; the first theme with an ID wins, and a theme with issues is left out. | Pack, then user, then built-in, as SCH-010 resolves inside a pack: outside a campaign there is no pack to start from. | Claude (ruling) |
 | Which slot schema are a pack's starting items checked against when it loads (SCH-082)? | The setting's slot schema, with the setting's default ruleset. A campaign whose tone profile overrides the slot schema has its items moved at creation (GEAR-090). | The default tone profile's override: a pack would be refused for a schema its campaigns may not use. Both: refuses packs whose items are moved correctly at creation anyway. | owner |
 | What happens to a pack folder whose name is not a pack ID (SCH-020)? | It is skipped, with a warning logged. | Listing it with its issues: `PackSummary.packId` must be a slug, so the client could not parse the list. | Claude (ruling) |
+| Where do setup's warnings go (SCH-114, SCH-116, GEAR-090 say "in the setup turn")? | `buildSetup` returns them and campaign creation logs each one, with the campaign's ID. They are not stored: no contract has a place for them (Open). | A `campaign_state` key or a field on the root turn's view: the contracts would change for a list no screen shows yet. | owner |
+| What happens before GEAR-090, when the campaign's slot schema lacks a slot an item is worn in (SCH-082)? | GEAR-090's move arrives with gear in phase 6. Until then the setup set fails validation, and campaign creation is refused with `illegal_state_change`, with an issue for each such item (Open). | Moving the items in phase 1: it is phase 6's gear work, and no tone profile in the reference pack or the built-in library overrides the slot schema. | owner |
 
 ## Open
 
 - **Pack fonts.** The loader does not read a pack's `fonts/` folder yet, so `themeIssues`
   gets no pack fonts and a pack theme that names one is reported as using an unknown font.
   UI-034's check that each font has a license file is in no task yet.
+- **Setup warnings are not stored (SCH-114, SCH-116, GEAR-090).** Each requirement lists
+  its changes "in the setup turn", but no contract has a place for them, so campaign
+  creation logs them and keeps nothing (Decisions). Showing them needs a field, such as
+  one on the root turn's view, and a screen to show it.
+- **Items worn in a slot the campaign lacks (GEAR-090, SCH-082).** A tone profile whose
+  slot schema override lacks a slot a starting item is worn in makes campaign creation
+  fail with `illegal_state_change`, until GEAR-090 moves such items in phase 6
+  (Decisions). The pack loads, since its items are checked against the setting's slot
+  schema.
