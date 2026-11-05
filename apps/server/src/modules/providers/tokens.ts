@@ -13,8 +13,9 @@ export const CALIBRATION_FILE = 'calibration.json';
 const SAMPLE_WEIGHT = 0.2;
 
 /**
- * Estimated tokens for `text`: its length divided by the ratio, rounded up. It adds no
- * margin; the context module's input budget holds the margin (CTX-030, PRV-072).
+ * Estimated tokens for `text`: its length divided by the ratio, rounded up. The length
+ * is in UTF-16 code units; calibration absorbs the difference from true characters. It
+ * adds no margin; the context module's input budget holds that (CTX-030, PRV-072).
  * Implements PRV-070.
  */
 export function estimateTokens(text: string, charsPerToken: number): number {
