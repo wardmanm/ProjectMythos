@@ -11,6 +11,7 @@ import type {
   Observation,
   Place,
 } from '@mythos/contracts';
+import type { HistoryEntry } from '@mythos/contracts/content';
 import type { CommitSetEntry } from './fold';
 import { type FoldedState, initialState } from './folded-state';
 
@@ -85,6 +86,22 @@ export function observation(n: number, extra: Partial<Observation> = {}): Observ
     mentionedIds: [],
     importance: 3,
     tags: [],
+    ...extra,
+  };
+}
+
+/** An undated history entry (04-content-schemas §8.4) with no one in it, unless given. */
+export function historyEntry(ref: string, extra: Partial<HistoryEntry> = {}): HistoryEntry {
+  return {
+    ref,
+    placeId: null,
+    kind: 'event',
+    text: `${ref} happened.`,
+    actorIds: [],
+    witnessIds: [],
+    importance: 5,
+    tags: [],
+    alsoKnownBy: [],
     ...extra,
   };
 }
