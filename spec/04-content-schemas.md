@@ -43,7 +43,7 @@ Three sources, searched in this order when resolving a definition ID:
 
 | Source | Location | Contains |
 |---|---|---|
-| **Pack** | `<dataDir>/content-packs/<packId>/`, and `content-packs/<packId>/` in the repo, which ships the reference pack | A setting and everything specific to it |
+| **Pack** | `<dataDir>/content-packs/<packId>/`, and `content-packs/<packId>/` in the repo, which ships the reference pack. A data-directory pack replaces a repo pack with the same ID, with a warning | A setting and everything specific to it |
 | **User library** | `<dataDir>/library/` | Reusable definitions the player saved (tone profiles, rulesets, calendars, slot schemas) |
 | **Built-in library** | `content-library/` in the repo, shipped with the app | Defaults: `calendar.gregorian`, four rulesets (`ruleset.standard` and three examples), `slots.simple`, four starter tone profiles, six themes |
 
@@ -1191,3 +1191,12 @@ Excerpt: the first of the fixture's ten relationships.
   record: game time 0, no entities, clocks, or flags, the chosen PC's ID, the
   scenario's start place, and the first scene's ID, which setup's `scene.start` then
   records.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| How does SCH-001 catch an unknown key inside `media`, `voice`, `startingLocation`, `container`, or `bonuses`? Authored entities reuse runtime schemas there that are not strict, so Zod drops the key silently. | The loader compares each of those objects' keys with its schema's shape (for `startingLocation` and each bonus, the variant its `type` names) and reports every unknown key at its path. The contracts are unchanged. | Strict runtime schemas: they also parse stored state and commit payloads, so the change would reach far beyond authored files. | owner |
+| Which library problems does a pack report (SCH-100)? | Only problems in library definitions the pack uses (its calendar, slot schema, default tone profile and ruleset, and the themes and slot schemas its tone profiles name), each under the library file. A broken library definition is offered to no pack, and is logged. | Every library problem in every pack: one broken user ruleset would block every pack, even those that never use it. | owner |
+| What is `PackIssue.file` for a library file (SCH-101)? | A relative path starting with the library's folder: `content-library/…` for the built-in library, `library/…` for the user library. Never absolute. | Absolute paths: they differ between machines and between Windows and macOS, so the same files would not give the same errors (SCH-103). | owner |
+| Both pack folders hold a pack with the same ID (§2). | The data directory's pack is used, and a warning is logged. | The repository's pack: an edited copy in the data directory would be ignored. Refusing both: a copy could break the reference pack. | owner |
