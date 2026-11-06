@@ -37,11 +37,14 @@ const textPlaceholders: Record<ModelRole, readonly [string, ...string[]]> = {
 };
 
 /**
- * Placeholder output for each structured schema, keyed by `schemaName`. Empty in phase 1,
- * since no structured role runs in phase-1 play; each later phase adds an entry for each
- * schema it introduces, with a test that the entry parses with that schema.
+ * Placeholder output for each structured schema, keyed by `schemaName`. Phase 1 has only
+ * the settings probe's (PRV-090), since no structured role runs in phase-1 play; each
+ * later phase adds an entry for each schema it introduces, with a test that the entry
+ * parses with that schema.
  */
-export const jsonPlaceholders: ReadonlyMap<string, unknown> = new Map<string, unknown>();
+export const jsonPlaceholders: ReadonlyMap<string, unknown> = new Map<string, unknown>([
+  ['probe', { inn: 'The Tarred Gull', rooms: 6 }],
+]);
 
 const providerErrors: Record<
   ProviderError['code'],

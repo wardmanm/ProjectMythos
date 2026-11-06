@@ -3,8 +3,9 @@
 Everything between the engine and a model: the adapter interface every provider
 implements, the registry that builds an adapter from machine config, the mock adapter
 every test uses, the Ollama, OpenAI-compatible, and Anthropic adapters and the HTTP
-helpers they share, token estimation with its calibration, the job queue, and the model
-calls every other module makes: `callStructured` and `streamText`. The adapters import
+helpers they share, token estimation with its calibration, the job queue, the model
+calls every other module makes, `callStructured` and `streamText`, and the settings
+screen's probe and provider statuses. The adapters import
 `config`, for `DataDirEnv` and `resolveSecret`; the queue imports `config`, `storage`,
 and `events`, and the model calls `config` and `storage`. ARCH-021 allows all three.
 
@@ -40,6 +41,10 @@ and `events`, and the model calls `config` and `storage`. ARCH-021 allows all th
   too (CTX-110).
 - `toJsonSchema(schema)` and `adaptSchema(jsonSchema, providerType, method)` are steps 1
   and 2 of the pipeline, which the probe uses too (PRV-092).
+- `createProbe(options)` returns `{ probe }`, with its types `ProbeOptions` and
+  `ProviderProbe`, and `createHealthCheck(options)` returns `{ statuses }`, with
+  `HealthCheckOptions`, `HealthCheck`, `ProviderStatus`, and `HEALTH_TIMEOUT_MS` (see
+  [Probe and health](#probe-and-health)).
 
 ## The mock
 
@@ -51,7 +56,9 @@ A call is answered in one of three modes:
   `<fixturesDir>/<seq>-<role>.json`, where `seq` counts that role's calls from `001`.
   [The fixture README](../../../test/fixtures/model/README.md) has the layout.
 - **Default**, otherwise: short placeholder text for the role, or the placeholder in
-  `jsonPlaceholders` for a JSON schema. An unknown schema is `provider_rejected`.
+  `jsonPlaceholders` for a JSON schema. An unknown schema is `provider_rejected`. In
+  phase 1 the table holds only the probe's schema, so an unscripted mock profile passes
+  every method when probed.
 
 In every mode the text streams to `onDelta` a word at a time, with a pause of `delayMs`
 after each word. A call that is not streamed, or has no text, pauses once. Thinking is
@@ -366,6 +373,57 @@ false`, so the queue never streams the text twice.
   far (PRV-047). A refusal is returned as `ok` with `finishReason: 'refusal'` and
   recorded as `failed`.
 
+## Probe and health
+
+The settings screen's two checks (05-providers §9). The composition root builds each
+once.
+
+**`createProbe(options)`** takes `config`, `queue` (`runInteractive` and `cancel`),
+`adapterFor`, and `timeSource`. It has no campaigns, calibration, or logger, so it
+records nothing (PRV-092). `probe(profileId, signal)` returns a `ProbeResult`, or
+`not_found` for a profile that is not in machine config, the config's own error when it
+fails to load, and `cancelled` once `signal` aborts. In order:
+
+1. **The model list**, `listModels`, called directly: a GET, which needs no slot on the
+   device. It sets `reachable`, and `modelPresent` if the model is listed; for Ollama a
+   name with no tag matches its `:latest`. A failed list ends the probe, with its
+   message as the one suggestion. A model that is not listed is a suggestion, and the
+   probe goes on. An embedding profile stops here.
+2. **One tiny structured request per method**, `json-schema`, `tool-call`, then
+   `prompt-only`, each with a copy of the profile set to that method, the schema adapted
+   for it (`adaptSchema`), and its format instruction (`structured-output.ts`). The
+   answer is checked with `ProbeAnswerSchema`, an object of an inn's name and its rooms,
+   and the result goes in `structuredMethods`.
+3. **One text request**, last, so the model is already loaded: about 1,000 tokens of
+   scene notes, opening with the probe's start time so a server's prompt cache cannot
+   reuse an earlier probe's prompt. It streams to an `onDelta` that times the first
+   answer delta. Prompt speed is the uncached input tokens over the time to that delta,
+   and generation speed the output tokens over the rest. With thinking, which comes
+   first, only generation speed is given, over the whole call. A failed text request
+   leaves both null.
+
+Every model request runs as an interactive job on the provider's device, with
+`campaignId: null` and `role: 'narrator'`, the profile's own sampling and
+`maxOutputTokens`, and the hard floor at the end of its instructions (CSET-040). It is
+timed inside its job, so time queued does not count. A failure comes back with
+`retryable: false`, so the queue never retries it: each method gets one try.
+`emittedThinking` is true if any answer had thinking.
+
+`suggestions`, in order: a model that is not listed; each distinct provider error
+message, once; the fastest method that gave valid output, against the profile's own,
+with ties going to `json-schema`, then `tool-call` (or why none worked); turning thinking
+off on the server, when the model thought though the profile says `off`; and a context
+window below 8,192 tokens (CTX-032).
+
+**`createHealthCheck(options)`** takes `config`, `adapterFor`, `setTimer`, and `logger`.
+`statuses()` checks every provider in machine config at once and returns a
+`ProviderStatus` for each, in config order (PRV-091). Each check gets
+`HEALTH_TIMEOUT_MS`, 5 seconds, for the whole call, on top of the adapters' 10-second
+idle timeout: then its signal is aborted, and the provider is unreachable, "Ollama at
+http://localhost:11434 did not answer within 5 seconds." A check that throws, as
+building a `comfyui` adapter does until phase 9, is logged as a warning and reported
+unreachable.
+
 ## Files
 
 - `types.ts`: the copied interface types.
@@ -396,6 +454,15 @@ false`, so the queue never streams the text twice.
 - `records.ts`: attempts, outcomes, and storing the record.
 - `structured-testing.ts`: the model calls' test harness: a real queue and campaign, the
   mock behind every provider, and a calibration that only remembers. Not exported.
+- `probe.ts`: `createProbe`: the profile's listing, each request as an interactive job,
+  and timing inside the job.
+- `probe-prompts.ts`: what the probe sends: the tiny structured request, its schema
+  `ProbeAnswerSchema`, and the text prompt of about 1,000 tokens.
+- `probe-report.ts`: the pure half: each method's check, the speeds, model names, and the
+  suggestions.
+- `probe-testing.ts`: the probe tests' harness: a real queue whose campaigns and event bus
+  only remember being used, the mock, and fake time. Not exported.
+- `health.ts`: `createHealthCheck` and its 5-second limit.
 - `adapters/http.ts`: `sendRequest`, `parseWire`, `resolveApiKey`, and
   `RateLimitDetailsSchema`.
 - `adapters/http-errors.ts`: the PRV-013 error mapping, messages, and `retry-after`.
@@ -418,18 +485,20 @@ false`, so the queue never streams the text twice.
 
 ## Governing spec
 
-- [05-providers.md](../../../../../spec/05-providers.md) §2.2 (PRV-001), §3 to §8, and
+- [05-providers.md](../../../../../spec/05-providers.md) §2.2 (PRV-001), §3 to §9, and
   its closing sections.
 - [03-contracts.md](../../../../../spec/03-contracts.md) §14.1: the model call record,
-  its attempts, and `ChatMessage`.
+  its attempts, `ChatMessage`, `ProbeResult`, and `ProviderStatus`.
 - [01-architecture.md](../../../../../spec/01-architecture.md): ARCH-060 and ARCH-061
   (§4.4, model call records), ARCH-080 to ARCH-083 (§6.1), ARCH-131, and ARCH-133.
 - [06-turn-engine.md](../../../../../spec/06-turn-engine.md): TRN-012, resuming
   background jobs on server start.
 - [09-context.md](../../../../../spec/09-context.md): CTX-010 and CTX-011, the message
-  layout the Anthropic adapter's breakpoints follow, and CTX-090, the records.
-- [13-content-settings.md](../../../../../spec/13-content-settings.md): CSET-042, the
-  floor the format instruction stays ahead of, and CSET-050, refusals.
+  layout the Anthropic adapter's breakpoints follow, CTX-032, the context window the
+  probe warns about, and CTX-090, the records.
+- [13-content-settings.md](../../../../../spec/13-content-settings.md): CSET-040, the
+  floor at the end of the probe's instructions, CSET-042, the floor the format
+  instruction stays ahead of, and CSET-050, refusals.
 - [02-conventions.md](../../../../../spec/02-conventions.md): CONV-032, CONV-113, and
   CONV-114.
 - [ADR-010](../../../../../spec/decisions/ADR-010-no-vendor-sdks.md): adapters use
