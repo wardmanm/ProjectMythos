@@ -478,7 +478,7 @@ IDs must match body IDs.
 | `POST /skip` | `SkipTimeCommand` | `{ turnId }` (TIME-040) |
 | `POST /turns/:turnId/resolve` | `ResolveCommand` | `ResolutionDraft` or `{ accepted: true }` |
 | `POST /turns/:turnId/edit` | `EditStageCommand` | `TurnView` |
-| `POST /turns/:turnId/regenerate` | `RegenerateStageCommand` | `{ jobId }` |
+| `POST /turns/:turnId/regenerate` | `RegenerateStageCommand` | `{ turnId }` for a stage run as an interactive job (adjudication, narration); `{ jobId }` for a background one (extraction) |
 | `POST /turns/:turnId/keep-stale` | `KeepStaleCommand` | `TurnView` |
 | `POST /turns/:turnId/cancel` | `CancelCommand` | `TurnView` |
 | `POST /state` | `EditStateCommand` | `TurnView` |
@@ -806,6 +806,7 @@ CONV-116), and each cites its requirement IDs.
 | Where is TRN-061's application order defined? | Only in `orderSets(sets, depthByTurnId)` in `core`: turn depth, then stage, then the set's `seq`. Storage's `readSetsForRead` returns a read point's sets with their turn's depth, sorted by depth, then set `seq`, then commit `seq`, and not by stage; the caller applies `orderSets`, and the fold applies sets in the order it is given, without sorting them again. | Sorting by stage in SQL as well: two definitions of one order, which can drift apart. | owner |
 | When does the folded state gain wiki sections, notes, and beliefs (TRN-064)? | With their reducers: wiki page learned sections with `wiki.patch` in phase 4, and journal notes and beliefs with `note.*` and `belief.*` in phase 5. Phase 1's folded state holds the world state, relationships, learned names, and known observation IDs. | Adding them in phase 1: no reducer would fill them until those phases. | owner |
 | How does validation see the commits before it in the same set (TRN-070, TRN-071)? | `core` steps through a set in commit `seq` order, checking each commit against the state the earlier ones left and then applying it, so setup creates a container before its contents and a grant names an observation added earlier in its set. On write, any failure rejects the whole set; on replay, a failing commit is skipped and the rest of its set applies. | Checking every commit against the state before the set: setup's references to the entities it creates would all fail. Checking against the state after the set: a failing commit would have to be undone. | Claude (ruling) |
+| What does `POST /turns/:turnId/regenerate` return for a stage that runs as an interactive job (§10)? | `{ turnId }`, as `POST /actions` does; the stage's progress arrives as events (TRN-130). A background stage, such as extraction, still returns `{ jobId }`. | `{ jobId }` for every stage: `streamText` and `callStructured` run their interactive job inside the providers module, and `StreamTextOptions` has no way to hand its ID back. Adding an `onJob` callback to that code block would serve no client need, since the client only needs to know the retry started. | owner |
 | What is the root turn's `gameTimeStart` (TRN-056)? | The scenario's start, the game time its setup set advances to, so the opening narration and its extraction happen when the scenario begins. | 0, the epoch: MEM-004 dates a turn's observations from its `gameTimeStart`, so the opening's extraction would date them years before the scenario. | Claude (ruling) |
 
 ## Open
