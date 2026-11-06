@@ -45,7 +45,11 @@ within the model's budget, in an order that lets the model reuse its cache.
   never compute: anything that needs logic is prepared in code, in the role's view
   model (CTX-006).
 - **CTX-003** A template is a top-level file per role, composed of partials, so a layer
-  can replace one section without copying the rest.
+  can replace one section without copying the rest. A top-level template marks where
+  each tier of its role's recipe starts with a line such as `<!-- tier: world -->`,
+  once per tier and in tier order, and a template whose rendered text has a missing,
+  repeated, out-of-order, or unknown marker fails with `validation_failed`, naming the
+  file and its layer.
 
 | Template | Role | Purpose |
 |---|---|---|
