@@ -1734,8 +1734,9 @@ All paths are under `/api`.
   with no stored value is a validation issue at its path.
 - **CON-112** `POST /campaigns` checks the whole command against the pack, the ruleset,
   and the creation rules (SCH-072, SCH-110 to SCH-116) and reports every issue at once,
-  as SCH-100 does. On success the campaign folder exists, turn zero's `setup` sets are
-  committed, and the opening narration is queued; the response does not wait for it.
+  as SCH-100 does. On success the campaign folder exists, turn zero's `setup` set
+  (SCH-117) is committed, and the opening narration is queued; the response does not
+  wait for it.
 - **CON-113** Only `GET /session`, `POST /session`, and the static client are exempt
   from the PIN (ARCH-110). The event stream needs a session like everything else.
 - **CON-114** The event stream sends a comment line every 15 seconds while idle, so
