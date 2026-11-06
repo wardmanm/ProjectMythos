@@ -180,7 +180,9 @@ ask "how does this work?", rewrite it.
 - **CONV-112** `packages/core` aims for complete branch coverage; it is pure and cheap
   to test.
 - **CONV-113** No test touches the network or a real model. Model calls use the **mock
-  provider**, which replays recorded fixtures or returns scripted outputs.
+  provider**, which replays recorded fixtures or returns scripted outputs. A provider
+  adapter's own tests call a fake HTTP server that the test starts on `127.0.0.1` and a
+  port the operating system picks.
 - **CONV-114** A script records new fixtures from a real provider. Fixtures are
   committed and reviewed like code.
 - **CONV-115** Prompt templates have snapshot tests of their rendered output for a

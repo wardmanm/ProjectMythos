@@ -477,10 +477,14 @@ export type ProviderAdapter = {
 - **PRV-012** Adapters translate provider responses and errors into `TextResponse` and
   `ProviderError`. Nothing outside an adapter knows a provider's wire format.
 - **PRV-013** Error mapping: connection refused / DNS failure → `provider_unavailable`
-  (retryable); timeout → `provider_timeout` (retryable); HTTP 429 → `rate_limited`
-  (retryable, honoring `retry-after`); HTTP 5xx → `provider_unavailable` (retryable);
-  other 4xx and content refusals → `provider_rejected` (not retryable); abort →
-  `cancelled`.
+  (retryable); timeout, when nothing arrives for the profile's `timeoutMs` (no response
+  headers, or no next chunk of the body) → `provider_timeout` (retryable); HTTP 429 →
+  `rate_limited` (retryable, with the wait `retry-after` asks for as
+  `details.retryAfterSeconds`); HTTP 5xx, or an error the provider reports inside a 200
+  response → `provider_unavailable` (retryable); other 4xx, including a refusal sent as
+  one → `provider_rejected` (not retryable); abort → `cancelled`. A refusal in a 200
+  response is not an error: the adapter returns `ok` with `finishReason: 'refusal'`
+  (CSET-050).
 
 ### 3.1 Adapter specifics
 
@@ -778,12 +782,15 @@ export type JobQueue = {
 
 - **Reported input tokens can leave out the cached part of the prompt (PRV-071,
   `TokenUsage.inputTokens`).** Anthropic's `input_tokens` excludes cache reads and
-  writes, which it reports in separate fields, and Ollama's `prompt_eval_count` may
-  leave out a prefix it reused from the previous call. An adapter must report the whole
-  prompt in `inputTokens` (Decisions). Left unfixed, each cached call makes the
-  calibrated ratio drift high, estimates fall short, and prompts overflow the context
-  window. Both behaviors should be confirmed against the providers' current
-  documentation when P1-T11 and P1-T12 write the adapters.
+  writes, which it reports in separate fields, and older versions of Ollama left a
+  prefix reused from the previous call out of `prompt_eval_count`. An adapter must
+  report the whole prompt in `inputTokens` (Decisions). Left unfixed, each cached call
+  makes the calibrated ratio drift high, estimates fall short, and prompts overflow the
+  context window. Ollama 0.40.14 counts the whole prompt in `prompt_eval_count` and the
+  cached part in `prompt_eval_cached_count`, which its documentation does not say but
+  its source does (read for P1-T11 on 2026-11-05), and OpenAI's `prompt_tokens`
+  includes its `cached_tokens`. Anthropic's behavior is to be confirmed when P1-T12
+  writes its adapter.
 - **A handler that ignores its signal holds its device (PRV-064, ARCH-083).**
   Preemption, `cancel`, and `stop()` only abort `JobContext.signal`, and the slot frees
   when the run settles (Decisions). A handler, and the work given to `runInteractive`,
@@ -820,6 +827,24 @@ export type JobQueue = {
 | What does `wait` return for a job the queue does not hold (§6)? | A `not_found` error, at once. The queue forgets a job when it ends, so this includes a job that has finished; a background job's stored row keeps its last status. | Keeping finished jobs in memory to answer late calls: the map would grow for the life of the process. | Claude (ruling) |
 | When does a preempted job's slot free (PRV-064)? | When its run settles after the abort, not at the abort. Until then the interactive job waits, nothing else starts on the device, and no second job there is preempted. | Freeing the slot at the abort: a handler slow to notice its signal would run beside the interactive job on a device that has room for one. | Claude (ruling) |
 | How does a caller cancel an interactive job (PRV-061, ARCH-083)? | By aborting the signal it passed to `callStructured` or `streamText`, which then calls `cancel(jobId)`; the queue aborts the `JobContext` signal the work runs under. `InteractiveOptions` takes no signal. | Giving `runInteractive` the caller's signal: the code block's `InteractiveOptions` has none, and one job would have two ways to be cancelled. | Claude (ruling) |
+| What does a profile's `timeoutMs` bound (PRV-013)? | Idle time, in every adapter: the wait for the response headers, then each wait for the next chunk of the body. It never bounds the whole call, so a long narration that keeps streaming never times out, and a server that goes quiet fails after `timeoutMs`. | A bound on the whole call: it would cut off a long but healthy stream, or, set high enough for the slowest generation, take that long to notice a dead server. | owner |
+| What usage does an adapter report when the provider reports none (PRV-070, PRV-071)? | Each count it leaves out is estimated from the profile's `charsPerToken`, as the mock does, so `TextResponse.usage` is always complete. A cancelled call's usage is always estimated, so P1-T14 does not calibrate from cancelled calls (Open). | Zero for a missing count: calibration would read it as a huge error. Making the counts nullable: a change to the contract for a case the estimate covers. | owner |
+| How does Ollama's `tool-call` method work (PRV-023, PRV-030)? | The adapter offers one tool, named after the schema, with the schema as its parameters, and reads the answer from the tool call's arguments. Ollama cannot force a tool, so when the model answers in plain text instead, that text is the answer, and validation (PRV-050) judges it. | Failing a call with no tool call: a model that writes valid JSON as text would fail for no gain. | owner |
+| What is a 200 reply an adapter cannot read (PRV-012, PRV-013)? | `provider_unavailable`, retryable, with `httpStatus: null`: a body that is not JSON or does not match the adapter's wire schema, whole or one line or event of a stream, is a provider failure, like an error reported inside a 200 stream. | `provider_rejected`: nothing about the request was refused, and a garbled reply may not happen again. | Claude (ruling) |
+| When is `ProviderError.httpStatus` set (PRV-013)? | Only when the status caused the error: 429, other 4xx, and 5xx. A connection failure, a timeout, an abort, an unreadable reply, and an error inside a 200 stream have `null`, even once a 200 has arrived. | The status whenever a response arrived: a cancelled or timed-out stream would report HTTP 200. | Claude (ruling) |
+| How are Node's network failures mapped (PRV-013)? | `ECONNREFUSED`, `ENOTFOUND`, `EAI_AGAIN`, `ECONNRESET`, `EPIPE`, `UND_ERR_SOCKET` (a dropped connection), and connect timeouts (`ETIMEDOUT`, `UND_ERR_CONNECT_TIMEOUT`) are `provider_unavailable`, as is any other code. Node's own header and body timeouts (`UND_ERR_HEADERS_TIMEOUT`, `UND_ERR_BODY_TIMEOUT`, 300 seconds by default, so only a longer `timeoutMs` meets them) are `provider_timeout`. A header `fetch` would refuse to send is `provider_rejected`, caught before sending, because `fetch`'s own error quotes the value, which may be the API key. | Throwing for an unknown code: a TLS or routing failure is still a provider that cannot be reached. | Claude (ruling) |
+| How is `retry-after` read (PRV-013)? | Into `details: { retryAfterSeconds }` on every `rate_limited` error, null when the header is absent or unreadable. Seconds may have a fraction and round up. An HTTP date is measured from the injected `TimeSource` and gives 0 once past. Text with no letters that is not a number is unreadable, since `Date.parse` reads "-5" as a date in 2001. | Milliseconds: the header counts seconds. | Claude (ruling) |
+| Is an API key trimmed (PRV-005)? | Yes: `resolveApiKey` trims it, since a `.env` file with Windows line endings leaves a `\r` that makes the header invalid. | Using it as stored: the same file would work on macOS and fail on Windows (OVR-001). | Claude (ruling) |
+| How does the `<think>` splitter treat what is not a tidy block (PRV-046)? | A block still open at the end is thinking. A stray `</think>` with no `<think>` before it is dropped (Open). Whitespace straight after `</think>` is dropped, since models put a blank line there. The end of a delta that could be the start of a tag is held back until the next delta shows what it is. | Passing a stray `</think>` through: the tag would show in the narration. | Claude (ruling) |
+| Which structured-output method does an adapter use (PRV-023, PRV-030)? | For a `json` format, the profile's `structuredOutput`. A `text` format sends no format parameter, whatever the method. | A method chosen per call: the probe (PRV-090) already finds the method that works for each profile. | Claude (ruling) |
+| When does an adapter stream (PRV-045)? | Whenever the request has `onDelta`, which then gets every piece of answer text, a tool call's arguments included. Sending the whole text as one delta for a profile with `streaming: false` is `streamText`'s job (P1-T14). | Each adapter reading `profile.streaming`: every adapter would repeat the one-delta fallback. | Claude (ruling) |
+| What does an adapter return for a refusal in a 200 reply (PRV-013, CSET-050)? | `ok`, with `finishReason: 'refusal'`, for an OpenAI-compatible `refusal` or `finish_reason: 'content_filter'`. Its text is the answer, or the refusal's own words when there is none, and refusal text never reaches `onDelta`. | `provider_rejected`: the request was accepted and answered, and only the answer says why it was refused. | Claude (ruling) |
+| What does a call that fails after some text return (PRV-047)? | Only an abort returns the text so far, as `ok` with `finishReason: 'cancelled'`. Any other failure, such as an error event, a dropped connection, or a timeout, is the error however much text arrived, and an abort with only thinking received is the `cancelled` error. | Keeping the text on every failure: a narration cut off by a fault would be committed as if the player had stopped it. | Claude (ruling) |
+| What does the OpenAI-compatible adapter send beyond the messages (PRV-030)? | `max_tokens`; `stream_options.include_usage` when streaming; each sampling value the profile sets, `top_k` and `repeat_penalty` included, which OpenAI lacks but llama.cpp, vLLM, and LM Studio read. No thinking parameter (Open). An `apiKey` goes as a bearer token, in place of any `Authorization` in `headers`. | `max_completion_tokens`, which OpenAI now prefers: not every local server reads it. | Claude (ruling) |
+| What does the OpenAI-compatible `tool-call` method do when no tool call comes back (PRV-030)? | It uses the content, as Ollama's does, since some servers ignore `tool_choice`. Only the first tool call counts. | Failing the call: a server that ignores `tool_choice` but writes valid JSON would fail for no gain. | Claude (ruling) |
+| When is a streamed reply complete (PRV-012)? | When its body ends cleanly, even without Ollama's `done` line or an OpenAI `finish_reason`: the finish is then `stop`, and missing counts are estimated. A dropped connection is an error. | Requiring the last line: the server has already ended the body, and some servers leave it out. | Claude (ruling) |
+| Do adapters log (CONV-070)? | No: they take no logger. A failure returns as a `ProviderError` with a message in plain words, and the caller logs it. | A logger in each adapter: failures would be logged twice, and each adapter would need its own care to keep keys out of logs. | Claude (ruling) |
+| How do `health` and `listModels` reach a provider (PRV-091)? | With one GET under a 10-second idle timeout, since no profile gives a `timeoutMs`: Ollama's `/api/version` and `/api/tags`, and an OpenAI-compatible server's `/models` for both. Any error makes `health` unreachable, with the error's message as its detail. | No timeout: a hung server would leave the settings screen waiting. | Claude (ruling) |
 
 ## Open
 
@@ -843,3 +868,20 @@ export type JobQueue = {
   server start to read its stored jobs, and the campaign store keeps every connection
   open until shutdown. The queue cannot close one, since it does not know whether
   anything else is using it.
+- **Cancelled calls and calibration.** A cancelled call's usage is an estimate made with
+  the ratio calibration would correct (Decisions), so folding it in would pull the ratio
+  toward itself. P1-T14's `streamText` and `callStructured` skip calibration when
+  `finishReason` is `'cancelled'` (PRV-071).
+- **A stray `</think>` cannot take back streamed text.** Some chat templates open the
+  `<think>` block in the prompt, so the model writes its reasoning and then `</think>`
+  with no opening tag. By then the reasoning has gone to `onDelta` as answer text; the
+  splitter only drops the stray tag (PRV-046, Decisions). Such a model needs a server
+  that returns reasoning in a field of its own, as Ollama does with `think`, and as
+  llama.cpp's `--reasoning-format` and LM Studio's reasoning setting can.
+- **The OpenAI-compatible adapter sends no thinking parameter.** Servers name it
+  differently (`reasoning_effort`, `chat_template_kwargs.enable_thinking`, OpenRouter's
+  `reasoning`), so `profile.thinking` has no effect there; reasoning that does come back
+  is still captured (PRV-046). The probe (PRV-090) reports whether thinking was emitted.
+- **The local adapters have no `embedding` member.** Ollama and OpenAI-compatible
+  servers both serve embedding models, but `embed` arrives with retrieval in phase 4;
+  until then only the mock embeds (PRV-010).
