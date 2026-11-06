@@ -478,7 +478,7 @@ IDs must match body IDs.
 | `POST /skip` | `SkipTimeCommand` | `{ turnId }` (TIME-040) |
 | `POST /turns/:turnId/resolve` | `ResolveCommand` | `ResolutionDraft` or `{ accepted: true }` |
 | `POST /turns/:turnId/edit` | `EditStageCommand` | `TurnView` |
-| `POST /turns/:turnId/regenerate` | `RegenerateStageCommand` | `{ jobId }` |
+| `POST /turns/:turnId/regenerate` | `RegenerateStageCommand` | `{ turnId }` for a stage run as an interactive job (adjudication, narration); `{ jobId }` for a background one (extraction) |
 | `POST /turns/:turnId/keep-stale` | `KeepStaleCommand` | `TurnView` |
 | `POST /turns/:turnId/cancel` | `CancelCommand` | `TurnView` |
 | `POST /state` | `EditStateCommand` | `TurnView` |
@@ -798,6 +798,28 @@ CONV-116), and each cites its requirement IDs.
 - **TRN-148** Every query a module exposes returns different results on two branches
   that diverge, and on the same branch at two `asOf` points.
 
+## Traps
+
+- **Transactions don't nest (TRN-123, storage's `appendSet`).** A stage's set and the
+  status it leads to are one write: `appendSet(db, set, status)`. Wrapping `appendSet`
+  and `setTurnStatus` in a `db.transaction` of the caller's own throws, because
+  `appendSet` opens its own.
+- **No `await` between a command's checks and its writes (TRN-058, TRN-120,
+  `submit-action.ts`).** The head check, the waiting rules, and `insertTurn` run in one
+  synchronous stretch. An `await` between them would let a second submit pass the same
+  checks before the first turn is stored.
+- **An abandoned turn is on no branch (TRN-047).** Its `branch_turns` row is gone, so
+  `readSetsForRead` throws for it. Read its sets with storage's `readTurnSets`, as the
+  view of a cancelled turn does to hand back its input.
+- **A narration leaves the in-flight map before `narration.done` (TRN-150,
+  `narration.ts`).** The client refetches the turn on `narration.done` (UI-101). If the
+  in-memory text were still there, the refetch would get it with `complete: false`
+  instead of the committed narration.
+- **Retryable errors before any text are retried by the queue (PRV-063).** A narration
+  test scripted with `provider_unavailable` waits on backoff timers, not on the turn.
+  Use a non-retryable error such as `provider_rejected`, or fire the play stack's
+  `timers`.
+
 ## Decisions
 
 | Question | Decision | Rejected and why | Decided by |
@@ -806,6 +828,17 @@ CONV-116), and each cites its requirement IDs.
 | Where is TRN-061's application order defined? | Only in `orderSets(sets, depthByTurnId)` in `core`: turn depth, then stage, then the set's `seq`. Storage's `readSetsForRead` returns a read point's sets with their turn's depth, sorted by depth, then set `seq`, then commit `seq`, and not by stage; the caller applies `orderSets`, and the fold applies sets in the order it is given, without sorting them again. | Sorting by stage in SQL as well: two definitions of one order, which can drift apart. | owner |
 | When does the folded state gain wiki sections, notes, and beliefs (TRN-064)? | With their reducers: wiki page learned sections with `wiki.patch` in phase 4, and journal notes and beliefs with `note.*` and `belief.*` in phase 5. Phase 1's folded state holds the world state, relationships, learned names, and known observation IDs. | Adding them in phase 1: no reducer would fill them until those phases. | owner |
 | How does validation see the commits before it in the same set (TRN-070, TRN-071)? | `core` steps through a set in commit `seq` order, checking each commit against the state the earlier ones left and then applying it, so setup creates a container before its contents and a grant names an observation added earlier in its set. On write, any failure rejects the whole set; on replay, a failing commit is skipped and the rest of its set applies. | Checking every commit against the state before the set: setup's references to the entities it creates would all fail. Checking against the state after the set: a failing commit would have to be undone. | Claude (ruling) |
+| What does `POST /turns/:turnId/regenerate` return for a stage that runs as an interactive job (§10)? | `{ turnId }`, as `POST /actions` does; the stage's progress arrives as events (TRN-130). A background stage, such as extraction, still returns `{ jobId }`. | `{ jobId }` for every stage: `streamText` and `callStructured` run their interactive job inside the providers module, and `StreamTextOptions` has no way to hand its ID back. Adding an `onJob` callback to that code block would serve no client need, since the client only needs to know the retry started. | owner |
+| What text does a narration commit (TRN-051, TRN-052, CSET-050)? | Only the text forwarded to the client as `narration.delta`s, which is also what `GET /turns/:turnId` shows mid-stream (TRN-150). | `StreamedText.text`: after a refusal it can hold the refusal's own words, which never reach `onDelta`, and the player would find narration they never saw. | Claude (ruling) |
+| What happens to narration longer than `narration.set`'s 20,000 characters (TRN-051)? | It is cut at 20,000, never inside a surrogate pair. Deltas stop there, the stream is aborted, and the text is committed with `complete: false`, as a `length` stop is. | Committing it whole: the commit would fail its schema. Raising the limit: a contract change, for what `maxOutputTokens` already prevents on any ordinary profile. | Claude (ruling) |
+| What if the narrator finishes without a word (TRN-052)? | The turn becomes `stage-failed` with "The narrator returned no text." (`provider_rejected`), so the player can retry. | Committing an empty narration: the turn would look finished with nothing to read, and only `stage-failed` offers a retry in phase 1. | Claude (ruling) |
+| What does `cancel` do to a turn that is not narrating (TRN-047, TRN-058, TRN-149)? | A `stage-failed` turn that is not the root is abandoned, which TRN-058's "fixed or cancelled first" needs. Any other turn, a stage-failed root included, is returned as it is. | `conflict` for a finished turn: a Stop that reaches the server just as the narration ends would show the player an error. | Claude (ruling) |
+| What happens to a narration at shutdown (TRN-012, PRV-047)? | `narrations.stop()` runs before the queue's `stop()`. Text that arrived is committed with `complete: false`. A turn with none becomes `stage-failed`, never abandoned, since the player did not stop it. | Leaving it `narrating` for TRN-012 to fail at the next start: the text the player had read would be lost. | Claude (ruling) |
+| Where does a new turn start, and what date does its view show (TRN-011)? | Its `gameTimeStart` is the game time folded at its parent's end. The view's `gameTimeLabel` is that time in the campaign calendar. Each accepted action also sets the campaign's `lastPlayedAt`. | The parent's `gameTimeStart`: wrong once a turn advances time (phase 3). | Claude (ruling) |
+| What is a narration set based on, and what is its origin (CON-083)? | The turn's input set, or on the root turn its setup set. The origin is `model`, a stopped narration included. | Basing the opening on nothing: a later edit of the setup set could never make it stale. | Claude (ruling) |
+| What happens to an abandoned turn (TRN-047)? | The branch's head moves back to the parent, and the turn's `branch_turns` row is removed, in one transaction with its status (storage's `abandonTurn`). The turn and its sets stay in the log, and its view still holds its input. | Keeping its `branch_turns` row: the turn would stay in the branch's ancestry, and so in every later read point. | Claude (ruling) |
+| How is ARCH-070's one turn in flight checked? | A new action needs a head whose status TRN-058 allows, and no narration of the campaign running in this process. The second check holds once a campaign has more than one branch. | The head alone: an action on another branch could start while one narration still streams. | Claude (ruling) |
+| Does phase 1 publish `state.changed` (CON-100)? | No. Input and narration are turn content, not world state, and §11 lists phase 1's events. Every turn event carries IDs and a status only. The text arrives as deltas and through `GET /turns/:turnId`. | `state.changed` with no affected entities after each set: the client would invalidate the scene and journal for nothing. | Claude (ruling) |
 | What is the root turn's `gameTimeStart` (TRN-056)? | The scenario's start, the game time its setup set advances to, so the opening narration and its extraction happen when the scenario begins. | 0, the epoch: MEM-004 dates a turn's observations from its `gameTimeStart`, so the opening's extraction would date them years before the scenario. | Claude (ruling) |
 
 ## Open
@@ -816,3 +849,15 @@ CONV-116), and each cites its requirement IDs.
   type, but `applyCommit` throws for a type whose reducer arrives in a later phase,
   naming that phase, so such an edit fails with `internal_error` until its phase. The
   table of those phases is `UNBUILT_PHASES` in `packages/core/src/state/apply-commit.ts`.
+- **A failed stage's error is not kept (TRN-052, CSET-051).** The error reaches the
+  client only as the live `error` event. `TurnView` has no field for it, so after a
+  reload a failed turn's card can say that the narration failed, but not why.
+- **Phase 1's `TurnView` leaves `failedStages` and `versionCounts` empty**, even for a
+  `stage-failed` turn, whose failed stage is always narration. The status says it.
+  Phase 2 fills `versionCounts`, and phase 3, which can fail adjudication, fills
+  `failedStages`.
+- **Abandoning a turn publishes no `branch.changed`.** The branch's head moves back
+  with only a `turn.status`, as §11's phase-1 events allow. Another tab learns of it
+  from `conflict` on its next command (TRN-120), until phase 2 brings `branch.changed`.
+- **Every read folds from the root.** A submit, each narration prompt, and each
+  narration commit fold the whole branch, until snapshots arrive (TRN-066).

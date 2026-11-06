@@ -43,7 +43,7 @@ estimate, what was trimmed, and whether it is in the cached prefix, CTX-090), `r
 1. **Read** (`read.ts`). `readAtPoint(store, db, point)` reads the campaign record, its
    canon (setting, calendar, slot schema, tone profile, ruleset, scenario and its
    opening), the current content settings, and the point's active sets, put in order with
-   `orderSets` and folded from `initialState`. From the same sets it takes the current
+   core's `entriesInOrder` and folded from `initialState`. From the same sets it takes the current
    scene's earlier narrated turns (since the last `scene.start`) and the point's turn:
    the root turn opens the story (CTX-076); any other turn has its input.
 2. **Find the templates** (`templates.ts`). `layeredLookup` finds a file in the

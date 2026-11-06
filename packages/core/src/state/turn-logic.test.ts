@@ -1,7 +1,7 @@
 import type { CommitSet, CommitStage } from '@mythos/contracts';
 import { describe, expect, it } from 'vitest';
 import { commitSet, testId } from './test-support';
-import { activeSets, orderSets, staleStages } from './turn-logic';
+import { activeSets, entriesInOrder, orderSets, staleStages } from './turn-logic';
 
 // One turn's sets, numbered in creation order, each based on the stages before it.
 const input = commitSet(1, 'input');
@@ -110,6 +110,34 @@ describe('orderSets', () => {
       edit1,
       input2,
       narration2,
+    ]);
+  });
+
+  it('TRN-061: entriesInOrder puts sets as storage reads them into application order, each with its commits', () => {
+    const [turn0, turn1] = [testId(110), testId(111)];
+    const setup = commitSet(40, 'setup', { turnId: turn0 });
+    const narration0 = commitSet(41, 'narration', { turnId: turn0 });
+    const input1 = commitSet(42, 'input', { turnId: turn1 });
+    const commit = (set: CommitSet, n: number) => ({
+      id: testId(n),
+      setId: set.id,
+      seq: 0,
+      payload: { type: 'input.set' as const, mode: 'ic' as const, text: `set ${String(n)}` },
+    });
+    // Storage sorts by depth and seq, not by stage: an edit on turn 0 made before the
+    // opening narration would come back first.
+    const edit0 = commitSet(39, 'player-edit', { turnId: turn0 });
+    const read = [
+      { set: edit0, depth: 0, commits: [commit(edit0, 139)] },
+      { set: setup, depth: 0, commits: [commit(setup, 140)] },
+      { set: narration0, depth: 0, commits: [] },
+      { set: input1, depth: 1, commits: [commit(input1, 142)] },
+    ];
+    expect(entriesInOrder(read)).toEqual([
+      { set: setup, commits: [commit(setup, 140)] },
+      { set: narration0, commits: [] },
+      { set: edit0, commits: [commit(edit0, 139)] },
+      { set: input1, commits: [commit(input1, 142)] },
     ]);
   });
 

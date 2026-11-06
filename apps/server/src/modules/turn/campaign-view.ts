@@ -9,53 +9,36 @@ import {
   ok,
   type Result,
 } from '@mythos/contracts';
-import {
-  cmp,
-  type CommitSetEntry,
-  type FoldContext,
-  fold,
-  formatDate,
-  initialState,
-  orderSets,
-  toDate,
-} from '@mythos/core';
-import {
-  type CampaignRecord,
-  type CampaignStore,
-  type Database,
-  readBranch,
-  readCanon,
-  readSetsForRead,
-  readState,
-} from '../storage';
+import { cmp, formatDate, toDate } from '@mythos/core';
+import { type CampaignStore, type Database, readBranch, readCanon, readState } from '../storage';
+import { foldAtPoint, pointBefore, stored } from './read-point';
 
-// A campaign database missing what creation always writes is corrupt (CONV-041).
-function stored<T>(db: Database, value: T | null | undefined, what: string): T {
-  if (value === null || value === undefined) throw new Error(`${db.path} has no ${what}`);
-  return value;
-}
-
-/** The game time at the head of `branchId`: its active sets in TRN-061's order, folded. */
+/** The head of `branchId` and the game time there, its sets folded (TRN-060). */
 function headGameTime(
+  store: CampaignStore,
   db: Database,
-  record: CampaignRecord,
-  scenePlaceId: string,
   branchId: string,
-  context: FoldContext,
 ): { headTurnId: string; gameTime: number } {
   const branch = stored(db, readBranch(db, branchId), `branch ${branchId}`);
-  const point = { branchId, turnId: branch.headTurnId, beforeStage: 'end' as const };
-  const sets = readSetsForRead(db, point);
-  const depthByTurnId = Object.fromEntries(sets.map(({ set, depth }) => [set.turnId, depth]));
-  const commitsBySetId = new Map(sets.map(({ set, commits }) => [set.id, commits]));
-  // orderSets is the only definition of the order (06-turn-engine Decisions).
-  const entries = orderSets(
-    sets.map(({ set }) => set),
-    depthByTurnId,
-  ).map((set): CommitSetEntry => ({ set, commits: commitsBySetId.get(set.id) ?? [] }));
-  const start = initialState({ pcId: record.pcId, scenePlaceId, sceneId: record.firstSceneId });
-  const { state } = fold(start, entries, context);
+  const point = pointBefore(branchId, branch.headTurnId, 'end');
+  const { state } = foldAtPoint(store, db, point);
   return { headTurnId: branch.headTurnId, gameTime: state.world.gameTime };
+}
+
+/**
+ * Formats game times as the player reads them, in the campaign's own calendar
+ * (TIME-010). The calendar is read once, so a page of turns reads it once.
+ */
+export function gameTimeLabeller(store: CampaignStore, db: Database): (gameTime: number) => string {
+  const record = store.readCampaign(db);
+  const setting = stored(db, readCanon(db, 'setting', record.settingId), record.settingId).value;
+  const calendarId = setting.calendarId;
+  const calendar = stored(db, readCanon(db, 'calendar', calendarId), `calendar ${calendarId}`);
+  return (gameTime) =>
+    formatDate(
+      calendar.value,
+      toDate(calendar.value, setting.epoch, setting.epochWeekday, gameTime),
+    );
 }
 
 /**
@@ -65,25 +48,14 @@ function headGameTime(
 export function campaignViewOf(store: CampaignStore, db: Database): CampaignView {
   const record = store.readCampaign(db);
   const setting = stored(db, readCanon(db, 'setting', record.settingId), record.settingId).value;
-  const canonValue = <K extends 'calendar' | 'slots' | 'tone' | 'ruleset' | 'scenario' | 'theme'>(
-    kind: K,
-    id: string,
-  ) => stored(db, readCanon(db, kind, id), `${kind} ${id}`).value;
-  const calendar = canonValue('calendar', setting.calendarId);
-  const tone = canonValue('tone', record.toneProfileId);
-  const context: FoldContext = {
-    ruleset: canonValue('ruleset', record.rulesetId),
-    slots: canonValue('slots', tone.slotSchemaId ?? setting.slotSchemaId),
-  };
-  const scenario = canonValue('scenario', record.scenarioId);
+  const theme = stored(db, readCanon(db, 'theme', record.themeId), `theme ${record.themeId}`);
   const branchId = stored(db, readState(db, 'current_branch_id'), 'current branch');
-  const head = headGameTime(db, record, scenario.startPlaceId, branchId, context);
-  const date = toDate(calendar, setting.epoch, setting.epochWeekday, head.gameTime);
+  const head = headGameTime(store, db, branchId);
   return {
     campaignId: record.id,
     name: record.name,
     settingName: setting.name,
-    gameTimeLabel: formatDate(calendar, date),
+    gameTimeLabel: gameTimeLabeller(store, db)(head.gameTime),
     lastPlayedAt: record.lastPlayedAt,
     themeId: record.themeId,
     contentSettings: stored(db, readState(db, 'content_settings'), 'content settings'),
@@ -92,7 +64,7 @@ export function campaignViewOf(store: CampaignStore, db: Database): CampaignView
     pcId: record.pcId,
     currentBranchId: branchId,
     headTurnId: head.headTurnId,
-    theme: canonValue('theme', record.themeId),
+    theme: theme.value,
   };
 }
 

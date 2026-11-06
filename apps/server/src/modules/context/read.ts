@@ -12,11 +12,11 @@ import type {
 } from '@mythos/contracts/content';
 import {
   type CommitSetEntry,
+  entriesInOrder,
   type FoldContext,
   type FoldedState,
   fold,
   initialState,
-  orderSets,
 } from '@mythos/core';
 import {
   type CampaignStore,
@@ -55,18 +55,6 @@ export type CampaignAtPoint = {
 function stored<T>(db: Database, value: T | null | undefined, what: string): T {
   if (value === null || value === undefined) throw new Error(`${db.path} has no ${what}`);
   return value;
-}
-
-/** The point's active sets in TRN-061's order, with their commits. */
-function orderedEntries(db: Database, point: ReadPoint): CommitSetEntry[] {
-  const sets = readSetsForRead(db, point);
-  const depthByTurnId = Object.fromEntries(sets.map(({ set, depth }) => [set.turnId, depth]));
-  const commitsBySetId = new Map(sets.map(({ set, commits }) => [set.id, commits]));
-  // orderSets is the only definition of the order (06-turn-engine Decisions).
-  return orderSets(
-    sets.map(({ set }) => set),
-    depthByTurnId,
-  ).map((set) => ({ set, commits: commitsBySetId.get(set.id) ?? [] }));
 }
 
 /**
@@ -109,7 +97,8 @@ export function readAtPoint(store: CampaignStore, db: Database, point: ReadPoint
     slots: canon('slots', tone.slotSchemaId ?? setting.slotSchemaId).value,
   };
 
-  const entries = orderedEntries(db, point);
+  // The point's active sets in TRN-061's order, which core defines once.
+  const entries = entriesInOrder(readSetsForRead(db, point));
   const start = initialState({
     pcId: record.pcId,
     scenePlaceId: scenario.value.startPlaceId,

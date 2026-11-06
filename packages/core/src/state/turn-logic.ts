@@ -1,6 +1,12 @@
 // Which commit sets count, and in what order they apply (06-turn-engine §6, 03-contracts
 // §10.1). Copy-on-write ID remapping arrives with branches in phase 2.
-import { type CommitSet, type CommitStage, CommitStageSchema } from '@mythos/contracts';
+import {
+  type Commit,
+  type CommitSet,
+  type CommitStage,
+  CommitStageSchema,
+} from '@mythos/contracts';
+import type { CommitSetEntry } from './fold';
 
 const STAGE_ORDER: readonly CommitStage[] = CommitStageSchema.options;
 
@@ -27,6 +33,23 @@ export function orderSets(
       (a, b) => a.depth - b.depth || stageIndex(a.set) - stageIndex(b.set) || a.set.seq - b.set.seq,
     )
     .map(({ set }) => set);
+}
+
+/** A read point's set as storage returns it: with its commits and its turn's depth. */
+export type SetWithDepth = { set: CommitSet; depth: number; commits: readonly Commit[] };
+
+/**
+ * A read point's sets, each with its commits, in application order (`orderSets`), ready
+ * to fold. Every server read of folded state starts here, so the order has one
+ * definition (TRN-061).
+ */
+export function entriesInOrder(sets: readonly SetWithDepth[]): CommitSetEntry[] {
+  const depthByTurnId = Object.fromEntries(sets.map(({ set, depth }) => [set.turnId, depth]));
+  const commitsBySetId = new Map(sets.map(({ set, commits }) => [set.id, commits]));
+  return orderSets(
+    sets.map(({ set }) => set),
+    depthByTurnId,
+  ).map((set) => ({ set, commits: commitsBySetId.get(set.id) ?? [] }));
 }
 
 /**

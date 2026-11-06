@@ -42,7 +42,13 @@ export {
   inputBudget,
   transcriptBoundary,
 } from './prompts/context';
-export { activeSets, orderSets, staleStages } from './state/turn-logic';
+export {
+  activeSets,
+  entriesInOrder,
+  orderSets,
+  type SetWithDepth,
+  staleStages,
+} from './state/turn-logic';
 export {
   type FoldContext,
   type FoldedState,

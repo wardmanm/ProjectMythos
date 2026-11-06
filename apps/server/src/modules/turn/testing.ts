@@ -12,7 +12,8 @@ import {
   type Database,
   readSetsForRead,
 } from '../storage';
-import type { CreateCampaignDeps, TurnLogger } from './create-campaign';
+import type { CreateCampaignDeps } from './create-campaign';
+import type { NarrationStart, TurnLogger } from './deps';
 
 /** The wall time every test record gets. */
 export const TEST_NOW = new Date('2026-11-05T12:00:00.000Z');
@@ -95,7 +96,11 @@ export function createTestSpace() {
       return { ...defaultSources(dataDir), packFolders: [path.join(dataDir, 'content-packs')] };
     },
 
-    /** Everything createCampaign needs, on a new data directory unless `sources` says. */
+    /**
+     * Everything createCampaign needs, on a new data directory unless `sources` says.
+     * Its `narrations` only records what it is asked to start, in `started`, so a test
+     * that stores turns itself is never raced by an opening narration.
+     */
     deps(options: { dataDir?: string; sources?: ContentSources } = {}) {
       const dataDir = options.dataDir ?? this.folder();
       const timeSource = { now: () => TEST_NOW.getTime() };
@@ -104,8 +109,15 @@ export function createTestSpace() {
       const logger = recordingLogger();
       const sources = options.sources ?? defaultSources(dataDir);
       const content = createContent({ sources, logger });
-      const deps: CreateCampaignDeps = { store, content, timeSource, newId: seededIds(), logger };
-      return { ...deps, dataDir, logger };
+      const started: NarrationStart[] = [];
+      const narrations = {
+        start: (narration: NarrationStart) => {
+          started.push(narration);
+        },
+      };
+      const newId = seededIds();
+      const deps: CreateCampaignDeps = { store, content, timeSource, newId, logger, narrations };
+      return { ...deps, dataDir, logger, started };
     },
 
     cleanUp(): void {
