@@ -19,6 +19,7 @@ export {
   type ContentCategory,
   appendFloorToTask,
   appendLocked,
+  CATEGORY_LABELS,
   CONTENT_CATEGORIES,
   DEFAULT_WORDING,
   effectiveSettings,
@@ -37,6 +38,7 @@ export {
   type TierBudgets,
   type TierSpec,
   allocateBudgets,
+  estimateTokens,
   inputBudget,
   transcriptBoundary,
 } from './prompts/context';

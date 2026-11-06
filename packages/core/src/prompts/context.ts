@@ -22,6 +22,17 @@ export type TierBudgets = Partial<Record<Tier, number>>;
 export type BudgetOverflow = { fixedTiers: { tier: Tier; tokens: number }[]; available: number };
 
 /**
+ * Estimated tokens for `text`: its length divided by the ratio, rounded up. The length
+ * is in UTF-16 code units; calibration absorbs the difference from true characters. It
+ * adds no margin; `inputBudget` holds that (CTX-030, PRV-072). The providers module
+ * calibrates with it and the context module budgets with it, so both count alike.
+ * Implements PRV-070.
+ */
+export function estimateTokens(text: string, charsPerToken: number): number {
+  return Math.ceil(text.length / charsPerToken);
+}
+
+/**
  * A prompt's input budget: the context window less the output tokens, less 10% of what
  * remains as a margin for estimation error. Never negative. Implements CTX-030.
  */

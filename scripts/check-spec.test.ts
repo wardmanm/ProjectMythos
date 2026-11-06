@@ -20,6 +20,7 @@ const sources: Record<string, string> = {
   'spec/fixtures/packs/reference/setting.json': '{ "name": "Brinemoor" }\n',
   'spec/reference/contracts/rules.ts': 'export const rules = 1;\n',
   'spec/reference/contracts/content/index.ts': 'export const content = 2;\n',
+  'spec/reference/server-types/context/types.ts': 'export type ContextBuilder = object;\n',
   'spec/reference/server-types/providers/types.ts': 'export type ProviderAdapter = object;\n',
 };
 // Where each source is copied, by path prefix: a folder, or a whole file path.
@@ -27,6 +28,7 @@ const copyTargets: Record<string, string> = {
   'spec/fixtures/library/': 'content-library/',
   'spec/fixtures/packs/reference/': 'content-packs/reference/',
   'spec/reference/contracts/': 'packages/contracts/src/',
+  'spec/reference/server-types/context/types.ts': 'apps/server/src/modules/context/types.ts',
   'spec/reference/server-types/providers/types.ts': 'apps/server/src/modules/providers/types.ts',
 };
 

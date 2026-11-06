@@ -9,6 +9,7 @@
   "dependencies": {
     "@mythos/contracts": "workspace:*",
     "@mythos/core": "workspace:*",
+    "handlebars": "4.7.10",
     "jsonrepair": "3.15.0",
     "zod": "4.6.5"
   },

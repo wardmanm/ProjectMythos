@@ -48,6 +48,14 @@ and `testing.ts` (test helpers, not exported). The SCH-117 snapshot test's expec
 setup set is `__snapshots__/create-campaign.test.ts.snap`, made with seeded IDs and a
 fixed time source; a change to it is a change to the setup set.
 
+`narrator-prompt.test.ts` and `narrator-layers.test.ts` test the context module's
+narrator prompt end to end, here because lint keeps context's tests from importing this
+module, which creates campaigns. `prompt-testing.ts` (not exported) creates the reference
+campaign with seeded IDs, plays turns on it by storing their sets, and builds a context
+builder over it with fake dependencies. The preview snapshots of every engine template,
+at turn zero and at the third turn, are `__snapshots__/narrator-prompt/*.txt`; a change
+to one is a change to the prompt the narrator gets (CONV-115).
+
 ## Rules for code here
 
 - Tests make their data directories in fresh `os.tmpdir()` folders through

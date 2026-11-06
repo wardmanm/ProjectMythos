@@ -27,7 +27,8 @@ and `events`, and the model calls `config` and `storage`. ARCH-021 allows all th
   - read `requests`, every `TextRequest` received, in order.
 - `mockResponse(text, overrides)` and `mockProviderError(code, message)` build outcomes.
   Each error has the `retryable` and `httpStatus` PRV-013 gives its code.
-- `estimateTokens(text, charsPerToken)` is `ceil(length / ratio)`, with no margin.
+- `estimateTokens(text, charsPerToken)` is `ceil(length / ratio)`, with no margin. It lives
+  in `core`, so the context module counts alike, and `tokens.ts` re-exports it.
 - `openCalibration(dataDir)` returns `{ calibration, problem }`. The composition root
   opens it once and logs `problem` if the file was corrupt. A `Calibration` has:
   - `charsPerToken(profile)`, the ratio to estimate with;
@@ -431,7 +432,7 @@ unreachable.
 - `mock-adapter.ts`: the mock's modes, streaming, delays, and aborts.
 - `mock-outputs.ts`: placeholders, embeddings, `mockResponse`, `mockProviderError`.
 - `mock-fixtures.ts`: fixture names, reading, and the strict `TextResponse` schema.
-- `tokens.ts`: `estimateTokens` and calibration.
+- `tokens.ts`: calibration, and `estimateTokens` re-exported from `core`.
 - `queue.ts`: the 05-providers §6 types, copied verbatim above its divider line (never
   edit them here), then `createJobQueue`: registering, enqueueing, interactive jobs, and
   taking back stored jobs.

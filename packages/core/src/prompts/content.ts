@@ -70,7 +70,8 @@ export function usesExplicitRoles(settings: ContentSettings, minor: boolean): bo
   return !minor && CONTENT_CATEGORIES.some((category) => settings[category] === 'explicit');
 }
 
-const CATEGORY_LABELS: Record<ContentCategory, string> = {
+/** Each category's name in a prompt, as `renderContentSettings` writes it. */
+export const CATEGORY_LABELS: Record<ContentCategory, string> = {
   violence: 'Violence',
   gore: 'Gore',
   sexual: 'Sexual',
@@ -149,8 +150,9 @@ export function appendLocked(instructions: string, role: ModelRole): string {
 
 /**
  * Repeats the hard floor at the end of a rendered task tier while a minor is involved,
- * for each role in `FLOOR_ROLES`. Call it last, after the output-format instructions,
- * so the floor sits nearest the output. Implements CSET-042.
+ * for each role in `FLOOR_ROLES`. Call it last on the task tier, so the floor is the
+ * prompt's last text and sits nearest the output; the format instruction is a message of
+ * its own earlier in the prompt (PRV-050). Implements CSET-042.
  */
 export function appendFloorToTask(task: string, role: ModelRole, minor: boolean): string {
   return minor && getsFloor(role) ? `${task.trimEnd()}\n\n${HARD_FLOOR}` : task;

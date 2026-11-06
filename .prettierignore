@@ -3,6 +3,7 @@ spec/
 content-library/
 content-packs/
 packages/contracts/src/
+apps/server/src/modules/context/types.ts
 apps/server/src/modules/providers/types.ts
 
 # Written by pnpm.

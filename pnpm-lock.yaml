@@ -284,6 +284,9 @@ importers:
       '@mythos/core':
         specifier: workspace:*
         version: link:../../packages/core
+      handlebars:
+        specifier: 4.7.10
+        version: 4.7.10
       jsonrepair:
         specifier: 3.15.0
         version: 3.15.0

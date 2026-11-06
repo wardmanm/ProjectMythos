@@ -1,7 +1,8 @@
-import { cpSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import type { ContentSettings } from '@mythos/contracts/content';
 import { afterEach, describe, expect, it } from 'vitest';
+import { defaultSources } from '../content';
 import { type CanonKind, listCanon, readCanon, readStateHistory, readTemplates } from '../storage';
 import { createCampaign } from './create-campaign';
 import { arrivalCommand, createTestSpace } from './testing';
@@ -59,7 +60,9 @@ describe('the content snapshot', () => {
     // A copy of the built-in library, so the ruleset and the engine can have templates too.
     const library = path.join(dataDir, 'built-in');
     cpSync(sources.builtInLibrary, library, { recursive: true });
+    // The engine's own templates are replaced by the few this test names.
     const engine = path.join(library, 'templates');
+    rmSync(engine, { recursive: true, force: true });
     write(path.join(packDir, 'templates', 'narrator.md'), '﻿Pack narrator.\r\nSecond line.\r\n');
     write(path.join(packDir, 'templates', 'partials', 'tone.md'), 'Pack tone.');
     write(path.join(packDir, 'templates', '.DS_Store'), 'not a template');
@@ -99,7 +102,11 @@ describe('the content snapshot', () => {
   });
 
   it('CTX-005: a layer with no templates folder snapshots no files', async () => {
-    const db = await created(space.deps());
+    // The reference pack and the built-in library have none; the engine's points nowhere.
+    const dataDir = space.folder();
+    const sources = defaultSources(dataDir);
+    const engineTemplates = path.join(dataDir, 'no-engine-templates');
+    const db = await created(space.deps({ dataDir, sources: { ...sources, engineTemplates } }));
     expect(readTemplates(db)).toEqual([]);
   });
 
