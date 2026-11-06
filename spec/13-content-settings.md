@@ -169,4 +169,4 @@ every setting, for every role, and cannot be configured, overridden, or reworded
 
 | Question | Decision | Rejected and why | Decided by |
 |---|---|---|---|
-| What repeats the floor in the task tier while a minor is involved (CSET-042)? | `appendFloorToTask(task, role, minor)` in `core`, called last on the rendered task tier, after the output-format instructions. All floor text is appended by `core`: `appendLocked` adds it to the instructions tier. | The context module appending `HARD_FLOOR` itself: the floor's rules would live in two packages. | Claude (ruling) |
+| What repeats the floor in the task tier while a minor is involved (CSET-042)? | `appendFloorToTask(task, role, minor)` in `core`, called last on the rendered task tier, so the floor is the prompt's last text. The output-format instruction is a system message of its own, right after the leading system messages (PRV-050), so nothing follows the floor. All floor text is appended by `core`: `appendLocked` adds it to the instructions tier. | The context module appending `HARD_FLOOR` itself: the floor's rules would live in two packages. | Claude (ruling) |
