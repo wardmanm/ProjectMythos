@@ -51,7 +51,7 @@ const copyRules: readonly CopyRule[] = [
 // spec/reference/server-types/<module>/<file>, copied to apps/server/src/modules/<module>/<file>.
 // A file that adds an implementation after the verbatim types, such as the job queue's
 // queue.ts, is not a pure copy and is not listed.
-const serverTypeCopies: readonly string[] = ['providers/types.ts'];
+const serverTypeCopies: readonly string[] = ['context/types.ts', 'providers/types.ts'];
 
 /** A single file in `spec/` and the repository file that copies it. Paths use `/`. */
 type FileCopyRule = { source: string; copy: string };
