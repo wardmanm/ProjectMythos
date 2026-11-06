@@ -1,7 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import type { Turn } from '@mythos/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { readBranch } from './branches';
+import { readTurnSets } from './read-sets';
 import type { Database } from './sqlite';
 import {
   countRows,
@@ -13,11 +15,13 @@ import {
   testTurn,
 } from './testing';
 import {
+  abandonTurn,
   appendSet,
   insertRootTurn,
   insertTurn,
   readTurn,
   readTurnsOnBranch,
+  readTurnsWithStatus,
   setTurnStatus,
 } from './turns';
 
@@ -203,5 +207,90 @@ describe('reading turns', () => {
     expect(readTurnsOnBranch(db, branch.id, 3, 2).map((t) => t.id)).toEqual(ids.slice(1, 3));
     expect(readTurnsOnBranch(db, branch.id, 1, 10).map((t) => t.id)).toEqual([root.id]);
     expect(readTurn(db, 'e0b8f6c2-0000-4000-8000-000000000000')).toBeNull();
+  });
+});
+
+describe('stage results and abandoning', () => {
+  const narrationPayload = (text: string) => ({
+    type: 'narration.set' as const,
+    text,
+    complete: true,
+  });
+
+  it('TRN-123: appendSet with a status writes the set and the status together', async () => {
+    const { db, root, branch } = await campaignWithRoot();
+    const turn = { ...testTurn(root), status: 'narrating' as const };
+    insertTurn(db, { branchId: branch.id, turn, sets: [] });
+    appendSet(db, testSet(turn, 'narration', [narrationPayload('The door opens.')]), 'complete');
+    expect(readTurn(db, turn.id)?.status).toBe('complete');
+
+    // A set that fails to write leaves the status as it was.
+    const broken = testSet(turn, 'narration', [narrationPayload('Again.')], { id: randomUUID() });
+    expect(() => appendSet(db, broken, 'stage-failed')).toThrow(/unknown set/);
+    expect(readTurn(db, turn.id)?.status).toBe('complete');
+  });
+
+  it('TRN-047: abandonTurn moves the head back to the parent and keeps the turn off the branch', async () => {
+    const { db, root, branch } = await campaignWithRoot();
+    const turn = { ...testTurn(root), status: 'narrating' as const };
+    insertTurn(db, {
+      branchId: branch.id,
+      turn,
+      sets: [testSet(turn, 'input', [inputPayload('Hm.')])],
+    });
+    abandonTurn(db, branch.id, turn.id);
+
+    expect(readBranch(db, branch.id)?.headTurnId).toBe(root.id);
+    expect(readTurn(db, turn.id)?.status).toBe('abandoned');
+    expect(readTurnsOnBranch(db, branch.id, null, 10).map((t) => t.id)).toEqual([root.id]);
+    // Not deleted: its input is still there to hand back.
+    expect(readTurnSets(db, turn.id).map(({ commits }) => commits.map((c) => c.payload))).toEqual([
+      [inputPayload('Hm.')],
+    ]);
+    // The new head can take a child again.
+    const next = testTurn(root);
+    insertTurn(db, { branchId: branch.id, turn: next, sets: [] });
+    expect(readBranch(db, branch.id)?.headTurnId).toBe(next.id);
+  });
+
+  it('TRN-047: abandonTurn refuses the root and a turn that is not the head, changing nothing', async () => {
+    const { db, root, branch } = await campaignWithRoot();
+    expect(() => {
+      abandonTurn(db, branch.id, root.id);
+    }).toThrow(/is the root/);
+    const turn = testTurn(root);
+    insertTurn(db, { branchId: branch.id, turn, sets: [] });
+    expect(() => {
+      abandonTurn(db, branch.id, root.id);
+    }).toThrow(/not the head/);
+    expect(readBranch(db, branch.id)?.headTurnId).toBe(turn.id);
+    expect(readTurn(db, root.id)?.status).toBe('complete');
+  });
+
+  it('CON-081: readTurnSets gives one turn its active sets, in seq order, with their commits', async () => {
+    const { db, root, branch } = await campaignWithRoot();
+    const turn = testTurn(root);
+    const input = testSet(turn, 'input', [inputPayload('One.'), inputPayload('Two.')]);
+    insertTurn(db, { branchId: branch.id, turn, sets: [input] });
+    const first = testSet(turn, 'narration', [narrationPayload('First.')]);
+    appendSet(db, first);
+    appendSet(db, testSet(turn, 'narration', [narrationPayload('Second.')], first.set));
+
+    const sets = readTurnSets(db, turn.id);
+    expect(sets.map(({ set }) => set.stage)).toEqual(['input', 'narration']);
+    expect(sets.map(({ commits }) => commits.map((c) => c.payload))).toEqual([
+      [inputPayload('One.'), inputPayload('Two.')],
+      [narrationPayload('Second.')],
+    ]);
+    expect(readTurnSets(db, randomUUID())).toEqual([]);
+  });
+
+  it('TRN-012: readTurnsWithStatus finds the turns in the statuses asked for', async () => {
+    const { db, root, branch } = await campaignWithRoot();
+    const turn = { ...testTurn(root), status: 'narrating' as const };
+    insertTurn(db, { branchId: branch.id, turn, sets: [] });
+    expect(readTurnsWithStatus(db, ['adjudicating', 'narrating'])).toEqual([turn]);
+    expect(readTurnsWithStatus(db, ['complete']).map((t) => t.id)).toEqual([root.id]);
+    expect(readTurnsWithStatus(db, [])).toEqual([]);
   });
 });

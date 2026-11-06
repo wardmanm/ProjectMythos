@@ -4,7 +4,13 @@
 // public write here is one transaction (ARCH-041).
 import type { Branch, Commit, CommitPayload, CommitSet, Turn, TurnStatus } from '@mythos/contracts';
 import { z } from 'zod';
-import { addBranchTurn, insertBranchRow, readBranch, setBranchHead } from './branches';
+import {
+  addBranchTurn,
+  insertBranchRow,
+  readBranch,
+  removeBranchTurn,
+  setBranchHead,
+} from './branches';
 import {
   COMMIT_SET_SCHEMA_VERSION,
   CountRowSchema,
@@ -181,25 +187,65 @@ export function insertTurn(
 }
 
 /**
- * Adds a set and its commits to an existing turn, in one transaction. A set with
- * `supersedesSetId` makes that set inactive (CON-081, TRN-001). Returns it with its
- * `seq`.
+ * Adds a set and its commits to an existing turn and, when `status` is given, sets the
+ * turn's status, all in one transaction (TRN-123): a stage's result and the status it
+ * leads to are written together. A set with `supersedesSetId` makes that set inactive
+ * (CON-081, TRN-001). Returns it with its `seq`.
  */
-export function appendSet(db: Database, newSet: NewCommitSet): CommitSet {
+export function appendSet(db: Database, newSet: NewCommitSet, status?: TurnStatus): CommitSet {
   return db.transaction(() => {
     if (readTurn(db, newSet.set.turnId) === null) {
       throw new Error(`appendSet: no turn ${newSet.set.turnId}`);
     }
-    return insertSet(db, newSet);
+    const set = insertSet(db, newSet);
+    if (status !== undefined) updateStatus(db, newSet.set.turnId, status);
+    return set;
   });
 }
 
-/** Sets a turn's pipeline status, the one mutable column of `turns` (TRN-001, TRN-010). */
-export function setTurnStatus(db: Database, turnId: string, status: TurnStatus): void {
+// The one UPDATE of `turns` (TRN-001). Runs inside or outside a transaction.
+function updateStatus(db: Database, turnId: string, status: TurnStatus): void {
   const { changes } = db
     .prepare('UPDATE turns SET status = :status WHERE id = :turnId')
     .run({ turnId, status });
   if (changes !== 1) throw new Error(`setTurnStatus: no turn ${turnId}`);
+}
+
+/** Sets a turn's pipeline status, the one mutable column of `turns` (TRN-001, TRN-010). */
+export function setTurnStatus(db: Database, turnId: string, status: TurnStatus): void {
+  updateStatus(db, turnId, status);
+}
+
+/**
+ * Abandons a branch's head turn (TRN-047): the head moves back to the turn's parent, the
+ * turn's `branch_turns` row is removed, and its status becomes `abandoned`, in one
+ * transaction. The turn and its sets stay in the log, on no branch. Throws if the turn
+ * is not the branch's head, or is the root.
+ */
+export function abandonTurn(db: Database, branchId: string, turnId: string): void {
+  db.transaction(() => {
+    const branch = readBranch(db, branchId);
+    if (branch?.headTurnId !== turnId) {
+      throw new Error(`abandonTurn: turn ${turnId} is not the head of branch ${branchId}`);
+    }
+    const parentTurnId = readTurn(db, turnId)?.parentTurnId ?? null;
+    if (parentTurnId === null) throw new Error(`abandonTurn: turn ${turnId} is the root`);
+    setBranchHead(db, branchId, parentTurnId);
+    removeBranchTurn(db, branchId, turnId);
+    updateStatus(db, turnId, 'abandoned');
+  });
+}
+
+/** Every turn with one of `statuses`, in depth order, then by ID. */
+export function readTurnsWithStatus(db: Database, statuses: readonly TurnStatus[]): Turn[] {
+  const rows = db
+    .prepare(
+      `SELECT ${TURN_COLUMNS} FROM turns
+       WHERE status IN (SELECT value FROM json_each(:statuses))
+       ORDER BY depth, id`,
+    )
+    .all({ statuses: JSON.stringify(statuses) });
+  return rows.map((row) => parseRow('turns', TurnRowSchema, row, ['id']));
 }
 
 /** One turn, or null if there is none with that ID. */

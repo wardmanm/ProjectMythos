@@ -89,3 +89,39 @@ export function readSetsForRead(db: Database, point: ReadPoint): SetForRead[] {
   }
   return result;
 }
+
+const SET_COLUMNS = `id, turn_id, stage, origin, supersedes_set_id, based_on_set_ids,
+  copied_from_set_id, schema_version, seq, created_at`;
+
+/**
+ * One turn's active sets, each with its commits in `seq` order, in set `seq` order. It
+ * needs no branch, so it reads an abandoned turn too, which is on none (TRN-047).
+ */
+export function readTurnSets(
+  db: Database,
+  turnId: string,
+): { set: CommitSet; commits: Commit[] }[] {
+  const setRows = db
+    .prepare(
+      `SELECT ${SET_COLUMNS} FROM commit_sets
+       WHERE turn_id = :turnId AND active = 1 ORDER BY seq`,
+    )
+    .all({ turnId });
+  const commitRows = db
+    .prepare(
+      `SELECT commits.id, commits.set_id, commits.seq, commits.payload
+       FROM commits JOIN commit_sets ON commit_sets.id = commits.set_id
+       WHERE commit_sets.turn_id = :turnId AND commit_sets.active = 1
+       ORDER BY commit_sets.seq, commits.seq`,
+    )
+    .all({ turnId });
+  const commitsBySet = new Map<string, Commit[]>();
+  for (const row of commitRows) {
+    const commit = parseRow('commits', CommitRowSchema, row, ['id']);
+    commitsBySet.set(commit.setId, [...(commitsBySet.get(commit.setId) ?? []), commit]);
+  }
+  return setRows.map((row) => {
+    const set = parseRow('commit_sets', CommitSetRowSchema, row, ['id']);
+    return { set, commits: commitsBySet.get(set.id) ?? [] };
+  });
+}

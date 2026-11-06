@@ -31,9 +31,18 @@ every set's `seq` (CON-084). A commit's `seq` is its position in its set.
 - `insertTurn(db, { branchId, turn, sets })`: a child of the branch head, with its
   sets, the new head, and its `branch_turns` row (TRN-011). The caller has already
   checked the expected head (TRN-120); a turn that isn't the head's child throws.
-- `appendSet(db, newSet)`: a set on an existing turn. With `supersedesSetId`, the old
-  set becomes inactive in the same transaction (TRN-001).
-- `setTurnStatus`, `readTurn`, `readTurnsOnBranch(db, branchId, beforeDepth, limit)`.
+- `appendSet(db, newSet, status?)`: a set on an existing turn. With `supersedesSetId`,
+  the old set becomes inactive in the same transaction (TRN-001). With `status`, the
+  turn's status changes in that transaction too, so a stage's result and the status it
+  leads to are written together (TRN-123). Transactions do not nest, so a caller cannot
+  wrap `appendSet` and `setTurnStatus` in one of its own.
+- `abandonTurn(db, branchId, turnId)`: the branch's head moves back to the turn's parent,
+  the turn's `branch_turns` row is removed, and its status becomes `abandoned`, in one
+  transaction (TRN-047). The turn and its sets stay in the log, on no branch. The root,
+  or a turn that is not the head, throws.
+- `setTurnStatus`, `readTurn`, `readTurnsOnBranch(db, branchId, beforeDepth, limit)`, and
+  `readTurnsWithStatus(db, statuses)` (depth order, then ID), which finds the turns a
+  restart left mid-stage (TRN-012).
 
 **Campaign start** (`campaign-start.ts`). `writeCampaignStart(db, { canon, contentSettings,
 branch, turn, sets, createdAt })` writes what a new campaign needs after its folder and
@@ -45,7 +54,10 @@ the caller's transaction, since transactions do not nest.
 **Reads** (`read-sets.ts`). `readSetsForRead(db, point)` returns the active sets inside
 a read point (TRN-060), each with its commits and its turn's depth, sorted by depth,
 then set `seq`, then commit `seq`. It does not sort by stage: core's `orderSets` is the
-only definition of TRN-061's order, and the caller applies it before folding.
+only definition of TRN-061's order, and the caller applies it before folding, through
+core's `entriesInOrder`. `readTurnSets(db, turnId)` returns one turn's active sets, each
+with its commits, in set `seq` order. It needs no branch, so it reads an abandoned turn
+too.
 
 **Branches** (`branches.ts`). `createBranch` (with the `branch_turns` rows of its head's
 ancestry, TRN-100), `readBranch`, `listBranches` (creation order). Not commits (TRN-002).

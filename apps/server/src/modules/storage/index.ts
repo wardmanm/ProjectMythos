@@ -24,11 +24,12 @@ export {
 } from './campaign-state';
 export { insertJob, listUnfinishedJobs, updateJob } from './jobs';
 export { insertModelCall, listModelCalls, pruneModelCalls, readModelCall } from './model-calls';
-export { readSetsForRead, type SetForRead } from './read-sets';
+export { readSetsForRead, readTurnSets, type SetForRead } from './read-sets';
 export { rebuildProjections } from './rebuild';
 export { type CampaignRecord, CampaignRecordSchema, type PersistedJob } from './rows';
 export { type Database, openDatabase } from './sqlite';
 export {
+  abandonTurn,
   appendSet,
   insertRootTurn,
   insertTurn,
@@ -36,5 +37,6 @@ export {
   type NewCommitSet,
   readTurn,
   readTurnsOnBranch,
+  readTurnsWithStatus,
   setTurnStatus,
 } from './turns';

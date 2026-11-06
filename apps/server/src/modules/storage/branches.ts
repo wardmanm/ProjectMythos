@@ -31,6 +31,16 @@ export function addBranchTurn(db: Database, branchId: string, turnId: string, de
   ).run({ branchId, turnId, depth });
 }
 
+/** Removes a turn's `branch_turns` row when it leaves the branch's head (TRN-003, TRN-047). */
+export function removeBranchTurn(db: Database, branchId: string, turnId: string): void {
+  const { changes } = db
+    .prepare('DELETE FROM branch_turns WHERE branch_id = :branchId AND turn_id = :turnId')
+    .run({ branchId, turnId });
+  if (changes !== 1) {
+    throw new Error(`removeBranchTurn: turn ${turnId} is not on branch ${branchId}`);
+  }
+}
+
 /** Points a branch at a new head. The caller keeps `branch_turns` in step. */
 export function setBranchHead(db: Database, branchId: string, headTurnId: string): void {
   const { changes } = db
