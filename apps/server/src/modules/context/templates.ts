@@ -1,6 +1,6 @@
-// Prompt templates (09-context §2): Markdown files found in six layers and rendered with
-// Handlebars in strict mode, with two helpers and nothing else, so a template can only
-// read its view model (CTX-001, CTX-002, CTX-004).
+// Prompt templates (09-context §2): Markdown files found in six layers, with their
+// partials, rendered in the environment helpers.ts builds, so a template can only read its
+// view model (CTX-001 to CTX-004).
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { type AppError, err, ok, type Result } from '@mythos/contracts';
@@ -8,6 +8,7 @@ import type { Ruleset } from '@mythos/contracts/content';
 import { cmp } from '@mythos/core';
 import Handlebars from 'handlebars';
 import type { CanonTemplate } from '../storage';
+import { COMPILE_OPTIONS, environment } from './helpers';
 
 /** Where a template file comes from, highest priority first (CTX-004). */
 export const TEMPLATE_LAYERS = [
@@ -35,7 +36,7 @@ export type LayerSources = {
   snapshot: readonly CanonTemplate[];
 };
 
-/** A file path a template may have: lowercase words, `/` between folders, `.md` (ARCH-031). */
+/** A file path a template may have: lowercase words, `/` between folders, and `.md`. */
 export const TEMPLATE_PATH = /^[a-z0-9-]+(\/[a-z0-9-]+)*\.md$/;
 /** What `{{> name}}` may name; it resolves to `partials/<name>.md`. */
 const PARTIAL_NAME = /^[a-z0-9-]+(\/[a-z0-9-]+)*$/;
@@ -67,72 +68,20 @@ export function layeredLookup(sources: LayerSources): TemplateLookup {
     // Paths come from template names and partial names, never from the player as is.
     if (!TEMPLATE_PATH.test(filePath)) throw new Error(`not a template path: ${filePath}`);
     const override = sources.campaign(filePath);
-    if (override !== null)
+    if (override !== null) {
       return { layer: 'campaign', path: filePath, text: normalizeText(override) };
+    }
     if (sources.profileDir !== null) {
       const text = await readProfileFile(sources.profileDir, filePath);
-      if (text !== null)
+      if (text !== null) {
         return { layer: 'model-profile', path: filePath, text: normalizeText(text) };
+      }
     }
     for (const layer of SNAPSHOT_ORDER) {
       const found = sources.snapshot.find((file) => file.layer === layer && file.path === filePath);
       if (found !== undefined) return { layer, path: filePath, text: found.text };
     }
     return null;
-  };
-}
-
-// Implements CTX-001 and CTX-002: a missing variable is an error, prompts are not HTML,
-// and only `join`, `label`, and the block helpers exist. `lookup` and `log` are removed.
-const COMPILE_OPTIONS: CompileOptions = {
-  strict: true,
-  noEscape: true,
-  knownHelpersOnly: true,
-  knownHelpers: { join: true, label: true, lookup: false, log: false },
-};
-
-/** `{{join list ", "}}`: a list of strings or numbers, joined. */
-function join(...args: unknown[]): string {
-  const [list, separator] = args;
-  const items = Array.isArray(list) ? (list as unknown[]) : null;
-  if (
-    items === null ||
-    typeof separator !== 'string' ||
-    !items.every((item) => typeof item === 'string' || typeof item === 'number')
-  ) {
-    throw new Error('join takes a list of strings and a separator, e.g. {{join themes ", "}}');
-  }
-  return items.map(String).join(separator);
-}
-
-/** The ruleset's labels by key: `result.<tier>`, `effect.<level>`, and `harm.<n>`. */
-function rulesetLabels(ruleset: Ruleset): Map<string, string> {
-  const labels = new Map<string, string>();
-  for (const [tier, text] of Object.entries(ruleset.results.labels)) {
-    labels.set(`result.${tier}`, text);
-  }
-  for (const [level, text] of Object.entries(ruleset.effect.labels)) {
-    labels.set(`effect.${level}`, text);
-  }
-  ruleset.harm.levels.forEach((level, index) =>
-    labels.set(`harm.${String(index + 1)}`, level.name),
-  );
-  // One above the last level is fatal (07-rules).
-  labels.set(`harm.${String(ruleset.harm.levels.length + 1)}`, ruleset.harm.fatalName);
-  return labels;
-}
-
-/** `{{label "result.partial"}}`: a ruleset label. An unknown key fails rendering. */
-function labelHelper(ruleset: Ruleset): (...args: unknown[]) => string {
-  const labels = rulesetLabels(ruleset);
-  return (...args) => {
-    const [key] = args;
-    const text = typeof key === 'string' ? labels.get(key) : undefined;
-    if (args.length !== 2 || text === undefined) {
-      const known = [...labels.keys()].sort(cmp).join(', ');
-      throw new Error(`label takes one of these keys: ${known}; got ${JSON.stringify(key)}`);
-    }
-    return text;
   };
 }
 
@@ -167,12 +116,12 @@ function scan(program: hbs.AST.Program, found: Scan): void {
 
 /** A template ready to render, with every file it uses. */
 export type PreparedTemplate = {
-  /** The top-level file. */
-  file: TemplateFile;
   /** Every file used, as `<layer>:<path>`, sorted. */
   used: string[];
   /** Renders `view`; an override that fails is `validation_failed`, an engine one throws. */
   render(view: object): Result<string, AppError>;
+  /** A problem with the rendered text of the top-level file, such as its tier markers. */
+  problem(message: string): AppError;
 };
 
 /**
@@ -252,18 +201,15 @@ export async function prepareTemplate(
   ruleset: Ruleset,
 ): Promise<Result<PreparedTemplate, AppError>> {
   const file = await lookup(filePath);
-  if (file === null)
+  if (file === null) {
     return err({ code: 'not_found', message: `No layer has template ${filePath}.` });
+  }
   const loaded: Loaded = { files: new Map(), partialOf: new Map() };
   const tree = await loadTree(lookup, file, loaded, []);
   if (!tree.ok) return tree;
   const usedFiles = [...loaded.files.values()];
 
-  const hb = Handlebars.create();
-  hb.unregisterHelper('lookup');
-  hb.unregisterHelper('log');
-  hb.registerHelper('join', join);
-  hb.registerHelper('label', labelHelper(ruleset));
+  const hb = environment(ruleset);
   // Which file an error came from: the innermost partial that saw it first.
   const sourceOf = new WeakMap<Error, TemplateFile>();
   const attributed = (error: unknown, from: TemplateFile): Error => {
@@ -284,7 +230,6 @@ export async function prepareTemplate(
   const top = hb.compile(file.text, COMPILE_OPTIONS);
 
   return ok({
-    file,
     used: usedFiles.map((each) => `${each.layer}:${each.path}`).sort(cmp),
     render(view) {
       try {
@@ -294,5 +239,6 @@ export async function prepareTemplate(
         return err(failure(sourceOf.get(wrapped) ?? file, problemText(wrapped), usedFiles));
       }
     },
+    problem: (message) => failure(file, message, usedFiles),
   });
 }

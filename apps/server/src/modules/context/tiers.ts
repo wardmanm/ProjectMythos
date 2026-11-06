@@ -89,6 +89,8 @@ const TIER_SEPARATOR = '\n\n';
 /** The messages, and how many tokens each tier adds to them, separators included. */
 export type Layout = {
   messages: ChatMessage[];
+  /** The tiers in each message, in the same order. */
+  messageTiers: Tier[][];
   tokens: Partial<Record<Tier, number>>;
   /** Tiers whose message ends at or before the last cache breakpoint. */
   cached: Set<Tier>;
@@ -101,8 +103,7 @@ export type Layout = {
  * (PRV-072). Implements CTX-010.
  */
 export function layOut(texts: TierTexts, charsPerToken: number): Layout {
-  const layout: Layout = { messages: [], tokens: {}, cached: new Set() };
-  const tiersByMessage: Tier[][] = [];
+  const layout: Layout = { messages: [], messageTiers: [], tokens: {}, cached: new Set() };
   for (const group of MESSAGE_LAYOUT) {
     const present = group.tiers.filter((tier) => (texts[tier] ?? '') !== '');
     if (present.length === 0) continue;
@@ -117,10 +118,12 @@ export function layOut(texts: TierTexts, charsPerToken: number): Layout {
         ? { role: group.role, content, cacheBreakpoint: true }
         : { role: group.role, content },
     );
-    tiersByMessage.push(present);
+    layout.messageTiers.push(present);
   }
   const lastBreakpoint = layout.messages.findLastIndex((message) => message.cacheBreakpoint);
-  for (const tier of tiersByMessage.slice(0, lastBreakpoint + 1).flat()) layout.cached.add(tier);
+  for (const tier of layout.messageTiers.slice(0, lastBreakpoint + 1).flat()) {
+    layout.cached.add(tier);
+  }
   return layout;
 }
 

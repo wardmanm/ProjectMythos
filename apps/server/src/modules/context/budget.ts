@@ -45,7 +45,8 @@ export type FitInput = {
   render(choice: FitChoice): Result<TierTexts, AppError>;
 };
 
-export type FittedPrompt = { messages: ChatMessage[]; tiers: TierReport[] };
+/** The messages, the tiers in each, and a report on each tier. */
+export type FittedPrompt = { messages: ChatMessage[]; messageTiers: Tier[][]; tiers: TierReport[] };
 
 /** A tier in an overflow message, with what it holds if that needs saying. */
 type Row = { tier: Tier; tokens: number; note: string | null };
@@ -245,5 +246,5 @@ export function fitPrompt(input: FitInput): Result<FittedPrompt, AppError> {
     if (budget !== undefined) trimmableBudgets[tier] = budget;
   }
   const tiers = tierReports(input.tiers, layout, trimmableBudgets, trimmedItems(input, choice));
-  return ok({ messages: layout.messages, tiers });
+  return ok({ messages: layout.messages, messageTiers: layout.messageTiers, tiers });
 }
