@@ -115,7 +115,7 @@ includes:
   from the street) receives the claim with `via: 'told'`.
 - **MEM-035** `told` and `rumor` grants of non-claim observations come only from setup
   (history entries' `alsoKnownBy`), world ticks, and the player. `inferred` grants come
-  only from world ticks and the player.
+  only from the same three: setup, through `alsoKnownBy`, world ticks, and the player.
 
 ## 4. Extraction
 
@@ -752,3 +752,9 @@ All against the mock provider and a temporary database.
 - **MEM-136** MEM-084's performance bound, with a generated 20,000-observation campaign.
 - **MEM-137** A relationship change from the PC is rejected with `trackPc: 'off'` and
   recorded with `trackPc: 'auto'`.
+
+## Decisions
+
+| Question | Decision | Rejected and why | Decided by |
+|---|---|---|---|
+| May setup make `inferred` grants (MEM-035)? | Yes. A history entry's `alsoKnownBy` may give any `via`, `inferred` included, so setup grants it as written; MEM-035 names setup among the sources of `inferred` grants. | Refusing `inferred` in `alsoKnownBy`: an author could not seed what a character has worked out for themselves before play. Granting it as `told`: the knower would hold a told grant no one gave them. | owner |

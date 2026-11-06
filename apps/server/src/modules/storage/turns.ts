@@ -115,14 +115,15 @@ function insertSets(db: Database, turnId: string, sets: readonly NewCommitSet[])
   });
 }
 
+/** A campaign's first turn, its sets, and the first branch, which points at it. */
+export type RootTurn = { branch: Branch; turn: Turn; sets: readonly NewCommitSet[] };
+
 /**
- * Writes a campaign's first turn with its sets, and the first branch pointing at it,
- * in one transaction. Throws if the campaign already has a root turn.
+ * Writes the root turn, its sets, the branch, and its `branch_turns` row. Must run inside
+ * a transaction: `insertRootTurn` and `writeCampaignStart` provide one. Throws if the
+ * campaign already has a root turn.
  */
-export function insertRootTurn(
-  db: Database,
-  input: { branch: Branch; turn: Turn; sets: readonly NewCommitSet[] },
-): CommitSet[] {
+export function insertRootTurnRows(db: Database, input: RootTurn): CommitSet[] {
   const { branch, turn } = input;
   if (turn.parentTurnId !== null || turn.depth !== 0) {
     throw new Error(`insertRootTurn: turn ${turn.id} has a parent or a depth above 0`);
@@ -130,17 +131,23 @@ export function insertRootTurn(
   if (branch.headTurnId !== turn.id) {
     throw new Error(`insertRootTurn: branch ${branch.id} must point at turn ${turn.id}`);
   }
-  return db.transaction(() => {
-    const roots = db.prepare('SELECT COUNT(*) AS count FROM turns WHERE parent_turn_id IS NULL');
-    if (parseRow('turns', CountRowSchema, roots.get(), []).count > 0) {
-      throw new Error('insertRootTurn: the campaign already has a root turn');
-    }
-    insertTurnRow(db, turn);
-    const sets = insertSets(db, turn.id, input.sets);
-    insertBranchRow(db, branch);
-    addBranchTurn(db, branch.id, turn.id, 0);
-    return sets;
-  });
+  const roots = db.prepare('SELECT COUNT(*) AS count FROM turns WHERE parent_turn_id IS NULL');
+  if (parseRow('turns', CountRowSchema, roots.get(), []).count > 0) {
+    throw new Error('insertRootTurn: the campaign already has a root turn');
+  }
+  insertTurnRow(db, turn);
+  const sets = insertSets(db, turn.id, input.sets);
+  insertBranchRow(db, branch);
+  addBranchTurn(db, branch.id, turn.id, 0);
+  return sets;
+}
+
+/**
+ * Writes a campaign's first turn with its sets, and the first branch pointing at it,
+ * in one transaction. Throws if the campaign already has a root turn.
+ */
+export function insertRootTurn(db: Database, input: RootTurn): CommitSet[] {
+  return db.transaction(() => insertRootTurnRows(db, input));
 }
 
 /**

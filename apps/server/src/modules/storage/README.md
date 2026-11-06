@@ -35,6 +35,13 @@ every set's `seq` (CON-084). A commit's `seq` is its position in its set.
   set becomes inactive in the same transaction (TRN-001).
 - `setTurnStatus`, `readTurn`, `readTurnsOnBranch(db, branchId, beforeDepth, limit)`.
 
+**Campaign start** (`campaign-start.ts`). `writeCampaignStart(db, { canon, contentSettings,
+branch, turn, sets, createdAt })` writes what a new campaign needs after its folder and
+`campaign` row: the content snapshot, the first `content_settings` and
+`current_branch_id`, and the root turn with its sets and the first branch, in one
+transaction (TRN-123). It reuses `canon.ts`'s and `turns.ts`'s inserts, which run inside
+the caller's transaction, since transactions do not nest.
+
 **Reads** (`read-sets.ts`). `readSetsForRead(db, point)` returns the active sets inside
 a read point (TRN-060), each with its commits and its turn's depth, sorted by depth,
 then set `seq`, then commit `seq`. It does not sort by stage: core's `orderSets` is the
@@ -82,7 +89,8 @@ from the log (ARCH-042). Later phases add `replay_conflicts`.
 
 `sqlite.ts`, `migrate.ts`, `migrations/`, `rows.ts`, `campaigns.ts`, `turns.ts`,
 `branches.ts`, `read-sets.ts`, `rebuild.ts`, `campaign-state.ts`, `canon.ts`,
-`model-calls.ts`, `jobs.ts`, and `testing.ts` (test helpers, not exported).
+`campaign-start.ts`, `model-calls.ts`, `jobs.ts`, and `testing.ts` (test helpers, not
+exported).
 
 ## Governing spec
 

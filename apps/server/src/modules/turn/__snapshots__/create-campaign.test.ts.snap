@@ -1,0 +1,1255 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createCampaign > SCH-117: creating a campaign from Arrival gives a setup set whose commits, in order, match the snapshot 1`] = `
+[
+  {
+    "entity": {
+      "aliases": [],
+      "description": "A fishing town of slate roofs and tarred net sheds, built up a steep hill above a stone-walled harbor. Fog most mornings; the smell of fish and coal smoke always.",
+      "id": "place.brinemoor",
+      "kind": "place",
+      "name": "Brinemoor",
+      "parentPlaceId": null,
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [
+        "the Gull",
+      ],
+      "description": "A low, smoky inn at the top of the harbor steps: a long taproom with a peat fire, five rooms upstairs, and a net loft out back.",
+      "id": "place.gull-and-anchor",
+      "kind": "place",
+      "name": "The Gull and Anchor",
+      "parentPlaceId": "place.brinemoor",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [
+        "the harbor",
+      ],
+      "description": "A stone-walled harbor crowded with fishing boats, slick steps down to the water, and the harbor wall where old men mend nets.",
+      "id": "place.harbor",
+      "kind": "place",
+      "name": "Brinemoor Harbor",
+      "parentPlaceId": "place.brinemoor",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "description": "A narrow two-room office on the harbor wall: a counter, a stove, shelves of clearance books, and the clerk's desk behind a rail.",
+      "id": "place.harbor-office",
+      "kind": "place",
+      "name": "The Harbor Office",
+      "parentPlaceId": "place.harbor",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "description": "A rocky headland north of the harbor, crowned by a ruined beacon tower. The currents off it are treacherous.",
+      "id": "place.the-point",
+      "kind": "place",
+      "name": "The Point",
+      "parentPlaceId": "place.brinemoor",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "description": "A squat granite watch house above the harbor mouth, with a signal mast, a lamp room, and a single cell.",
+      "id": "place.warden-house",
+      "kind": "place",
+      "name": "The Warden House",
+      "parentPlaceId": "place.brinemoor",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [
+        "the smugglers",
+      ],
+      "description": "A smuggling ring that runs brandy, tobacco, and worse along the coast in a fast cutter, landing cargo at night.",
+      "goals": [
+        "Move their cargo past the Wardens before winter closes the sea",
+        "Make sure nobody talks about the Merrow's Luck",
+      ],
+      "id": "faction.night-traders",
+      "kind": "faction",
+      "name": "The Night Traders",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [
+        "the Wardens",
+      ],
+      "description": "The harbor watch: six wardens and a captain who keep the harbor mouth, collect dues, and hunt smugglers.",
+      "goals": [
+        "Stop the night smuggling before the winter storms",
+        "Keep the harbor safe with too few wardens",
+      ],
+      "id": "faction.tide-wardens",
+      "kind": "faction",
+      "name": "The Tide Wardens",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "age": 47,
+      "ageCategory": "adult",
+      "aliases": [
+        "the Warden captain",
+      ],
+      "goals": [
+        "Catch whoever is moving cargo past the harbor at night",
+      ],
+      "id": "npc.ines-crale",
+      "keyNpc": false,
+      "kind": "npc",
+      "lifeState": "alive",
+      "locationId": "place.warden-house",
+      "name": "Ines Crale",
+      "personality": "Blunt, tired, and honest to a fault. Respects competence and has no patience for grief that gets in her way. Suspects smuggling but lacks proof and wardens.",
+      "physicalDescription": "Tall and rawboned, iron-grey hair in a short braid, a Warden's blue coat worn shiny at the cuffs.",
+      "stats": {
+        "cha": 3,
+        "dex": 3,
+        "end": 4,
+        "int": 4,
+        "str": 3,
+      },
+      "statuses": [],
+      "tags": [],
+      "voiceProfile": {
+        "description": "Flat, clipped, and tired; an officer who gives orders and does not repeat them.",
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "age": 22,
+      "ageCategory": "adult",
+      "aliases": [],
+      "goals": [],
+      "id": "npc.jory",
+      "keyNpc": false,
+      "kind": "npc",
+      "lifeState": "alive",
+      "locationId": null,
+      "name": "Jory Ashby",
+      "personality": "Easygoing, loyal, and careless with money. Always sure the next job will set things right. Hates to disappoint his sister.",
+      "physicalDescription": "Tall and loose-limbed, with his sister's freckles and an easy grin.",
+      "stats": {
+        "cha": 3,
+        "dex": 3,
+        "end": 3,
+        "int": 2,
+        "str": 3,
+      },
+      "statuses": [],
+      "tags": [],
+      "voiceProfile": {
+        "description": "A light, easy tenor that laughs at its own jokes.",
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "age": 54,
+      "ageCategory": "adult",
+      "aliases": [
+        "the innkeeper",
+      ],
+      "goals": [
+        "Keep the Gull and Anchor open through a lean winter",
+      ],
+      "id": "npc.odette",
+      "keyNpc": false,
+      "kind": "npc",
+      "lifeState": "alive",
+      "locationId": "place.gull-and-anchor",
+      "name": "Odette Marsh",
+      "personality": "Warm, nosy, and generous with soup and gossip. Protective of her regulars and of strays. Thinks the best of old friends and the worst of the Tide Wardens.",
+      "physicalDescription": "Broad and quick-moving, grey hair pinned up anyhow, sleeves rolled to the elbow.",
+      "stats": {
+        "cha": 4,
+        "dex": 2,
+        "end": 3,
+        "int": 3,
+        "str": 2,
+      },
+      "statuses": [],
+      "tags": [],
+      "voiceProfile": {
+        "description": "A warm, husky alto with a coastal burr; talks fast when gossiping and slow when worried.",
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "age": 11,
+      "ageCategory": "minor",
+      "aliases": [
+        "the errand girl",
+      ],
+      "goals": [],
+      "id": "npc.pip",
+      "keyNpc": false,
+      "kind": "npc",
+      "lifeState": "alive",
+      "locationId": "place.harbor",
+      "name": "Pip",
+      "personality": "Quick, cheeky, and always hungry. Runs messages along the harbor for a penny. Notices everything, and tells what she knows to people who are kind to her.",
+      "physicalDescription": "Small and wiry, in a patched coat two sizes too big, with a cap pulled low over tangled hair.",
+      "stats": {
+        "cha": 3,
+        "dex": 4,
+        "end": 2,
+        "int": 3,
+        "str": 1,
+      },
+      "statuses": [],
+      "tags": [],
+      "voiceProfile": {
+        "description": "A child's quick, bright voice with a harbor accent; chatters when nervous.",
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "age": 63,
+      "ageCategory": "adult",
+      "aliases": [
+        "the old fisherman",
+      ],
+      "goals": [
+        "Keep his head down until the Wardens stop asking questions",
+      ],
+      "id": "npc.tomas",
+      "keyNpc": false,
+      "kind": "npc",
+      "lifeState": "alive",
+      "locationId": "place.harbor",
+      "name": "Tomas Reyne",
+      "personality": "Gruff, superstitious, and sparing with words. Trusts weather and boats more than people. Says nothing about what he saw, because he does not know who is listening.",
+      "physicalDescription": "Stooped and heavy-shouldered, face like weathered rope, missing two fingers on his left hand.",
+      "stats": {
+        "cha": 2,
+        "dex": 2,
+        "end": 4,
+        "int": 2,
+        "str": 3,
+      },
+      "statuses": [],
+      "tags": [],
+      "voiceProfile": {
+        "description": "Gravelly and slow, an old fisherman who speaks in short sentences and long pauses.",
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "age": 41,
+      "ageCategory": "adult",
+      "aliases": [
+        "the clerk",
+      ],
+      "goals": [
+        "Keep the truth about the Merrow's Luck buried",
+        "Pay off his debt to the smugglers before winter",
+      ],
+      "id": "npc.varek",
+      "keyNpc": false,
+      "kind": "npc",
+      "lifeState": "alive",
+      "locationId": "place.harbor-office",
+      "name": "Varek Holm",
+      "personality": "Courteous, careful, never volunteers anything. Deflects with dry humor. Becomes very still when frightened.",
+      "physicalDescription": "Lean, weathered, a pale scar through one eyebrow. Ink-stained fingers.",
+      "stats": {
+        "cha": 4,
+        "dex": 4,
+        "end": 3,
+        "int": 4,
+        "str": 3,
+      },
+      "statuses": [],
+      "tags": [],
+      "voiceProfile": {
+        "description": "Low, dry, and unhurried; a clerk's careful diction that tightens when pressed.",
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "age": 26,
+      "ageCategory": "adult",
+      "aliases": [],
+      "goals": [],
+      "id": "pc.wren",
+      "keyNpc": false,
+      "kind": "pc",
+      "lifeState": "alive",
+      "locationId": "place.gull-and-anchor",
+      "media": {
+        "imagePrompt": "young woman, short dark hair, freckles, long oilskin cloak",
+      },
+      "name": "Wren Ashby",
+      "personality": "Stubborn, practical, and quick to notice when someone is lying. Hides worry behind briskness. Keeps her promises and expects others to keep theirs.",
+      "physicalDescription": "Slight and freckled, with dark hair cropped short and a watchful look.",
+      "stats": {
+        "cha": 3,
+        "dex": 3,
+        "end": 3,
+        "int": 4,
+        "str": 2,
+      },
+      "statuses": [],
+      "tags": [],
+      "voiceProfile": {
+        "description": "Clear and brisk, a little hoarse from travel; softens only with people she trusts.",
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "Sturdy walking boots, salt-stained to the ankle.",
+      "id": "item.boots",
+      "kind": "item",
+      "location": {
+        "characterId": "pc.wren",
+        "layer": 0,
+        "slot": "feet",
+        "type": "worn",
+      },
+      "name": "boots",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "medium",
+      "tags": [],
+      "wearable": {
+        "covers": [],
+        "slots": [
+          "feet",
+        ],
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "container": {
+        "capacity": 8,
+        "maxItemSize": "medium",
+      },
+      "description": "A worn carpetbag with a brass clasp.",
+      "id": "item.carpetbag",
+      "kind": "item",
+      "location": {
+        "characterId": "pc.wren",
+        "type": "held",
+      },
+      "name": "carpetbag",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "medium",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "container": {
+        "capacity": 2,
+        "maxItemSize": "small",
+      },
+      "description": "Heavy grey wool trousers with one deep pocket.",
+      "id": "item.wool-trousers",
+      "kind": "item",
+      "location": {
+        "characterId": "pc.wren",
+        "layer": 0,
+        "slot": "legs",
+        "type": "worn",
+      },
+      "name": "wool trousers",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "medium",
+      "tags": [],
+      "wearable": {
+        "covers": [],
+        "slots": [
+          "legs",
+        ],
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "A few shillings and a handful of pennies: enough for a week's room and board.",
+      "id": "item.coins",
+      "kind": "item",
+      "location": {
+        "containerId": "item.wool-trousers",
+        "type": "contained",
+      },
+      "name": "coins",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "tiny",
+      "tags": [
+        "money",
+      ],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [
+        {
+          "points": 1,
+          "situation": "cutting rope, net, or line",
+          "type": "roll",
+        },
+      ],
+      "description": "A short, thick-spined gutting knife in a leather sheath.",
+      "id": "item.fishing-knife",
+      "kind": "item",
+      "location": {
+        "characterId": "pc.wren",
+        "layer": 1,
+        "slot": "legs",
+        "type": "worn",
+      },
+      "name": "fishing knife",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "small",
+      "tags": [
+        "weapon",
+        "tool",
+      ],
+      "wearable": {
+        "covers": [],
+        "slots": [
+          "legs",
+        ],
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "A clerk's ledger bound in green cloth, kept locked in the bottom drawer of the harbor office desk.",
+      "id": "item.harbor-ledger",
+      "kind": "item",
+      "location": {
+        "placeId": "place.harbor-office",
+        "type": "placed",
+      },
+      "name": "green ledger",
+      "ownerId": "npc.varek",
+      "quantity": 1,
+      "size": "small",
+      "tags": [
+        "evidence",
+      ],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "container": {
+        "capacity": 4,
+        "maxItemSize": "small",
+      },
+      "description": "A long, much-mended oilskin cloak with a deep inner pocket.",
+      "id": "item.oilskin-cloak",
+      "kind": "item",
+      "location": {
+        "characterId": "pc.wren",
+        "layer": 0,
+        "slot": "torso",
+        "type": "worn",
+      },
+      "name": "oilskin cloak",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "medium",
+      "tags": [],
+      "wearable": {
+        "covers": [
+          "neck",
+        ],
+        "slots": [
+          "torso",
+        ],
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "A formal notice on harbor office paper, signed by the clerk, Varek Holm.",
+      "id": "item.harbor-notice",
+      "kind": "item",
+      "location": {
+        "containerId": "item.oilskin-cloak",
+        "type": "contained",
+      },
+      "name": "harbor office notice",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "tiny",
+      "tags": [
+        "letter",
+      ],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "A creased letter in Jory's untidy hand, dated August 20th.",
+      "id": "item.jory-letter",
+      "kind": "item",
+      "location": {
+        "containerId": "item.oilskin-cloak",
+        "type": "contained",
+      },
+      "name": "Jory's letter",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "tiny",
+      "tags": [
+        "letter",
+      ],
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "A plain linen shirt, damp at the collar.",
+      "id": "item.linen-shirt",
+      "kind": "item",
+      "location": {
+        "characterId": "pc.wren",
+        "layer": 1,
+        "slot": "torso",
+        "type": "worn",
+      },
+      "name": "linen shirt",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "small",
+      "tags": [],
+      "wearable": {
+        "covers": [],
+        "slots": [
+          "torso",
+        ],
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "A small silver locket holding a faded portrait of Wren and Jory's mother.",
+      "id": "item.silver-locket",
+      "kind": "item",
+      "location": {
+        "characterId": "pc.wren",
+        "layer": 0,
+        "slot": "neck",
+        "type": "worn",
+      },
+      "name": "silver locket",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "tiny",
+      "tags": [],
+      "wearable": {
+        "covers": [],
+        "slots": [
+          "neck",
+        ],
+      },
+    },
+    "type": "entity.create",
+  },
+  {
+    "entity": {
+      "aliases": [],
+      "bonuses": [],
+      "description": "A change of clothes, folded tight.",
+      "id": "item.spare-clothes",
+      "kind": "item",
+      "location": {
+        "containerId": "item.carpetbag",
+        "type": "contained",
+      },
+      "name": "spare clothes",
+      "ownerId": "pc.wren",
+      "quantity": 1,
+      "size": "medium",
+      "tags": [],
+    },
+    "type": "entity.create",
+  },
+  {
+    "minutes": 2513880,
+    "reason": "The scenario starts: Monday, October 12, 1874 (evening).",
+    "type": "time.advance",
+  },
+  {
+    "placeId": "place.gull-and-anchor",
+    "sceneId": "00000000-0000-4000-8000-000000000005",
+    "type": "scene.start",
+  },
+  {
+    "observation": {
+      "actorIds": [],
+      "gameTime": 2456640,
+      "id": "00000000-0000-4000-8000-000000000006",
+      "importance": 8,
+      "kind": "event",
+      "mentionedIds": [],
+      "placeId": null,
+      "tags": [
+        "merrows-luck",
+      ],
+      "text": "The fishing boat Merrow's Luck failed to return to Brinemoor. Her crew of five is presumed drowned.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.varek",
+      "gameTime": 2456640,
+      "observationId": "00000000-0000-4000-8000-000000000006",
+      "via": "rumor",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "npc.odette",
+      "gameTime": 2456640,
+      "observationId": "00000000-0000-4000-8000-000000000006",
+      "via": "rumor",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "npc.tomas",
+      "gameTime": 2456640,
+      "observationId": "00000000-0000-4000-8000-000000000006",
+      "via": "rumor",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "npc.pip",
+      "gameTime": 2456640,
+      "observationId": "00000000-0000-4000-8000-000000000006",
+      "via": "rumor",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "npc.ines-crale",
+      "gameTime": 2456640,
+      "observationId": "00000000-0000-4000-8000-000000000006",
+      "via": "rumor",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.varek",
+      ],
+      "gameTime": 2456580,
+      "id": "00000000-0000-4000-8000-000000000007",
+      "importance": 10,
+      "kind": "event",
+      "mentionedIds": [],
+      "placeId": "place.harbor",
+      "tags": [
+        "merrows-luck",
+        "secret",
+      ],
+      "text": "Varek Holm signed false papers letting the Merrow's Luck sail at night with smuggled cargo, knowing she was unseaworthy.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.varek",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.varek",
+      "gameTime": 2456580,
+      "observationId": "00000000-0000-4000-8000-000000000007",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.varek",
+      ],
+      "claim": {
+        "aboutObservationId": "00000000-0000-4000-8000-000000000006",
+        "audienceIds": [
+          "npc.odette",
+        ],
+        "content": "The Merrow's Luck was caught in a squall off the point.",
+        "sourceId": "npc.varek",
+        "truthful": "false",
+      },
+      "gameTime": 2460720,
+      "id": "00000000-0000-4000-8000-000000000008",
+      "importance": 6,
+      "kind": "claim",
+      "mentionedIds": [],
+      "placeId": "place.gull-and-anchor",
+      "tags": [
+        "merrows-luck",
+      ],
+      "text": "Varek told Odette the Merrow's Luck was caught in a squall off the point.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.varek",
+        "npc.odette",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.varek",
+      "gameTime": 2460720,
+      "observationId": "00000000-0000-4000-8000-000000000008",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "npc.odette",
+      "gameTime": 2460720,
+      "observationId": "00000000-0000-4000-8000-000000000008",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.varek",
+      ],
+      "gameTime": 0,
+      "id": "00000000-0000-4000-8000-000000000009",
+      "importance": 9,
+      "kind": "event",
+      "mentionedIds": [],
+      "placeId": null,
+      "tags": [
+        "smuggling",
+        "secret",
+      ],
+      "text": "Varek Holm lost heavily at cards to the Night Traders, and has paid the debt down ever since by clearing their cargo through the harbor office.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.varek",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.varek",
+      "gameTime": 0,
+      "observationId": "00000000-0000-4000-8000-000000000009",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.jory",
+      ],
+      "claim": {
+        "aboutObservationId": null,
+        "audienceIds": [
+          "npc.odette",
+        ],
+        "content": "The harbor clerk has found the Merrow's Luck crew some well-paid extra work.",
+        "sourceId": "npc.jory",
+        "truthful": "true",
+      },
+      "gameTime": 2426100,
+      "id": "00000000-0000-4000-8000-000000000010",
+      "importance": 5,
+      "kind": "claim",
+      "mentionedIds": [],
+      "placeId": "place.gull-and-anchor",
+      "tags": [
+        "jory",
+      ],
+      "text": "Over supper at the Gull and Anchor, Jory Ashby told Odette that the harbor clerk had found the Merrow's Luck crew some well-paid extra work.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.jory",
+        "npc.odette",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.jory",
+      "gameTime": 2426100,
+      "observationId": "00000000-0000-4000-8000-000000000010",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "npc.odette",
+      "gameTime": 2426100,
+      "observationId": "00000000-0000-4000-8000-000000000010",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.jory",
+      ],
+      "claim": {
+        "aboutObservationId": null,
+        "audienceIds": [
+          "pc.wren",
+        ],
+        "content": "He has signed on with the Merrow's Luck, and the harbor clerk has found the crew night runs for good money, enough to clear what he owes.",
+        "sourceId": "npc.jory",
+        "truthful": "true",
+      },
+      "gameTime": 2436480,
+      "id": "00000000-0000-4000-8000-000000000011",
+      "importance": 7,
+      "kind": "claim",
+      "mentionedIds": [],
+      "placeId": "place.gull-and-anchor",
+      "tags": [
+        "jory",
+        "letter",
+      ],
+      "text": "Jory wrote to his sister Wren that he had signed on with the Merrow's Luck, and that the harbor clerk had found the crew night runs for good money.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.jory",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.jory",
+      "gameTime": 2436480,
+      "observationId": "00000000-0000-4000-8000-000000000011",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "pc.wren",
+      "gameTime": 2436480,
+      "observationId": "00000000-0000-4000-8000-000000000011",
+      "via": "told",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.varek",
+      ],
+      "gameTime": 2456560,
+      "id": "00000000-0000-4000-8000-000000000012",
+      "importance": 6,
+      "kind": "event",
+      "mentionedIds": [],
+      "placeId": "place.harbor",
+      "tags": [
+        "merrows-luck",
+      ],
+      "text": "Pip saw Varek Holm hurrying along the harbor wall late at night with a shuttered lantern and his leather document case.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.pip",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.pip",
+      "gameTime": 2456560,
+      "observationId": "00000000-0000-4000-8000-000000000012",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.jory",
+      ],
+      "gameTime": 2456610,
+      "id": "00000000-0000-4000-8000-000000000013",
+      "importance": 7,
+      "kind": "event",
+      "mentionedIds": [],
+      "placeId": "place.harbor",
+      "tags": [
+        "merrows-luck",
+      ],
+      "text": "The Merrow's Luck slipped out of Brinemoor harbor after dark with no lanterns lit, riding low in the water on a flat calm sea.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.jory",
+        "npc.tomas",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.jory",
+      "gameTime": 2456610,
+      "observationId": "00000000-0000-4000-8000-000000000013",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "npc.tomas",
+      "gameTime": 2456610,
+      "observationId": "00000000-0000-4000-8000-000000000013",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.jory",
+      ],
+      "gameTime": 2456760,
+      "id": "00000000-0000-4000-8000-000000000014",
+      "importance": 10,
+      "kind": "event",
+      "mentionedIds": [],
+      "placeId": "place.the-point",
+      "tags": [
+        "merrows-luck",
+        "jory",
+        "secret",
+      ],
+      "text": "The overloaded Merrow's Luck foundered in calm water off the Point. The Night Traders' cutter waiting to meet her pulled Jory Ashby from the sea and carried him away up the coast; the other four crew drowned.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.jory",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.jory",
+      "gameTime": 2456760,
+      "observationId": "00000000-0000-4000-8000-000000000014",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.varek",
+      ],
+      "claim": {
+        "aboutObservationId": "00000000-0000-4000-8000-000000000006",
+        "audienceIds": [
+          "pc.wren",
+        ],
+        "content": "The Merrow's Luck was lost with all hands in a squall off the Point on the night of September 2nd, and Jory is presumed drowned.",
+        "sourceId": "npc.varek",
+        "truthful": "partly",
+      },
+      "gameTime": 2466720,
+      "id": "00000000-0000-4000-8000-000000000015",
+      "importance": 8,
+      "kind": "claim",
+      "mentionedIds": [],
+      "placeId": "place.harbor-office",
+      "tags": [
+        "merrows-luck",
+        "jory",
+        "letter",
+      ],
+      "text": "Varek Holm wrote to Wren Ashby, as Jory's next of kin, that the Merrow's Luck had been lost with all hands in a squall off the Point.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.varek",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.varek",
+      "gameTime": 2466720,
+      "observationId": "00000000-0000-4000-8000-000000000015",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "grant": {
+      "entityId": "pc.wren",
+      "gameTime": 2466720,
+      "observationId": "00000000-0000-4000-8000-000000000015",
+      "via": "told",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "observation": {
+      "actorIds": [
+        "npc.ines-crale",
+      ],
+      "gameTime": 2482020,
+      "id": "00000000-0000-4000-8000-000000000016",
+      "importance": 7,
+      "kind": "event",
+      "mentionedIds": [],
+      "placeId": "place.warden-house",
+      "tags": [
+        "merrows-luck",
+        "smuggling",
+      ],
+      "text": "Ines Crale found harbor office clearances for three night sailings that no warden on watch saw leave, the Merrow's Luck among them.",
+      "turnId": "00000000-0000-4000-8000-000000000002",
+      "witnessIds": [
+        "npc.ines-crale",
+      ],
+    },
+    "type": "observation.add",
+  },
+  {
+    "grant": {
+      "entityId": "npc.ines-crale",
+      "gameTime": 2482020,
+      "observationId": "00000000-0000-4000-8000-000000000016",
+      "via": "witnessed",
+      "viaObservationId": null,
+    },
+    "type": "knowledge.grant",
+  },
+  {
+    "dimensions": {
+      "affection": 2,
+      "trust": 3,
+    },
+    "fromId": "npc.odette",
+    "summary": "Old friends. She thinks he is lonely, not secretive.",
+    "toId": "npc.varek",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "affection": 3,
+      "trust": 2,
+    },
+    "fromId": "npc.varek",
+    "summary": "Fond of her, and careful never to let her near his business.",
+    "toId": "npc.odette",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "affection": 2,
+      "trust": 1,
+    },
+    "fromId": "npc.odette",
+    "summary": "Liked the boy. Thought he talked too freely about money.",
+    "toId": "npc.jory",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "affection": 4,
+      "trust": 3,
+    },
+    "fromId": "npc.odette",
+    "summary": "Slips her bread and soup, and worries about her come winter.",
+    "toId": "npc.pip",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "affection": 4,
+      "trust": 4,
+    },
+    "fromId": "npc.pip",
+    "summary": "Odette feeds her and asks nothing back.",
+    "toId": "npc.odette",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "fear": 2,
+      "trust": -2,
+    },
+    "fromId": "npc.tomas",
+    "summary": "Never liked the clerk. Since the night the Merrow sailed dark, afraid of him too.",
+    "toId": "npc.varek",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "respect": 2,
+      "trust": -1,
+    },
+    "fromId": "npc.ines-crale",
+    "summary": "Finds him efficient and a little too tidy. She has started to wonder why.",
+    "toId": "npc.varek",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "fear": 2,
+      "respect": 2,
+    },
+    "fromId": "npc.varek",
+    "summary": "Respects her, and is afraid of how close she is getting.",
+    "toId": "npc.ines-crale",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "affection": 5,
+      "trust": 2,
+    },
+    "fromId": "pc.wren",
+    "summary": "Her younger brother. She loves him, and has spent years getting him out of trouble.",
+    "toId": "npc.jory",
+    "type": "relationship.set",
+  },
+  {
+    "dimensions": {
+      "affection": 5,
+      "trust": 4,
+    },
+    "fromId": "npc.jory",
+    "summary": "Adores his sister and hates to disappoint her.",
+    "toId": "pc.wren",
+    "type": "relationship.set",
+  },
+  {
+    "entityId": "npc.jory",
+    "knowerId": "pc.wren",
+    "name": "Jory Ashby",
+    "type": "knowledge.name",
+  },
+  {
+    "entityId": "npc.varek",
+    "knowerId": "pc.wren",
+    "name": "Varek Holm",
+    "type": "knowledge.name",
+  },
+]
+`;

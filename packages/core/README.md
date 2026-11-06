@@ -15,7 +15,7 @@ own (CONV-015): `src/index.ts` is the only public entry point.
 | ---------------- | -------------------------------- | ------------------------------------------------------------------------- |
 | `src/`           |                                  | `index.ts`, `compare.ts` (used by every folder), and `theme.ts` (14-ui)   |
 | `src/rules/`     | 07-rules, 11-gear                | Ruleset checks, gear, and appearance; dice, harm, and clocks to come      |
-| `src/state/`     | 06-turn-engine, 03-contracts §10 | Turn logic, the fold, and commit validation; setup to come                |
+| `src/state/`     | 06-turn-engine, 03-contracts §10 | Turn logic, the fold, commit validation, and the setup set                |
 | `src/knowledge/` | 08-memory, 10-journal            | Display names and common knowledge; retrieval and consolidation to come   |
 | `src/prompts/`   | 09-context, 13-content-settings  | Budgets, transcript rolling, the hard floor, and content-settings wording |
 | `src/time/`      | 12-time-world                    | Calendar math and display; world ticks to come                            |
@@ -78,6 +78,26 @@ own (CONV-015): `src/index.ts` is the only public entry point.
     `details: { issues }` (CON-005, CON-071, TRN-070).
 
   Spec: 06-turn-engine §6 and 03-contracts §7 to §10.
+
+- **Setup** (`setup.ts`, `setup-history.ts`): `buildSetup(pack, choices, newId)` builds the
+  root turn's one `setup` set, in SCH-117's order. `SetupPack` is what it needs of a
+  loaded pack, which the content module's `LoadedPack` fits; `SetupChoices` holds the
+  scenario, the chosen PC, the ruleset, and the root turn's ID. The `Setup` it returns
+  has the first scene's ID, the scenario's start as game time, the payloads, and a
+  warning for each change from the pack. It:
+  - creates places, factions, characters, then items, each by ID with `cmp`, a
+    later-sorting parent place or container moved up to just before the first entity
+    inside it, with starting statuses given IDs and the start time (SCH-005);
+  - advances time to the scenario's start, moves the PC and present characters there, and
+    starts the first scene;
+  - turns history into observations, each followed by one grant per knower (MEM-010,
+    MEM-034, MEM-035), fits seed relationships to the ruleset (SCH-092), and names the
+    characters the PC knows from history (JRN-022);
+  - leaves out every premade PC but the chosen one, and everything that refers to it
+    (SCH-113, SCH-116), in `setup-history.ts`.
+
+  The caller checks the result with `validateSet` before writing it (TRN-070).
+  Spec: 04-content-schemas §11.
 
 `test-support.ts` holds builders for the state tests and is not exported.
 

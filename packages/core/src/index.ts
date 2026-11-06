@@ -50,3 +50,4 @@ export {
 export { applyCommit } from './state/apply-commit';
 export { commitIssues } from './state/validate';
 export { type CommitSetEntry, fold, validateSet } from './state/fold';
+export { buildSetup, type Setup, type SetupChoices, type SetupPack } from './state/setup';
