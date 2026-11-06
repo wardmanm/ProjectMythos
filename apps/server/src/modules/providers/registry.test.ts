@@ -30,7 +30,6 @@ describe('createAdapter', () => {
   });
 
   const toCome: [type: string, rest: Record<string, unknown>, arrives: string][] = [
-    ['anthropic', { apiKey: { env: 'ANTHROPIC_API_KEY' } }, 'P1-T12'],
     ['comfyui', { baseUrl: 'http://localhost:8188' }, 'phase 9'],
   ];
 
