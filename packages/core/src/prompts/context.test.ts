@@ -2,6 +2,7 @@ import type { Tier } from '@mythos/contracts';
 import { describe, expect, it } from 'vitest';
 import {
   allocateBudgets,
+  estimateTokens,
   inputBudget,
   type TierBudgets,
   type TierSpec,
@@ -39,6 +40,15 @@ const budgetsOf = (total: number, given: TierSpec[]): TierBudgets => {
 };
 const sum = (budgets: TierBudgets): number =>
   Object.values(budgets).reduce((total, tokens) => total + tokens, 0);
+
+describe('estimateTokens', () => {
+  it('PRV-070: tokens are characters divided by the ratio, rounded up', () => {
+    expect(estimateTokens('', 3.5)).toBe(0);
+    expect(estimateTokens('abcdefgh', 4)).toBe(2);
+    expect(estimateTokens('abcdefghi', 4)).toBe(3);
+    expect(estimateTokens('abcdefgh', 3.5)).toBe(3);
+  });
+});
 
 describe('inputBudget', () => {
   it('CTX-030: the window less output tokens, less a 10% margin on what remains', () => {

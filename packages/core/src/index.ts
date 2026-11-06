@@ -37,6 +37,7 @@ export {
   type TierBudgets,
   type TierSpec,
   allocateBudgets,
+  estimateTokens,
   inputBudget,
   transcriptBoundary,
 } from './prompts/context';

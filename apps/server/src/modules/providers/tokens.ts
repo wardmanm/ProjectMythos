@@ -12,15 +12,9 @@ export const CALIBRATION_FILE = 'calibration.json';
 /** How much one call moves the calibrated ratio: an exponential moving average. */
 const SAMPLE_WEIGHT = 0.2;
 
-/**
- * Estimated tokens for `text`: its length divided by the ratio, rounded up. The length
- * is in UTF-16 code units; calibration absorbs the difference from true characters. It
- * adds no margin; the context module's input budget holds that (CTX-030, PRV-072).
- * Implements PRV-070.
- */
-export function estimateTokens(text: string, charsPerToken: number): number {
-  return Math.ceil(text.length / charsPerToken);
-}
+// The estimate lives in core, so the context module budgets with the same count that
+// calibration uses without importing providers (CTX-110, 05-providers Decisions).
+export { estimateTokens } from '@mythos/core';
 
 /** Calibrated ratios, keyed by `calibrationKey`. */
 const CalibrationFileSchema = z.strictObject({
