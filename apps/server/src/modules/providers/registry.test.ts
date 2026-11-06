@@ -20,7 +20,7 @@ describe('createAdapter', () => {
   it.each([
     ['ollama', { baseUrl: 'http://127.0.0.1:11434' }],
     ['openai-compatible', { baseUrl: 'http://127.0.0.1:1234/v1' }],
-  ])('ARCH-133: builds the %s adapter with a text member', (type, rest) => {
+  ])('ARCH-133, PRV-010: builds the %s adapter with a text member', (type, rest) => {
     const config = ProviderConfigSchema.parse({ id: 'local', type, deviceId: 'gpu', ...rest });
     const adapter = createAdapter(config, deps);
 
