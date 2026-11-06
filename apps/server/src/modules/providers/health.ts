@@ -37,7 +37,7 @@ export type HealthCheckOptions = {
 
 export type HealthCheck = {
   /** Every provider's status, in config order, or the error if the config fails to load. */
-  statuses(): Promise<Result<ProviderStatus[], AppError>>;
+  statuses: () => Promise<Result<ProviderStatus[], AppError>>;
 };
 
 /** Builds the health check. Called once, by the composition root (ARCH-022). */
