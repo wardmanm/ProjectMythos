@@ -56,7 +56,11 @@ own (CONV-015): `src/index.ts` is the only public entry point.
   - `activeSets` keeps the sets nothing supersedes (CON-081), and `staleStages` lists the
     stages of a turn whose active set is based on an inactive one (CON-083);
   - `orderSets(sets, depthByTurnId)` puts sets in application order: turn depth, then
-    stage, then `seq`. It is the only definition of that order (TRN-061, CON-084).
+    stage, then `seq`. It is the only definition of that order (TRN-061, CON-084);
+  - `entriesInOrder(sets)` takes a read point's sets as storage returns them, each a
+    `SetWithDepth` (its commits and its turn's depth), and gives them to `orderSets`,
+    returning `CommitSetEntry` values ready to fold. Every server read of folded state
+    uses it.
 - **Folded state** (`folded-state.ts`): the `FoldedState` type (the world state,
   relationships keyed by `relationshipKey(fromId, toId)`, each knower's learned names, and
   the known observation IDs), the `FoldContext` type (ruleset and slot schema), and
