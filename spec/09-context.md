@@ -565,6 +565,3 @@ export type ContextBuilder = {
   until chunk summaries arrive in phase 2, and the inspector lists them as trimmed.
 - **The view model is not kept (CTX-006).** Neither `BuiltPrompt` nor the model call
   record has a field for it, so the inspector can show only the rendered prompt.
-- **Folding at a read point is written twice (TRN-060).** `context/read.ts` and
-  `turn/campaign-view.ts` each read a point's sets, order them with `orderSets`, and fold
-  them; P1-T19's read point will be a third. One helper would keep them the same.
