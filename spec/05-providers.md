@@ -609,7 +609,9 @@ export type StreamText = (options: StreamTextOptions) => Promise<Result<Streamed
      campaign and ruleset.
   2. **Adapt** — transform the JSON Schema for the profile's provider and method
      (PRV-052).
-  3. **Instruct** — the engine appends a format instruction to the prompt. For
+  3. **Instruct** — the engine adds a format instruction to the prompt, as a system
+     message of its own right after the prompt's leading system messages, so a floor
+     repeated at the end of the task tier stays nearest the output (CSET-042). For
      `prompt-only` this includes the JSON Schema and a minimal example; for the other
      methods, a one-line reminder. Templates never contain format instructions
      (09-context).
@@ -626,9 +628,16 @@ export type StreamText = (options: StreamTextOptions) => Promise<Result<Streamed
 - **PRV-051** Transient provider errors are retried by the queue (§6), separately from
   validation retries in step 7.
 - **PRV-052** Schema adaptation per provider is a pure function with unit tests. For
-  Anthropic it sets `additionalProperties: false` on every object and removes
-  unsupported keywords (length and numeric-range constraints). Other adapters pass the
-  schema through unless their README documents a limitation.
+  Anthropic's `json-schema` and `tool-call` methods it sets `additionalProperties:
+  false` on every object; removes length and numeric-range constraints (`minLength`,
+  `maxLength`, `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`,
+  `multipleOf`), `maxItems`, a `minItems` above 1, and `$schema`; turns `oneOf` into
+  `anyOf`; and drops a `format` Anthropic does not list, a `pattern` with
+  backreferences, lookaround, or word boundaries, and an `enum` of values that are not
+  strings, numbers, booleans, or null. What adaptation cannot change, such as a
+  recursive schema or one past Anthropic's complexity limits, is refused by the
+  provider and falls back under PRV-053. `prompt-only`, and the other adapters, get the
+  schema unchanged unless an adapter's README documents a limitation.
 - **PRV-053** If a provider rejects the schema itself (`provider_rejected` on a
   `json-schema` or `tool-call` request), the call is retried once as `prompt-only` and
   the switch is recorded in the model call record.
