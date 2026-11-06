@@ -775,11 +775,11 @@ export type JobQueue = {
 
 ## 9. Settings support
 
-- **PRV-090** **Probe**: for a chosen profile, the server sends a short prompt and a
-  tiny structured request with each method, and reports: reachable, model present,
-  which structured-output methods produced valid output, approximate prompt
-  processing and generation speed, and whether thinking was emitted. The UI suggests
-  settings from the result.
+- **PRV-090** **Probe**: for a chosen profile, the server sends a tiny structured
+  request with each method, then a text prompt of about 1,000 tokens, and reports:
+  reachable, model present, which structured-output methods produced valid output,
+  approximate prompt processing and generation speed, and whether thinking was
+  emitted. The UI suggests settings from the result.
 - **PRV-091** `listModels` populates model pickers; `health` drives a status indicator
   per provider in the UI.
 - **PRV-092** The probe calls adapters directly, not through `callStructured`, so it can
