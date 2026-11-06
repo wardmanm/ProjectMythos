@@ -110,10 +110,10 @@ SCH-005, SCH-110, SCH-111, SCH-112, SCH-113, SCH-116, SCH-117, SCH-118, TRN-056,
     temporary pack and library (CTX-005); content settings (CSET-020); the view after the
     pack folder is deleted (ARCH-045); a setup set that fails validation leaves no folder
     (TRN-070); a write failure removes the folder, and an ID in use is refused (TRN-123).
-  - `pnpm check` passes, after rebasing onto `origin/main` (`bff5ede`). The workspace has
-    `Tests  605 passed (605)` and `spec/reference` `Tests  271 passed (271)`, and it ends
-    with `Docs check passed: 834 requirements, 25 tasks (13 done), 20 ADRs, 83 markdown
-    files, 834 citations in code.`
+  - `pnpm check` passes, after rebasing onto `main` with P1-T13 merged (`47a835c`). The
+    workspace has `Tests  633 passed (633)` and `spec/reference` `Tests  271 passed (271)`,
+    and it ends with `Docs check passed: 834 requirements, 25 tasks (14 done), 20 ADRs, 83
+    markdown files, 878 citations in code.`
 - **Rulings:**
   - **Mike's decisions** on the plan, 2026-11-05 (`P1-T17: spec: owner: setup warnings,
     MEM-035's inferred grants, GEAR-090 in phase 6`), each a Decisions row with Decided
