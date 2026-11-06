@@ -11,6 +11,8 @@ export type JobHandler<P> = {
   priority: JobPriority;
   persisted: boolean; // true for background jobs
   run(payload: P, ctx: JobContext): Promise<Result<void, AppError>>;
+  /** The failure path, run once with the last error when the job ends `failed` (PRV-063). */
+  onFailed?(payload: P, error: AppError): Promise<void>;
 };
 
 export type JobContext = {

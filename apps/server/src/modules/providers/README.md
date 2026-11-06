@@ -2,9 +2,9 @@
 
 Everything between the engine and a model. So far: the adapter interface every provider
 implements, the registry that builds an adapter from machine config, the mock adapter
-every test uses, and token estimation with its calibration. The real adapters (P1-T11,
-P1-T12), the job queue (P1-T13), and the structured-output pipeline (P1-T14) arrive
-later. It imports no other module yet; ARCH-021 allows `config`, `storage`, and `events`.
+every test uses, token estimation with its calibration, and the job queue. The real
+adapters (P1-T11, P1-T12) and the structured-output pipeline (P1-T14) arrive later. The
+queue imports `config`, `storage`, and `events`, which ARCH-021 allows.
 
 ## Public API (`index.ts`)
 
@@ -55,6 +55,73 @@ way toward `current × estimated / reported`. Changing a profile's model starts 
 from the profile's own `charsPerToken`. Writes are atomic and one at a time. A corrupt
 file is replaced on the next save.
 
+## Job queue
+
+Every model call runs as a job (05-providers §6). `createJobQueue(options)` is called
+once, by the composition root (ARCH-022), with:
+
+- `config`: the `ConfigStore`. Each scheduling decision reads `current()` once, so device
+  concurrency, `queue.preemptBackground`, and `queue.maxAttempts` apply without a
+  restart (PRV-004). A device missing from the config, and every device while the config
+  fails to load, runs one job at a time.
+- `campaigns`: the campaign store's `openCampaign` and `listCampaigns`. Background jobs
+  are rows in their campaign's `jobs` table, written through storage's jobs repository.
+  The queue opens the campaign for each write and holds no connection.
+- `publish`: the event bus's `publish`, for `job.updated`.
+- `timeSource`, `logger` (pino's fits `QueueLogger`), and `setTimer`, the backoff timer:
+  `(ms, callback) => cancel`. In production it wraps `setTimeout`:
+  `(ms, callback) => { const timer = setTimeout(callback, ms); return () => clearTimeout(timer); }`.
+
+It returns the copied `JobQueue` and `JobQueueLifecycle`:
+
+- `register(handler)`, at startup, for persisted background job types only. It throws for
+  a type registered twice, the reserved type `interactive`, `persisted: false`, or
+  priority `interactive`. A handler's optional `onFailed(payload, error)` runs once when
+  its job ends `failed`.
+- `enqueue(options)` throws for an unknown type, or a payload that is not JSON or fails
+  the handler's schema (PRV-066). For a campaign that does not exist it returns
+  `not_found`. Otherwise it stores the job as `queued`.
+- `runInteractive(options, work)` runs `work` in a slot on its device at `interactive`
+  priority, never stored, as a job of type `interactive`. It resolves with whatever the
+  last run of `work` returned, partial narration included (PRV-047), or `cancelled` if it
+  was cancelled before it ran. With `campaignId: null` it publishes nothing (PRV-092).
+- `cancel(jobId)` ends a queued job at once, clearing any backoff timer. A running job
+  has its signal aborted and ends `cancelled` when its run settles, with no retry.
+- `wait(jobId)` resolves with `ok`, the last error, or `cancelled`. The queue forgets a
+  job once it finishes, so a job it does not hold, finished or never known, gives
+  `not_found` at once.
+- `resume()`, at server start, after every `register`: takes back each campaign's
+  `queued` and `running` jobs, in stored order (PRV-062). A stored job with no handler,
+  or whose payload no longer parses, is marked `failed`; a campaign that fails to open
+  is logged and skipped. Before a campaign's first new job, `enqueue` takes back its
+  stored jobs too, once per campaign.
+- `stop()`, at shutdown, before `closeAll()`: cancels interactive jobs, aborts running
+  background jobs and stores them as `queued`, and resolves once every run has settled.
+  Whoever waits on a background job gets `cancelled`. Afterwards `enqueue`,
+  `runInteractive`, and `resume` throw.
+
+How jobs run:
+
+- **Order** (PRV-060): each device runs up to its `concurrency` jobs, highest priority
+  first (ARCH-080), then in arrival order. A retried or preempted job keeps its place.
+  Each change (a job added, a run settling, a timer, a cancel) asks for one scheduling
+  pass, run in a microtask; nothing polls.
+- **Retries** (PRV-051, PRV-063): an error the run returns with `retryable: true`, as a
+  `ProviderError` has (PRV-013), is retried after 2 s, 8 s, then 30 s each time, or after
+  `details.retryAfterSeconds` if that is longer, until `queue.maxAttempts`. The job is
+  `queued` while it waits. Any other error fails the job. A run that throws fails it as
+  `internal_error`, and is logged. Interactive work is retried the same way.
+- **Attempts**: `attempts` counts runs that ended in success or failure, and
+  `ctx.attempt` is `attempts + 1`. Runs that were preempted, stopped, cut off by a
+  restart, or cancelled do not count.
+- **Preemption** (PRV-064): with `preemptBackground` on, an interactive job that finds
+  every slot on its device running a background job aborts the one started last. That
+  job goes back to `queued` when its run settles, and only then does the slot free. A
+  handler, and the work given to `runInteractive`, must pass `ctx.signal` to every call
+  and return soon after it aborts.
+- **Events** (PRV-065): every status change is written to storage first, then published
+  as `job.updated` on the job's campaign.
+
 ## Files
 
 - `types.ts`: the copied interface types.
@@ -63,12 +130,25 @@ file is replaced on the next save.
 - `mock-outputs.ts`: placeholders, embeddings, `mockResponse`, `mockProviderError`.
 - `mock-fixtures.ts`: fixture names, reading, and the strict `TextResponse` schema.
 - `tokens.ts`: `estimateTokens` and calibration.
+- `queue.ts`: the 05-providers §6 types, copied verbatim above its divider line (never
+  edit them here), then `createJobQueue`: registering, enqueueing, interactive jobs, and
+  taking back stored jobs.
+- `queue-runner.ts`: the scheduling pass, each run and what follows it, cancel, and stop.
+- `queue-policy.ts`: the pure decisions: settings from config, the pass plan with
+  preemption, retryability, and the backoff.
+- `queue-persistence.ts`: binding payloads to handlers, reading stored jobs, and the
+  recorder that stores each change and then publishes it.
+- `queue-testing.ts`: the queue tests' helpers (a fake timer, held runs, an editable
+  config, campaigns in temporary folders). Not exported.
 
 ## Governing spec
 
-- [05-providers.md](../../../../../spec/05-providers.md) §3, §4, §7, §8, and its
+- [05-providers.md](../../../../../spec/05-providers.md) §3, §4, §6, §7, §8, and its
   closing sections.
-- [01-architecture.md](../../../../../spec/01-architecture.md): ARCH-133.
+- [01-architecture.md](../../../../../spec/01-architecture.md): ARCH-080 to ARCH-083
+  (§6.1), ARCH-131, and ARCH-133.
+- [06-turn-engine.md](../../../../../spec/06-turn-engine.md): TRN-012, resuming
+  background jobs on server start.
 - [02-conventions.md](../../../../../spec/02-conventions.md): CONV-113 and CONV-114.
 - [ADR-010](../../../../../spec/decisions/ADR-010-no-vendor-sdks.md): adapters use
   `fetch`, not vendor SDKs.
