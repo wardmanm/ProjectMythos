@@ -19,6 +19,7 @@ export {
   type ContentCategory,
   appendFloorToTask,
   appendLocked,
+  CATEGORY_LABELS,
   CONTENT_CATEGORIES,
   DEFAULT_WORDING,
   effectiveSettings,

@@ -70,7 +70,8 @@ export function usesExplicitRoles(settings: ContentSettings, minor: boolean): bo
   return !minor && CONTENT_CATEGORIES.some((category) => settings[category] === 'explicit');
 }
 
-const CATEGORY_LABELS: Record<ContentCategory, string> = {
+/** Each category's name in a prompt, as `renderContentSettings` writes it. */
+export const CATEGORY_LABELS: Record<ContentCategory, string> = {
   violence: 'Violence',
   gore: 'Gore',
   sexual: 'Sexual',
