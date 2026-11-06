@@ -85,7 +85,10 @@ function involvedIds(at: CampaignAtPoint, nameOf: (entity: Entity) => string): S
 
 type PublicBlock = { id: string; view: CharacterView; shortAppearance: string };
 
-/** Each present character's public block, untrimmed, and the appearance a trim keeps. */
+/**
+ * Each present character's public block, untrimmed, and the appearance a trim keeps. Built
+ * only from what they show, so it changes only when that does. Implements CTX-013.
+ */
 function publicBlocks(
   at: CampaignAtPoint,
   present: readonly Character[],
@@ -155,6 +158,7 @@ function fixedView(
       standardPacing: tone.pacing === 'standard',
       fastPacing: tone.pacing === 'fast',
     },
+    // Implements CSET-012: the narrator writes fiction, so it gets the content settings.
     content: contentView(settings),
     setting: { name: at.setting.name, summary: at.setting.summary },
     pc: {
@@ -177,7 +181,7 @@ function fixedView(
  * The narrator's recipe at a point: display names for the PC (JRN-020, CTX-052),
  * appearance from core (GEAR-060), settings tightened while a minor is present or
  * involved (CSET-042), the scene's trims, and the current scene's earlier turns.
- * Implements CTX-006, CTX-012, CTX-071, CTX-076, and CTX-081.
+ * Implements CTX-006, CTX-012, CTX-052, CTX-071, CTX-076, CTX-081, and CSET-042.
  */
 export function narratorRecipe(at: CampaignAtPoint): NarratorRecipe {
   const { state } = at;
