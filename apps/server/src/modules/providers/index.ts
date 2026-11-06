@@ -40,3 +40,11 @@ export {
 export type { ModelCallsOptions } from './model-call';
 export { type RoleRoute, routeRole } from './role-routing';
 export { adaptSchema, type JsonSchema, toJsonSchema } from './schema-adapt';
+// Settings support (05-providers §9): each provider's status.
+export {
+  createHealthCheck,
+  HEALTH_TIMEOUT_MS,
+  type HealthCheck,
+  type HealthCheckOptions,
+  type ProviderStatus,
+} from './health';
