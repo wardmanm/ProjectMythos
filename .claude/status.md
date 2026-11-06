@@ -1,12 +1,18 @@
 # Status: Mythos
-Updated: 2026-11-06 · Through: ea99740 · Branch: main
+Updated: 2026-11-06 · Through: 9cee5bf · Branch: main
 
 ## Current focus
-Phase 1 (Foundation): 16 of 25 tasks done. The second parallel batch, P1-T11, P1-T12, P1-T13,
-and P1-T17, merged as PRs #38 to #41; its worktrees are removed. Ready to start: P1-T14
-(structured-output pipeline, streaming, call records). No branch open.
+Phase 1 (Foundation): 17 of 25 tasks done. P1-T14 (structured-output pipeline, streaming, call
+records) merged as PR #42. Ready to start: P1-T15 (probe and provider health) and P1-T18 (context
+module and narrator templates). No branch open.
 
 ## Recent changes
+- 2026-11-06: P1-T14 merged (#42): `callStructured` and `streamText`, `routeRole`, schema adaptation,
+  and one model call record per call. Mike's decisions: the format instruction is a system message
+  after the leading system messages (PRV-050 reworded); `ModelCallAttempt` gains `error` for a
+  provider failure (03-contracts). Rulings: PRV-052's full Anthropic list (`oneOf` becomes `anyOf`);
+  PRV-053 switches once, and success after it is `fallback`; refusals; one delta with streaming off;
+  role sampling overrides key by key; an unassigned illustrator is `not_configured`.
 - 2026-11-06: Mike's decision: issue #17 closed by hand. #38 ("Closes #17") merged, but GitHub
   never closed the issue.
 - 2026-11-06: Claude's ruling: CON-112 and 06-turn-engine §11's phase-1 row say turn zero has one
@@ -38,8 +44,6 @@ and P1-T17, merged as PRs #38 to #41; its worktrees are removed. Ready to start:
   only through commits (ARCH-040)".
 - 2026-11-05: P1-T21 merged (#37): the client foundation: routes, `theme.house`, the typed API
   layer, one `EventSource` per campaign, and twelve shadcn components.
-- 2026-11-05: P1-T08 merged (#36): the pack and library loader, reporting every issue in three
-  passes.
 
 ## Pending decisions
 None.
@@ -50,7 +54,6 @@ None.
   on Windows (CI)" is unticked; CI passed on windows-latest for #34.
 - A 429 message lacks a period before its wait: "…too many requests It asks to wait 12 seconds"
   (`providers/adapters/http-errors.ts`, cosmetic).
-- Not tested, owned by later work: PRV-045's `narration.delta` events and one-delta fallback,
-  PRV-047's partial narration, and PRV-061's signal-to-`cancel` link (P1-T14, P1-T19); CON-112's
-  opening narration (P1-T19); UI-042's horizontal scroll at phone width (P1-T23, P1-T25); ARCH-061's
-  export exclusion and TRN-003's range rewrites (phase 2).
+- Not tested, owned by later work: PRV-045's `narration.delta` events and PRV-047's incomplete
+  narration (P1-T19); CON-112's opening narration (P1-T19); UI-042's horizontal scroll at phone
+  width (P1-T23, P1-T25); ARCH-061's export exclusion and TRN-003's range rewrites (phase 2).
