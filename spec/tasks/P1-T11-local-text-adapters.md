@@ -112,10 +112,10 @@ PRV-010, PRV-011, PRV-012, PRV-013, PRV-020, PRV-021, PRV-022, PRV-023, PRV-030,
   - Verified, then reverted: with the cancelled and timed-out checks swapped in
     `http.ts`, `PRV-013, PRV-047: an abort at the moment of a timeout is cancelled`
     fails.
-  - `pnpm check` passes after rebasing onto `origin/main`. The workspace has `Tests
-    717 passed (717)` and `spec/reference` `Tests  271 passed (271)`, and it ends with
-    `Docs check passed: 834 requirements, 25 tasks (13 done), 20 ADRs, 82 markdown files,
-    902 citations in code.`
+  - `pnpm check` passes after rebasing onto `main` with P1-T13 and P1-T17 merged
+    (`939dd86`). The workspace has `Tests  787 passed (787)` and `spec/reference`
+    `Tests  271 passed (271)`, and it ends with `Docs check passed: 834 requirements, 25
+    tasks (15 done), 20 ADRs, 83 markdown files, 1019 citations in code.`
 - **Rulings:**
   - **Owner's decisions** (`P1-T11: spec: owner: idle timeouts, estimated usage, and
     Ollama's tool-call fallback`): PRV-013 says `timeoutMs` is idle time, the wait for
