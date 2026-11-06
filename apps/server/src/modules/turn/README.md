@@ -78,11 +78,11 @@ contract schemas (`SubmitActionCommand`, `CancelCommand`, `RegenerateStageComman
      TRN-030). `touchLastPlayed` runs, `turn.created` and `turn.status` are published,
      and the narration starts.
 - `cancelTurn(deps, campaignId, { turnId })` returns the turn's `TurnView` once things have
-  settled (TRN-149, TRN-047):
-  - a turn that is narrating is stopped;
-  - a `stage-failed` turn that is not the root is abandoned;
-  - any other turn comes back as it is.
-  An abandoned turn's view holds its input, for the player to edit and send again.
+  settled (TRN-149, TRN-047). An abandoned turn's view holds its input, for the player to
+  edit and send again.
+  - A turn that is narrating is stopped.
+  - A `stage-failed` turn that is not the root is abandoned.
+  - Any other turn comes back as it is.
 - `regenerateStage(deps, campaignId, command)` retries a failed narration and returns
   `{ turnId }` (06-turn-engine §10). Phase 1 takes stage `narration` only, with no
   `instruction` or `profileId`, for a `stage-failed` head.
@@ -93,13 +93,15 @@ contract schemas (`SubmitActionCommand`, `CancelCommand`, `RegenerateStageComman
 
 **Views.**
 
-- `turnView({ store, narrations }, campaignId, turnId)`, `turnViews(…, branchId, {
-  beforeDepth, limit })` (oldest first, paging back from the head), and
-  `branchViews(store, campaignId)`, for `GET /turns/:turnId`, `GET
-  /branches/:branchId/turns`, and `GET /branches`.
-  - A `TurnView` fills `turn`, `gameTimeLabel` (the turn's `gameTimeStart` in the
-    campaign calendar), `input`, and `narration`. Every other part is empty or zero
-    until its phase.
+- `turnView(deps, campaignId, turnId)`, for `GET /turns/:turnId`. Its `deps` are a
+  `ViewDeps`, `{ store, narrations }`.
+- `turnViews(deps, campaignId, branchId, page)`, for `GET /branches/:branchId/turns`.
+  `page` is `{ beforeDepth, limit }`, and the turns come oldest first, paging back from
+  the head.
+- `branchViews(store, campaignId)`, for `GET /branches`.
+- What a `TurnView` holds:
+  - `turn`, `gameTimeLabel` (the turn's `gameTimeStart` in the campaign calendar),
+    `input`, and `narration`. Every other part is empty or zero until its phase.
   - While a turn narrates, its `narration` is the text so far with `complete: false`
     (TRN-150).
 - `campaignView(store, campaignId)` returns a campaign's `CampaignView`, or `not_found`.
@@ -132,8 +134,8 @@ them from the campaign's initial state.
    - **Stopped**: no text after a Stop. A normal turn is abandoned (TRN-047). The root
      turn, or any turn at shutdown, becomes `stage-failed`.
 5. A commit writes the narration set (origin `model`, based on the input set, or on the
-   root's setup set) and status `complete` in one transaction, with `appendSet(…,
-   'complete')`. Then `narration.done`, `turn.status`, and any `error` are published.
+   root's setup set) and status `complete` in one transaction, through `appendSet` with
+   a status. Then `narration.done`, `turn.status`, and any `error` are published.
 6. An unexpected throw is logged, and a turn still `narrating` becomes `stage-failed`
    with `internal_error`.
 
