@@ -43,6 +43,28 @@ function knowersOf(payloads: readonly CommitPayload[], observation: Observation)
 }
 
 describe('createCampaign', () => {
+  it('TRN-057: once the campaign is written, the root turn’s opening narration starts, based on its setup set', async () => {
+    const { deps, view, db } = await arrival();
+    const point = {
+      branchId: view.currentBranchId,
+      turnId: view.headTurnId,
+      beforeStage: 'end' as const,
+    };
+    const [setup] = readSetsForRead(db, point);
+    expect(deps.started).toEqual([
+      {
+        campaignId: view.campaignId,
+        branchId: view.currentBranchId,
+        turnId: view.headTurnId,
+        basedOnSetId: setup?.set.id,
+      },
+    ]);
+    // A command that is refused starts nothing.
+    const refused = await createCampaign(deps, arrivalCommand({ scenarioId: 'scenario.nowhere' }));
+    expect(refused.ok).toBe(false);
+    expect(deps.started).toHaveLength(1);
+  });
+
   it('SCH-117: creating a campaign from Arrival gives a setup set whose commits, in order, match the snapshot', async () => {
     const { payloads } = await arrival();
     expect(payloads).toMatchSnapshot();

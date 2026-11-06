@@ -30,14 +30,8 @@ import {
 } from '../storage';
 import { campaignViewOf } from './campaign-view';
 import { type CheckedCommand, checkCommand } from './check-command';
+import type { Narrations, TurnLogger } from './deps';
 import { canonEntries, templateFiles } from './snapshot';
-
-/** The logger methods the module uses; the server's pino logger fits it (CONV-071). */
-export type TurnLogger = {
-  info: (fields: Record<string, unknown>, message: string) => void;
-  warn: (fields: Record<string, unknown>, message: string) => void;
-  error: (fields: Record<string, unknown>, message: string) => void;
-};
 
 export type CreateCampaignDeps = {
   store: CampaignStore;
@@ -47,6 +41,8 @@ export type CreateCampaignDeps = {
   /** A new UUID on each call; tests pass a seeded one. */
   newId: () => string;
   logger: TurnLogger;
+  /** Starts the root turn's opening narration once the campaign is written (TRN-057). */
+  narrations: Pick<Narrations, 'start'>;
 };
 
 /** The IDs the campaign record, root turn, setup set, and branch Main take. */
@@ -183,8 +179,9 @@ async function writeCampaign(
  * Creates a campaign from a pack's scenario with its premade PC, or returns
  * `validation_failed` with every issue in the command (CON-112), or
  * `illegal_state_change` when the setup set does not validate (TRN-070). The root turn is
- * left `narrating`, for its opening narration. Setup's warnings are logged. Implements
- * SCH-110, SCH-111, SCH-112, CON-112, CSET-020, and CTX-005.
+ * left `narrating`, and its opening narration starts in the background. Setup's warnings
+ * are logged. Implements SCH-110, SCH-111, SCH-112, CON-112, CSET-020, CTX-005, and
+ * TRN-057.
  */
 export async function createCampaign(
   deps: CreateCampaignDeps,
@@ -229,5 +226,9 @@ export async function createCampaign(
   deps.logger.info({ campaignId: record.id, packId: record.packId }, 'campaign created');
   const db = deps.store.openCampaign(record.id);
   if (!db.ok) throw new Error(`campaign ${record.id} was created but would not open`);
-  return ok(campaignViewOf(deps.store, db.value));
+  const view = campaignViewOf(deps.store, db.value);
+  // Implements TRN-057: the root turn narrates the scenario's opening like any turn.
+  const { campaignId, branchId, turnId, setId: basedOnSetId } = ids;
+  deps.narrations.start({ campaignId, branchId, turnId, basedOnSetId });
+  return ok(view);
 }
