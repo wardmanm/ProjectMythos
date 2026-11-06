@@ -499,20 +499,72 @@ export type ContextBuilder = {
 - **CTX-106** Template layers resolve by priority; locked content cannot be overridden;
   a missing variable fails rendering; snapshot tests cover every engine template.
 
+## Traps
+
+- **Strict mode does not check names inside block helpers (CTX-001, `helpers.ts`).**
+  Handlebars throws on a missing `{{name}}`, but looks up a helper's parameters leniently,
+  so `{{#if scene.placee}}` or `{{#each turnz}}` is silently empty. (`join` and `label`
+  check their own parameters.) View models therefore carry every key, with null for
+  nothing, and a test checks the narrator's has no `undefined`; a misspelled name in an
+  override's `#if` still goes unnoticed.
+- **A view key named like a helper calls the helper (CTX-002, `narrator-view.ts`).**
+  `{{label}}` with no parameters calls the `label` helper, not the view's `label` key,
+  so no view model may have a key named `join` or `label`. The content-settings
+  partial's category name is `name` for this reason.
+- **Each tier counts the separator before it (PRV-072, `tiers.ts`).** Tiers that share a
+  message are joined by a blank line, and a tier's estimate includes the one before it.
+  Left out, the tiers' estimates add up to less than the whole prompt's, and a prompt the
+  budgets say fits can fail PRV-072's check.
+- **The verbatim tail can move back (CTX-041, `budget.ts`).** The boundary is worked out
+  afresh for every prompt from the transcript's budget, which is what the fixed tiers
+  leave, and the turn tier changes size every turn. A long input can roll a chunk out
+  and a short one on the next turn bring it back, changing the prefix twice. Nothing may
+  assume a rolled chunk stays rolled, such as writing a chunk's summary only when it
+  first rolls out; CTX-042 writes it when the chunk is complete.
+- **A partial file needs its final newline (CTX-003).** Handlebars drops the line break
+  after a `{{> name}}` on a line of its own, so a partial whose file does not end with a
+  newline runs into the line after it.
+
 ## Decisions
 
 | Question | Decision | Rejected and why | Decided by |
 |---|---|---|---|
 | 10% of what is CTX-030's margin? | Of the input budget: `floor((contextWindow − maxOutputTokens) × 0.9)`. The margin covers error in the input token estimate (PRV-072). | 10% of the whole window: a larger margin that also covers output, which `maxOutputTokens` already reserves. | owner |
 | What does a `contextBudget` cap on a fixed tier do (CTX-031)? | Nothing: caps limit trimmable tiers only, so fixed tiers always get exactly what they need. | Failing with `context_overflow` when a fixed tier needs more than its cap: every call of that role would fail over a setting that cannot help. | owner |
+| How does a top-level template mark where each tier starts (CTX-003)? | A line `<!-- tier: <name> -->` starts each tier of the role's recipe, once each and in tier order. Code splits the rendered text at these lines and trims each tier. A missing, repeated, out-of-order, or unknown marker fails with `validation_failed`, naming the file and its layer. | One file per tier: twelve files per role, and a layer could not change two tiers in one place. Code writing every tier but the instructions: the world, scene, and turn tiers' wording could not be changed. | owner |
+| How is room kept for the format instruction (CTX-030, PRV-072)? | The budget takes `reservedTokens`. It comes off the input budget before the tiers share it, has a line of its own in a `context_overflow` message, and counts in the PRV-072 check. The narrator reserves 0, because `streamText` adds no format instruction. Each structured role's reservation arrives with its recipe (Open). | A per-method reservation written now: no structured role has a recipe until phase 3. | owner |
+| What happens when the scene is still over its budget after its last trim (CTX-034)? | Its fully trimmed form is kept whole, like a fixed tier, and the transcript makes up the difference. If the fixed tiers and that scene still do not fit, `context_overflow` lists the scene with the fixed tiers. | Dropping uninvolved characters from the scene: the narrator would no longer know who is there. | owner |
+| What of text before a top-level template's first tier marker (CTX-003)? | It fails like a bad marker, because it would belong to no tier. A note for the template's reader goes in a Handlebars comment, `{{!-- … --}}`, which renders nothing. | Adding it to the first tier: text would move silently from where its author put it. | Claude (ruling) |
+| What does `{{> name}}` resolve to, and how does a prompt name its files (CTX-003, CTX-090)? | `partials/<name>.md`, found in the same six layers. A name is lowercase words, digits, and hyphens, with `/` between folders. `BuiltPrompt.templates` lists each file used as `<layer>:<path>`, sorted with `cmp`, the layers named `campaign`, `model-profile`, `tone-profile`, `pack`, `ruleset`, and `engine`. | A partial anywhere in a layer's folder: `{{> tone}}` could mean two files. | Claude (ruling) |
+| What happens when a template fails (CTX-001, CTX-106)? | A missing variable, a syntax error, an unknown helper or partial, a partial that includes itself, a partial block or inline partial, or a bad tier marker is `validation_failed`, naming the file it is in and that file's layer. When every file the prompt used is the engine's, it throws instead: the shipped templates are broken (CONV-041). | Falling back to the engine's file: the player's override would stop working without a word. | Claude (ruling) |
+| What keys does `label` take (CTX-002)? | `result.<tier>` and `effect.<level>`, and `harm.<n>` from 1 to one past the ruleset's last level, which is its `fatalName`. Any other key fails rendering. | Labels as view-model data: every role's view model would carry the same ruleset labels. | Claude (ruling) |
+| What does the narrator's scene tier hold of the place? | Its display name and its runtime `description`, never its canon Markdown, which is truth (SCH-021). | Its common knowledge (JRN-031): the narrator would read lore as something the PC sees in the room. | Claude (ruling) |
+| Who is "involved" in phase 1 (CTX-034, CSET-042)? | The PC, and every character the input names by the name the PC knows them by, with or without a leading article, present or not. Phase 1 has no ruling to name targets, and no voiced lines (CTX-060). | Only present characters: a minor the player names while elsewhere would not tighten the prompt. | Claude (ruling) |
+| How does the scene trim (CTX-034)? | One step at a time: each uninvolved character's personality, in listing order, then each one's appearance cut to its first sentence, its "one line". A step that would remove nothing is skipped. Each trimmed item names its entity ID, such as `personality of npc.odette`. | Trimming all personalities at once: the scene would lose more than it needs to fit. | Claude (ruling) |
+| What do a phase-1 prompt's tiers and reports hold (CTX-010, CTX-090)? | Only the recipe's tiers. The narrator's state and knowledge tiers arrive with their content (09-context §11), so they have no report, and the scene and transcript share the budget by their own weights, 15 and 45. A tier with no content, such as the transcript at turn zero, gets no message and reports an estimate of 0 outside the cached prefix. | Empty state and knowledge tiers with weights: their share would only spill to the others. | Claude (ruling) |
+| What may `preview` render (CTX-008)? | A template path matching `^[a-z0-9-]+(/[a-z0-9-]+)*\.md$`, so it never reaches outside a layer's folder. In phase 1 it builds the narrator prompt at the point, through the same budgets, and shows each message under a line naming its role and tiers, for `narrator.md` or any file that prompt used. Any other file is `not_found`. | Rendering a partial alone: it would have no context to render against. | Claude (ruling) |
 
 ## Open
 
-- **The format instruction is outside the budget (CTX-030, PRV-050 step 3).** The
-  structured-output pipeline adds its format instruction after the context module has
-  budgeted the prompt, as a system message after the leading system messages, between
-  the `world` message and the `scene` message of CTX-010's layout. For `json-schema` and
-  `tool-call` it is one line; for `prompt-only` it holds the whole JSON Schema and an
-  example, about 8,500 characters for the ruling, and a retry adds the failed answer and
-  its problems. P1-T18 should reserve room for it when it budgets a structured role's
-  prompt.
+- **Structured roles' format instructions are not reserved yet (CTX-030, PRV-050 step
+  3).** The structured-output pipeline adds its format instruction after the context
+  module has budgeted the prompt, as a system message after the leading system messages,
+  between the `world` message and the `scene` message of CTX-010's layout. The budget
+  reserves `reservedTokens` for it (Decisions), and the narrator reserves 0. Phase 3,
+  which brings the first structured recipe, computes the reservation for each structured
+  role from its method: one line for `json-schema` and `tool-call`, and for
+  `prompt-only` the whole JSON Schema and an example, about 8,500 characters for the
+  ruling (roughly 2,430 tokens). A retry's failed answer and its problem list are still
+  unreserved.
+- **Characters are listed by ID, not by when they joined (CTX-012).** In phase 1 everyone
+  present was there when the scene started, so they tie. Once characters can arrive
+  mid-scene (extraction, phase 4), the order they joined must be tracked.
+- **The transcript holds inputs and narration only (CTX-040).** Roll lines arrive with
+  rolls in phase 3, and OOC turns are not left out after `oocTurnsKept` (TRN-020),
+  because phase 1 accepts only in-character input. Rolled-out turns are simply left out
+  until chunk summaries arrive in phase 2, and the inspector lists them as trimmed.
+- **The view model is not kept (CTX-006).** Neither `BuiltPrompt` nor the model call
+  record has a field for it, so the inspector can show only the rendered prompt.
+- **Folding at a read point is written twice (TRN-060).** `context/read.ts` and
+  `turn/campaign-view.ts` each read a point's sets, order them with `orderSets`, and fold
+  them; P1-T19's read point will be a third. One helper would keep them the same.
