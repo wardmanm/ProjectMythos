@@ -501,3 +501,14 @@ export type ContextBuilder = {
 |---|---|---|---|
 | 10% of what is CTX-030's margin? | Of the input budget: `floor((contextWindow − maxOutputTokens) × 0.9)`. The margin covers error in the input token estimate (PRV-072). | 10% of the whole window: a larger margin that also covers output, which `maxOutputTokens` already reserves. | owner |
 | What does a `contextBudget` cap on a fixed tier do (CTX-031)? | Nothing: caps limit trimmable tiers only, so fixed tiers always get exactly what they need. | Failing with `context_overflow` when a fixed tier needs more than its cap: every call of that role would fail over a setting that cannot help. | owner |
+
+## Open
+
+- **The format instruction is outside the budget (CTX-030, PRV-050 step 3).** The
+  structured-output pipeline adds its format instruction after the context module has
+  budgeted the prompt, as a system message after the leading system messages, between
+  the `world` message and the `scene` message of CTX-010's layout. For `json-schema` and
+  `tool-call` it is one line; for `prompt-only` it holds the whole JSON Schema and an
+  example, about 8,500 characters for the ruling, and a retry adds the failed answer and
+  its problems. P1-T18 should reserve room for it when it budgets a structured role's
+  prompt.

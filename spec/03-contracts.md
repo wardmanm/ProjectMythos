@@ -1435,6 +1435,7 @@ import { StatBlockSchema, StatIdSchema, StatusTagSchema } from './rules';
 import { AgeCategorySchema } from './entities';
 import { RetrievedObservationSchema } from './memory';
 import { ModelRoleSchema } from './models';
+import { AppErrorSchema } from './errors';
 import { MachineConfigSchema, StructuredOutputMethodSchema } from './machine-config';
 import {
   PackIdSchema,
@@ -1656,6 +1657,7 @@ export const ModelCallAttemptSchema = z.object({
   method: z.enum(['json-schema', 'tool-call', 'prompt-only', 'text']),
   rawOutput: z.string(),
   thinking: z.string().nullable(),
+  error: AppErrorSchema.nullable(), // why the provider gave no answer; null when it answered
   parseError: z.string().nullable(),
   schemaIssues: z.array(z.string()),
   semanticIssues: z.array(SemanticIssueSchema),
@@ -1770,6 +1772,7 @@ All paths are under `/api`.
 | What are an `illegal_state_change` error's `details`? | `{ issues: SemanticIssue[] }`, like `validation_failed` (CON-091), every issue at once. Each `path` is a dotted path into the set's entry, such as `commits.2.payload.to`. | A bare array: the client would read the two codes' details differently. | Claude (ruling) |
 | Which sets may hold an `override.record` (TRN-080)? | Any set with origin `player`, and any set with a non-null `supersedesSetId`. A regenerated set keeps origin `model` (or `engine` for resolution, 06-turn-engine §7.1) and still records the player's instruction. | Only sets with origin `player`: a regeneration's `override.record` would be rejected. Giving a regenerated set origin `player`: the model wrote its content, and origin records who did. Keeping the instruction on the job: overrides would leave the commit log. | owner |
 | Which theme and content settings does a new campaign get (`CreateCampaignCommand`, CON-112)? | The theme is the command's `themeId`, else the tone profile's, else `theme.house` (UI-030); a `themeId` the pack does not offer is an issue at `themeId`. The content settings are the command's, else the tone profile's, written as the first `content_settings` version (CSET-020). Both are resolved before anything is written. | Falling back to the tone profile's theme when the command's is unknown: the player would get a look they did not choose without being told. | Claude (ruling) |
+| How is an attempt that failed at the provider recorded (`ModelCallAttempt`, PRV-054)? | In its own field, `error`: the `AppError` the call got instead of an answer, such as a timeout, a 5xx, or a rejected request, and null when the provider answered. Each run the queue retries is an attempt, so a call that timed out twice and then answered has three. | Writing it into `parseError`: the field would mean two things. Recording only attempts the provider answered: a call that failed at the provider would have a record that does not say why. | owner |
 
 ## Open
 

@@ -609,7 +609,9 @@ export type StreamText = (options: StreamTextOptions) => Promise<Result<Streamed
      campaign and ruleset.
   2. **Adapt** — transform the JSON Schema for the profile's provider and method
      (PRV-052).
-  3. **Instruct** — the engine appends a format instruction to the prompt. For
+  3. **Instruct** — the engine adds a format instruction to the prompt, as a system
+     message of its own right after the prompt's leading system messages, so a floor
+     repeated at the end of the task tier stays nearest the output (CSET-042). For
      `prompt-only` this includes the JSON Schema and a minimal example; for the other
      methods, a one-line reminder. Templates never contain format instructions
      (09-context).
@@ -626,9 +628,16 @@ export type StreamText = (options: StreamTextOptions) => Promise<Result<Streamed
 - **PRV-051** Transient provider errors are retried by the queue (§6), separately from
   validation retries in step 7.
 - **PRV-052** Schema adaptation per provider is a pure function with unit tests. For
-  Anthropic it sets `additionalProperties: false` on every object and removes
-  unsupported keywords (length and numeric-range constraints). Other adapters pass the
-  schema through unless their README documents a limitation.
+  Anthropic's `json-schema` and `tool-call` methods it sets `additionalProperties:
+  false` on every object; removes length and numeric-range constraints (`minLength`,
+  `maxLength`, `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`,
+  `multipleOf`), `maxItems`, a `minItems` above 1, and `$schema`; turns `oneOf` into
+  `anyOf`; and drops a `format` Anthropic does not list, a `pattern` with
+  backreferences, lookaround, or word boundaries, and an `enum` of values that are not
+  strings, numbers, booleans, or null. What adaptation cannot change, such as a
+  recursive schema or one past Anthropic's complexity limits, is refused by the
+  provider and falls back under PRV-053. `prompt-only`, and the other adapters, get the
+  schema unchanged unless an adapter's README documents a limitation.
 - **PRV-053** If a provider rejects the schema itself (`provider_rejected` on a
   `json-schema` or `tool-call` request), the call is retried once as `prompt-only` and
   the switch is recorded in the model call record.
@@ -809,6 +818,11 @@ export type JobQueue = {
 - **Anthropic's thinking is empty unless asked for (PRV-046).** Current models default
   to `display: 'omitted'` and stream thinking blocks with no text, so a profile with
   thinking `on` must send `display: 'summarized'`, or `thinking` is always null.
+- **`jsonrepair` repairs almost anything (PRV-050 step 5, `structured-output.ts`).** It
+  turns `{"a": }}}` into `{"a": null}` and `{"a": @#$}` into `{"a": "@#$"}`, so a broken
+  answer seldom ends as a parse error: the Zod schema is what rejects it. A test that
+  needs a parse error must use text `jsonrepair` refuses, such as `{"a": "x" : "y"}` or no
+  `{` at all.
 - **An Anthropic spend-cap 429 is not worth retrying (PRV-013).** A usage tier's monthly
   spend cap answers with a 429 that has no `retry-after` and keeps failing until access
   resumes. PRV-013 calls every 429 retryable, so the queue retries it up to
@@ -872,6 +886,16 @@ export type JobQueue = {
 | How does `health` check an Anthropic provider (PRV-091)? | `GET /v1/models?limit=1`, which needs a working key, timed with the `TimeSource`. A 401 or 403 is `reachable: false`, with a message that says to check the key. | A one-token Messages call: it costs money, and it needs a model name, which a provider config does not have. | Claude (ruling) |
 | What is an `anthropic` provider's `baseUrl`? | The API's origin without `/v1`, as Anthropic's SDKs take it, and `https://api.anthropic.com` when absent. A trailing slash is ignored. | Including `/v1`, as `openai-compatible` does: an address copied from an Anthropic SDK's settings would lack it. | Claude (ruling) |
 | How does the Anthropic adapter tell that a 400 is about thinking (PRV-013)? | It does not: every 400 on a profile whose thinking is `off` gets the hint, worded to fit any 400: "This profile turns thinking off, which some Anthropic models do not allow; if that is the problem, set the profile's thinking to provider-default in Settings." | Matching Anthropic's message text: code never branches on message text (CONV-042), and a rewording would drop the hint with no test failing. | Claude (ruling) |
+| Where does the format instruction go (PRV-050 step 3)? | In a system message of its own, right after the prompt's leading system messages. A floor repeated at the end of the task tier (CSET-042) then stays nearest the output, and the instruction, which is the same on every call for one schema and method, stays in the cached prefix. Retry feedback still goes at the end. | A user message after the task tier: the format text, the whole schema for `prompt-only`, would follow the repeated floor, and would be processed again on every call. | owner |
+| When does PRV-053 switch to `prompt-only`, and what does the record say? | On any `provider_rejected` from a `json-schema` or `tool-call` request, once per call: code cannot tell a refused schema from another 4xx (CONV-042), and a needless switch costs one call. The switch is not a validation retry, so the call may send four requests. A call that succeeds after it has outcome `fallback`. | Switching only on a schema error: no error code says so. Counting the switch as a retry: a call would lose a validation retry to a provider limit. | Claude (ruling) |
+| What does a refusal do (CSET-050)? | `callStructured` returns `provider_rejected`, without a validation retry, since a refusal is no format problem; its message leaves the model's words out, because callers log it (CONV-072). `streamText` returns `ok` with `finishReason: 'refusal'`, and its record's outcome is `failed`. | Feeding a refusal back as a parse error: two more calls that the model would refuse too. | Claude (ruling) |
+| What does a model call record hold (PRV-054, ARCH-060)? | One record per call, written when it ends. Each run of the adapter is an attempt, the queue's transient retries (PRV-051) included, with the error in `error` when the provider gave no answer. `messages` are those of the last request sent: the caller's, the format instruction, and each retry's feedback. A call that reaches no model, because its role is unassigned or machine config failed to load, has no record. A campaign that no longer opens is logged and its record dropped; the caller still gets its result. | A record per attempt: the inspector would have to put a call back together. The first request's messages: the retries' feedback would be lost. | Claude (ruling) |
+| What is in `model_output_invalid`'s `details` (PRV-050 step 8)? | `{ attempts }`: for each attempt, `attempt`, `method`, `error`, `parseError`, `schemaIssues`, and `semanticIssues`. | The last attempt's problems only: the turn's failure card could not show why the earlier ones failed. | Claude (ruling) |
+| What does a profile with `streaming: false` send to `onDelta` (PRV-045)? | One delta, with whatever text came back, partial text after a cancel included, so the deltas always add up to `StreamedText.text`. The adapter gets no `onDelta`. | Nothing after a cancel: the turn would keep text the player never saw. | Claude (ruling) |
+| Which roles does `routeRole` fall back for (PRV-001, PRV-009, PRV-015)? | `npc-voice` to the narrator's assignment and `speech-segmenter` to the extractor's. An unassigned `illustrator` is `not_configured`: its fallback is templates, not a model, so its caller (phase 9) checks the role before calling. | Routing the illustrator to another role: no role writes image prompts in its place. | Claude (ruling) |
+| What does a role's `sampling` do to its profile's (PRV-001)? | It overrides it key by key: an adjudicator that sets only `temperature` keeps the profile's `presencePenalty`. | Replacing the whole `sampling`: setting one value in a role would quietly drop the profile's others. | Claude (ruling) |
+| What does calibration fold in (PRV-071)? | Each attempt the provider answered, unless its `finishReason` is `cancelled`, comparing `estimateTokens` over all the message text sent with the reported `inputTokens`. The call does not wait for the save, and a failed save is logged. | Once per call: a call with retries would calibrate from one of several prompts. Waiting for the save: every call would wait for a file write. | Claude (ruling) |
+| What does the Anthropic adaptation do with a constraint it removes (PRV-052)? | Drops it. Zod still checks the answer, and a violation comes back to the model in the retry feedback (PRV-050 step 7). | Copying it into the field's `description`, as Anthropic's SDK helpers do: more text in every schema for a hint the retry already gives. | Claude (ruling) |
 
 ## Open
 
@@ -886,19 +910,15 @@ export type JobQueue = {
   deterministic placeholder vectors, whatever the mode (PRV-080, PRV-081). Retrieval
   tests that need chosen similarities arrive in phase 4, which adds scripted and fixture
   embeddings.
-- **Retrying a streamed call after its text has been sent (PRV-051, PRV-047).**
-  `runInteractive` retries any error the work returns with `retryable: true`
-  (Decisions). A streamed call that fails after some text has reached the player would
-  then stream the narration a second time. P1-T14 must return such an error with
-  `retryable: false`.
 - **`resume()` opens every campaign (PRV-062).** It opens each campaign's database at
   server start to read its stored jobs, and the campaign store keeps every connection
   open until shutdown. The queue cannot close one, since it does not know whether
   anything else is using it.
-- **Cancelled calls and calibration.** A cancelled call's usage is an estimate made with
-  the ratio calibration would correct (Decisions), so folding it in would pull the ratio
-  toward itself. P1-T14's `streamText` and `callStructured` skip calibration when
-  `finishReason` is `'cancelled'` (PRV-071).
+- **Estimated usage still feeds calibration (PRV-071).** An adapter estimates a count
+  its provider leaves out from the profile's own `charsPerToken` (Decisions), and
+  `TextResponse` does not say which counts are estimates. Calibrating from such a call
+  pulls the ratio back toward the profile's own, so a provider that never reports
+  usage leaves its profile on its starting ratio. Only cancelled calls are skipped.
 - **A stray `</think>` cannot take back streamed text.** Some chat templates open the
   `<think>` block in the prompt, so the model writes its reasoning and then `</think>`
   with no opening tag. By then the reasoning has gone to `onDelta` as answer text; the
@@ -919,9 +939,14 @@ export type JobQueue = {
 - **No `anthropic-workspace-id`.** Anthropic's `anthropic-workspace-id` header picks the
   workspace for a credential that can act on more than one. An `anthropic` provider has no
   field for it, so the adapter never sends it; adding one changes `ProviderConfigSchema`.
-- **PRV-052 leaves out some of Anthropic's limits.** Its structured outputs, read
-  2026-11-05, also refuse array constraints beyond a `minItems` of 0 or 1 (so `maxItems`
-  too), recursive schemas, regex backreferences, lookaround, and word boundaries, enums of
-  complex values, and external `$ref`. A request may hold at most 20 strict tools, 24
-  optional parameters, and 16 parameters with union types. P1-T14's adaptation should
-  handle these.
+- **Limits the Anthropic adaptation cannot fix (PRV-052, PRV-053).** A request may hold
+  at most 20 strict tools, 24 optional parameters, and 16 parameters with union types
+  (an `anyOf` or a type array such as `["string", "null"]`), across all its strict
+  schemas, and refuses recursive schemas and complex regex quantifiers. Removing any of
+  these would change what the schema means, so such a schema is sent as it is, refused
+  with a 400, and retried as `prompt-only`.
+- **A union at the root of an Anthropic schema is unverified (PRV-052).** The ruling's
+  schema is a discriminated union, so its root becomes an `anyOf`. Anthropic's
+  structured-outputs page, read 2026-11-06, shows only object roots and says nothing
+  about a union root. If it is refused, PRV-053 falls back to `prompt-only`; the first
+  real adjudication call (phase 3), or a probe with the ruling schema, will show it.

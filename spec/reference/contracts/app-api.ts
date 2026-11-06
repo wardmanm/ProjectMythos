@@ -4,6 +4,7 @@ import { StatBlockSchema, StatIdSchema, StatusTagSchema } from './rules';
 import { AgeCategorySchema } from './entities';
 import { RetrievedObservationSchema } from './memory';
 import { ModelRoleSchema } from './models';
+import { AppErrorSchema } from './errors';
 import { MachineConfigSchema, StructuredOutputMethodSchema } from './machine-config';
 import {
   PackIdSchema,
@@ -225,6 +226,7 @@ export const ModelCallAttemptSchema = z.object({
   method: z.enum(['json-schema', 'tool-call', 'prompt-only', 'text']),
   rawOutput: z.string(),
   thinking: z.string().nullable(),
+  error: AppErrorSchema.nullable(), // why the provider gave no answer; null when it answered
   parseError: z.string().nullable(),
   schemaIssues: z.array(z.string()),
   semanticIssues: z.array(SemanticIssueSchema),
