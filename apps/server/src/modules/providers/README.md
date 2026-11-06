@@ -1,12 +1,12 @@
 # providers
 
-Everything between the engine and a model. So far: the adapter interface every provider
+Everything between the engine and a model: the adapter interface every provider
 implements, the registry that builds an adapter from machine config, the mock adapter
 every test uses, the Ollama, OpenAI-compatible, and Anthropic adapters and the HTTP
-helpers they share, token estimation with its calibration, and the job queue. The
-structured-output pipeline (P1-T14) arrives later. The adapters import `config`, for
-`DataDirEnv` and `resolveSecret`; the queue imports `config`, `storage`, and `events`.
-ARCH-021 allows all three.
+helpers they share, token estimation with its calibration, the job queue, and the model
+calls every other module makes: `callStructured` and `streamText`. The adapters import
+`config`, for `DataDirEnv` and `resolveSecret`; the queue imports `config`, `storage`,
+and `events`, and the model calls `config` and `storage`. ARCH-021 allows all three.
 
 ## Public API (`index.ts`)
 
@@ -31,6 +31,15 @@ ARCH-021 allows all three.
   opens it once and logs `problem` if the file was corrupt. A `Calibration` has:
   - `charsPerToken(profile)`, the ratio to estimate with;
   - `calibrate(profile, estimated, reported)`, which folds one call into it.
+- `createModelCalls(options)` returns `{ callStructured, streamText }` (see
+  [Model calls](#model-calls)), with their types from `structured.ts`:
+  `StructuredCallOptions`, `CallStructured`, `StreamTextOptions`, `StreamText`,
+  `StreamedText`, and `PromptReport`.
+- `routeRole(config, role)` gives a role's `RoleRoute`: its profile, provider, and
+  sampling, or `not_configured`. The composition root can give it to the context module
+  too (CTX-110).
+- `toJsonSchema(schema)` and `adaptSchema(jsonSchema, providerType, method)` are steps 1
+  and 2 of the pipeline, which the probe uses too (PRV-092).
 
 ## The mock
 
@@ -288,6 +297,75 @@ How jobs run:
 - **Events** (PRV-065): every status change is written to storage first, then published
   as `job.updated` on the job's campaign.
 
+## Model calls
+
+No module calls an adapter for a model's answer: it calls `callStructured` or
+`streamText` (05-providers §5), except the probe (PRV-092). `createModelCalls(options)` is
+called once, by the composition root, with:
+
+- `config`, the `ConfigStore`, read once per call (PRV-004);
+- `queue`, for `runInteractive` and `cancel`;
+- `adapterFor(provider)`, which in production is `createAdapter(provider, deps)`, and in
+  tests returns one mock;
+- `campaigns` (`openCampaign`), where records are stored; `calibration`; `timeSource`;
+  and `logger`.
+
+**Every call** starts by routing its role (`routeRole`, PRV-001). An unassigned role is
+`not_configured`. `npc-voice` uses the narrator's assignment and `speech-segmenter` the
+extractor's; the role's `sampling` overrides the profile's key by key. A call that fails
+here reached no model and has no record. Then each adapter call runs:
+
+- with `job: null`, as an interactive job on the provider's device (`runInteractive`).
+  Aborting the caller's `signal` calls `cancel(jobId)`, which aborts the signal the
+  adapter call runs under (PRV-061);
+- with a `JobContext`, in that job's own slot, under both signals, starting no job of its
+  own (PRV-067).
+
+Each run is an attempt, so the queue's transient retries (PRV-051) are recorded too.
+Each attempt the provider answered, unless cancelled, calibrates the profile from
+`estimateTokens` over the message text sent and the reported `inputTokens` (PRV-071),
+without waiting for the save. When the call ends, one `ModelCallRecord` is written to
+the campaign's `model_calls` (ARCH-060), not as a commit (ARCH-061). It holds every
+attempt, a provider failure in its `error`, the messages of the last request sent, and
+the caller's `PromptReport`. A campaign that no longer opens is logged, and the result
+still returned. Outcomes: `success`; `fallback`, which means it succeeded after PRV-053's
+switch; `failed`; and `cancelled`.
+
+**`callStructured(options)`** runs PRV-050's steps:
+
+1. `toJsonSchema` converts the Zod schema once per schema object (`schema-adapt.ts`). A
+   schema that cannot convert, such as one with a transform, throws (CON-004).
+2. `adaptSchema` closes every object and removes what Anthropic refuses, for Anthropic's
+   `json-schema` and `tool-call` only (PRV-052). Every other case gets the schema as it
+   is.
+3. The format instruction (`structured-output.ts`) is a system message right after the
+   leading system messages. For `json-schema` and `tool-call` it is one line; for
+   `prompt-only` it holds the unadapted schema and a minimal example built from it.
+4. The answer text has code fences stripped. The text from the first `{` to the last `}`
+   is parsed, then repaired with `jsonrepair` if that fails. It is then parsed with the
+   schema, issues listed as `path: message`, and checked with `semanticCheck`.
+5. A problem is fed back: the answer goes back as the assistant's message, followed by a
+   user message listing every problem, for at most two retries. After that the call
+   returns `model_output_invalid`, with each attempt's problems in `details.attempts`.
+
+A `provider_rejected` on `json-schema` or `tool-call` is retried once as `prompt-only`,
+sending the request with a copy of the profile (PRV-053). This is not a validation
+retry. Other errors are returned as they are. An answer cut off by a cancel is
+`cancelled`. A refusal is `provider_rejected`, with no retry, and leaves the model's
+words out of the message (CSET-050). Only a value that passed the schema and
+`semanticCheck` is ever returned (CONV-032).
+
+**`streamText(options)`** sends plain text, such as narration:
+
+- **Streaming:** a profile with `streaming: true` gets each delta forwarded to `onDelta`
+  as it arrives. One with streaming off gets the returned text, partial text included, as
+  one delta (PRV-045). Adapters keep thinking out of the deltas (PRV-046).
+- **Errors:** an error after any delta reached `onDelta` comes back with `retryable:
+false`, so the queue never streams the text twice.
+- **Cancel:** a cancel returns `{ text, finishReason: 'cancelled' }` with the text so
+  far (PRV-047). A refusal is returned as `ok` with `finishReason: 'refusal'` and
+  recorded as `failed`.
+
 ## Files
 
 - `types.ts`: the copied interface types.
@@ -306,6 +384,18 @@ How jobs run:
   recorder that stores each change and then publishes it.
 - `queue-testing.ts`: the queue tests' helpers (a fake timer, held runs, an editable
   config, campaigns in temporary folders). Not exported.
+- `structured.ts`: the 05-providers §5 types, copied verbatim above its divider line
+  (never edit them here), then `createModelCalls`, `callStructured`'s loop, and
+  `streamText`.
+- `model-call.ts`: what both calls share: routing, each adapter call in its job's slot or
+  as an interactive job, attempts, calibration, and the record.
+- `structured-output.ts`: the pure steps: the format instruction and its example,
+  extracting JSON, validation, and retry feedback.
+- `schema-adapt.ts`: `toJsonSchema` and `adaptSchema`.
+- `role-routing.ts`: `routeRole`.
+- `records.ts`: attempts, outcomes, and storing the record.
+- `structured-testing.ts`: the model calls' test harness: a real queue and campaign, the
+  mock behind every provider, and a calibration that only remembers. Not exported.
 - `adapters/http.ts`: `sendRequest`, `parseWire`, `resolveApiKey`, and
   `RateLimitDetailsSchema`.
 - `adapters/http-errors.ts`: the PRV-013 error mapping, messages, and `retry-after`.
@@ -328,14 +418,19 @@ How jobs run:
 
 ## Governing spec
 
-- [05-providers.md](../../../../../spec/05-providers.md) §3, §4, §6, §7, §8, and its
-  closing sections.
-- [01-architecture.md](../../../../../spec/01-architecture.md): ARCH-080 to ARCH-083
-  (§6.1), ARCH-131, and ARCH-133.
+- [05-providers.md](../../../../../spec/05-providers.md) §2.2 (PRV-001), §3 to §8, and
+  its closing sections.
+- [03-contracts.md](../../../../../spec/03-contracts.md) §14.1: the model call record,
+  its attempts, and `ChatMessage`.
+- [01-architecture.md](../../../../../spec/01-architecture.md): ARCH-060 and ARCH-061
+  (§4.4, model call records), ARCH-080 to ARCH-083 (§6.1), ARCH-131, and ARCH-133.
 - [06-turn-engine.md](../../../../../spec/06-turn-engine.md): TRN-012, resuming
   background jobs on server start.
 - [09-context.md](../../../../../spec/09-context.md): CTX-010 and CTX-011, the message
-  layout the Anthropic adapter's breakpoints follow.
-- [02-conventions.md](../../../../../spec/02-conventions.md): CONV-113 and CONV-114.
+  layout the Anthropic adapter's breakpoints follow, and CTX-090, the records.
+- [13-content-settings.md](../../../../../spec/13-content-settings.md): CSET-042, the
+  floor the format instruction stays ahead of, and CSET-050, refusals.
+- [02-conventions.md](../../../../../spec/02-conventions.md): CONV-032, CONV-113, and
+  CONV-114.
 - [ADR-010](../../../../../spec/decisions/ADR-010-no-vendor-sdks.md): adapters use
   `fetch`, not vendor SDKs.
