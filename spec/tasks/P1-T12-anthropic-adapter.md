@@ -84,10 +84,10 @@ PRV-010, PRV-011, PRV-012, PRV-013, PRV-040, PRV-041, PRV-042, PRV-043, PRV-045,
     - 3: `pnpm check` passes, below.
   - Mike's thinking-off message has its test: `PRV-013: a model that cannot turn thinking
     off gets Anthropic's explanation and the setting to change`.
-  - `pnpm check` passes, stacked on P1-T11's `8d60250` and not yet rebased onto `main`.
-    The workspace has `Tests  706 passed (706)` and `spec/reference` `Tests  271 passed (271)`,
-    and it ends with `Docs check passed: 834 requirements, 25 tasks (13 done), 20 ADRs, 82
-    markdown files, 883 citations in code.`
+  - `pnpm check` passes after rebasing onto P1-T11, with P1-T13 and P1-T17 merged before
+    it. The workspace has `Tests  847 passed (847)` and `spec/reference`
+    `Tests  271 passed (271)`, and it ends with `Docs check passed: 834 requirements, 25
+    tasks (16 done), 20 ADRs, 83 markdown files, 1069 citations in code.`
 - **Rulings:**
   - **Owner's decisions of 2026-11-05** (`P1-T12: spec: owner: Anthropic version,
     sampling, thinking, and tool-call`): three 05-providers Decisions rows, for the
