@@ -117,18 +117,23 @@ own (CONV-015): `src/index.ts` is the only public entry point.
   - `minorInvolved`, `effectiveSettings`, and `usesExplicitRoles` apply automatic
     tightening (CSET-042, CSET-043);
   - `renderContentSettings` renders the default partial from `DEFAULT_WORDING`, one line
-    per category in `CONTENT_CATEGORIES`, then lines and veils (CSET-010).
+    per category in `CONTENT_CATEGORIES` under its name in `CATEGORY_LABELS`, then lines
+    and veils (CSET-010). The context module's view model passes the same wording and
+    names to the `content-settings` template.
 
   Spec: 13-content-settings §2, §3, §5.
 
 - **Context budgets** (`context.ts`):
+  - `estimateTokens(text, charsPerToken)` is `ceil(length / ratio)`, with no margin
+    (PRV-070). The context module budgets with it and the providers module calibrates
+    with it, and re-exports it, so both count alike;
   - `inputBudget` gives a prompt's input budget from a model profile (CTX-030);
   - `allocateBudgets` splits it among the tiers, or reports the fixed tiers that don't
     fit (CTX-031 to CTX-033);
   - `transcriptBoundary` finds where the verbatim transcript starts, rolling by whole
     chunks (CTX-041).
 
-  Spec: 09-context §4 and §5.
+  Spec: 09-context §4 and §5, and 05-providers §7.
 
 ### `time/`
 
@@ -160,6 +165,7 @@ Node's types.
 - [03-contracts.md](../../spec/03-contracts.md) §7 to §10
 - [04-content-schemas.md](../../spec/04-content-schemas.md) §11
 - [06-turn-engine.md](../../spec/06-turn-engine.md) §6
+- [05-providers.md](../../spec/05-providers.md) §7 (PRV-070)
 - [07-rules.md](../../spec/07-rules.md) §4.5, §12
 - [09-context.md](../../spec/09-context.md) §4, §5
 - [10-journal.md](../../spec/10-journal.md) §3, §4
