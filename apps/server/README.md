@@ -33,11 +33,11 @@ Lint enforces these boundaries.
 
 ## Running it
 
-| Script                                   | Does                                                                                     |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `pnpm start` (root)                      | `tsx src/main.ts`: the API and the built client on one port (ARCH-102)                   |
-| `pnpm dev` (root)                        | `scripts/dev.ts`: this package's `dev` (`tsx watch src/main.ts`) and the client's Vite   |
-| `pnpm --filter @mythos/server rebuild-projections` | Rebuilds every campaign's projections from its event log (ARCH-042)             |
+| Script                                             | Does                                                                                   |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `pnpm start` (root)                                | `tsx src/main.ts`: the API and the built client on one port (ARCH-102)                 |
+| `pnpm dev` (root)                                  | `scripts/dev.ts`: this package's `dev` (`tsx watch src/main.ts`) and the client's Vite |
+| `pnpm --filter @mythos/server rebuild-projections` | Rebuilds every campaign's projections from its event log (ARCH-042)                    |
 
 - **Flags:** `pnpm start --data-dir <folder> --port <number>` passes both to
   `main.ts`, and `pnpm dev` passes its arguments to the server. Without `--data-dir`,
