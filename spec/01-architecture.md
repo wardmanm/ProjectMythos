@@ -363,6 +363,17 @@ Per OVR-010, these exist from phase 1 even if unused:
   version, it does not fail: it adds the version to `minimumReleaseAgeExclude` in
   `pnpm-workspace.yaml` and installs it. Check `git diff pnpm-workspace.yaml` after
   adding a dependency, and take the newest version old enough to pass instead.
+- **Fastify sends a stream's headers with its first chunk (ARCH-091, http's
+  `events.ts`).** A body that is a stream gets its status and headers through
+  `setHeader`, which Node writes only when data does. An event stream that writes
+  nothing at first sends nothing at all, and the browser's `EventSource` waits in its
+  connecting state. `reply.hijack()` would send the headers at once, but it skips the
+  `onSend` hook that sets the session cookie (Decisions).
+- **A second signal kills the server mid-shutdown under `tsx watch` (ARCH-006,
+  `scripts/dev.ts`).** Ctrl+C already reaches every process in the terminal. When
+  `tsx watch` gets another signal while its child is still shutting down, it kills the
+  child, and a narration being committed at shutdown is lost. `dev.ts` therefore sends
+  nothing on Ctrl+C, and signals a child only when the other has ended by itself.
 
 ## Decisions
 
@@ -384,14 +395,14 @@ Per OVR-010, these exist from phase 1 even if unused:
 | How is a model call record's time stored (ARCH-061)? | `model_calls.created_at` is INTEGER milliseconds since 1970 UTC, so the retention prune compares numbers; the record's JSON keeps its `createdAt` string. | A WallTime string: strings with different numbers of fraction digits sort wrongly (02-conventions Traps). | Claude (ruling) |
 | Does the client's dev server mark the requests it proxies as forwarded (ARCH-006, ARCH-111)? | Yes: Vite's `/api` proxy sets `xfwd: true`, so each request carries `X-Forwarded-For`, and the PIN lock never exempts a forwarded request as localhost. A LAN device using the dev server needs the PIN, as it would with `pnpm start`; so does the host machine itself in development, when a PIN is set. | No `xfwd`: every request through the dev server would reach the server from 127.0.0.1, and the localhost exemption would let any LAN device in without the PIN. | Claude (ruling) |
 | What does campaign creation write together (TRN-123, ARCH-041)? | `createCampaignFolder` makes the folder and writes the `campaign` row; then `writeCampaignStart` writes canon, the first `content_settings` and `current_branch_id`, and the root turn with its setup set and branch `Main`, in one transaction. If either step throws, campaign creation deletes the folder and rethrows. Every expected failure is found before the folder is made. | Writing the `campaign` row in the same transaction: `createCampaignFolder` writes it, and moving it would change storage's API for a gap the Open section records. A transaction per part: a crash could leave canon with no root turn. | Claude (ruling) |
+| What does a request no route or file matched get (ARCH-102, CON-110)? | Under `/api`, `not_found`. Outside it, a GET or HEAD whose last path segment has no dot gets the client's `index.html`, so the client's router opens the screen its URL names. Anything else, such as a missing `/assets/x.js` or a POST, is `not_found`. With no built client, every page is `not_found`, saying to run `pnpm build`. | `index.html` for every GET outside `/api`: a missing script would come back as HTML, which the browser reports as a MIME error, not a 404. Deciding by the `Accept` header: a browser's navigations and its fetches send different values, and tools send none. | Claude (ruling) |
+| What happens to a client that falls behind its event stream (ARCH-090)? | Its stream is closed, with a warning, once more than 1 MiB (`MAX_UNSENT_BYTES` in http's `events.ts`) it has not taken waits in the stream and the socket. Its `EventSource` reconnects with its last event ID and is replayed from the bus, or told to resync, so nothing is lost. | No limit: Node's socket buffer grows without bound. Dropping events for that client: it could not tell what it missed. | Claude (ruling) |
+| What does a stream with nothing to send at first write (ARCH-091)? | When neither the position frame nor a replay wrote anything, the keep-alive comment goes at once, so the headers are sent and the browser's `open` fires (Traps). | Waiting 15 seconds for the first keep-alive: the client could not tell a live stream from a stalled one. Writing the position frame on every connect: after a `Last-Event-ID`, a drop during the replay would leave the browser at the newest ID, and the rest of the replay would be lost. | Claude (ruling) |
+| How does the server shut down (ARCH-022, ARCH-083)? | `close()`: Fastify refuses new requests with 503. A `preClose` hook ends every event stream, then runs `narrations.stop()`, then the queue's `stop()`, which cancels interactive jobs, so a pending probe returns. In-flight requests finish, and an `onClose` hook closes every database. `main.ts` calls `close()` on SIGINT or SIGTERM, and exits at once on a second signal. | Closing the databases in `preClose`: a request still in flight would find its connection closed. Stopping the queue first: partial narration would not be committed (06-turn-engine Decisions). | Claude (ruling) |
+| Where do the server's logs go (§4.1)? | Pino's JSON on stdout only, in phase 1. `<dataDir>/logs/` stays empty until a task defines what goes there (Open). | A file in `logs/` through Fastify's logger option: with no rotation or retention, it would grow without limit. | owner |
 
 ## Open
 
-- **No back-pressure on event streams (ARCH-090).** The bus delivers each event to
-  every subscriber synchronously, and a slow client's frames wait in Node's socket
-  buffer, which grows without limit. A suggestion for the events route (P1-T20): close
-  a stream whose response `writableLength` passes a limit; the client's `EventSource`
-  reconnects with its last event ID and is replayed from the buffer, or told to resync.
 - **Replay buffers are never freed (ARCH-091).** Each campaign's buffer, up to 1,000
   events, stays in memory until the server restarts, including after the campaign is
   deleted.
@@ -413,3 +424,8 @@ Per OVR-010, these exist from phase 1 even if unused:
   whole campaign list fails until the folder is deleted by hand. A fix would write the
   row in `writeCampaignStart`'s transaction, or have the list skip and report such a
   campaign.
+- **`<dataDir>/logs/` is unused (§4.1).** Logs go to stdout (Decisions). A later task
+  decides whether the server also writes them there, and how they are rotated and kept.
+- **The session cookie is never `Secure` yet (ARCH-110, MED-062).** The composition root
+  passes `secureCookies: false`, because the server speaks only HTTP until phase 10
+  brings HTTPS. That phase passes whether the running server started with HTTPS.

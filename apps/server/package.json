@@ -3,14 +3,21 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "rebuild-projections": "tsx src/cli/rebuild-projections.ts",
     "typecheck": "tsc",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@fastify/cookie": "11.1.5",
+    "@fastify/static": "10.1.10",
     "@mythos/contracts": "workspace:*",
     "@mythos/core": "workspace:*",
+    "fastify": "5.12.8",
     "handlebars": "4.7.10",
     "jsonrepair": "3.15.0",
+    "tsx": "4.23.15",
     "zod": "4.6.5"
   },
   "devDependencies": {

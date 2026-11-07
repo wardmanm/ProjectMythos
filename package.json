@@ -15,8 +15,8 @@
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && tsx scripts/check-spec.ts && pnpm --filter @mythos/spec-reference check",
     "trace": "pnpm --filter @mythos/spec-reference trace",
     "build": "pnpm --filter @mythos/client build",
-    "dev": "node -e \"console.error('pnpm dev arrives in P1-T20.'); process.exit(1)\"",
-    "start": "node -e \"console.error('pnpm start arrives in P1-T20.'); process.exit(1)\""
+    "dev": "tsx scripts/dev.ts",
+    "start": "pnpm --filter @mythos/server start"
   },
   "devDependencies": {
     "@types/node": "26.6.4",

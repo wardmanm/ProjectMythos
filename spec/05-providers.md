@@ -960,3 +960,6 @@ export type JobQueue = {
   real adjudication call (phase 3) will show it. The settings probe keeps an object root
   (Decisions), so it cannot; a one-off manual probe with a union-root schema could settle
   it sooner.
+- **A ComfyUI provider's model list is `internal_error` (PRV-091).** `createAdapter`
+  throws for `comfyui` until phase 9, so `GET /settings/providers/:providerId/models` for
+  one answers `internal_error`, where its status is reported unreachable.
