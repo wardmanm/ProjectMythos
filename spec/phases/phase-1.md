@@ -159,8 +159,9 @@ tests included) and the owner has signed off the checks below on both machines
 | S8. PIN | | |
 | S9. Restart during a reply | | |
 
-A failed check becomes a bug (CONV-140). Record anything else rough under Loose ends in
-`.claude/status.md`, or in the Open section of the document it concerns.
+A failed check becomes a bug (CONV-140). Anything else noticed while testing is filed
+with `/sign-off-notes` from a second window, and listed below under **Found while
+testing** (CONV-141).
 
 ## Risks
 

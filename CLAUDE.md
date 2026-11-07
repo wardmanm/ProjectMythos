@@ -32,7 +32,7 @@ everywhere.
 | Task files | Status and completion notes: the log of what each task did and decided. |
 | `pnpm trace` | What is built: task status, and the requirements done tasks list and tests cite. |
 | `.claude/status.md` | Where things stand: focus, recent changes, pending decisions, loose ends. |
-| GitHub issues, milestones, releases | A mirror for Mike's [Project Mythos board](https://github.com/users/wardmanm/projects/9): one issue per task, one milestone per phase, one release per phase (ADR-018). Never edited to show progress. A bug found at sign-off is an issue of its own, labeled `bug` and `sign-off`, with its Priority on the board (ADR-019). |
+| GitHub issues, milestones, releases | A mirror for Mike's [Project Mythos board](https://github.com/users/wardmanm/projects/9): one issue per task, one milestone per phase, one release per phase (ADR-018). Never edited to show progress. A bug found at sign-off is an issue of its own, labeled `bug` and `sign-off`, with its Priority on the board (ADR-019), and so is a bug, change, or feature filed with `/sign-off-notes` (ADR-021). |
 
 The code is the truth for what is built, and the spec for what must be. When they
 disagree, one of them has a defect: find out which.
@@ -65,7 +65,9 @@ disagree, one of them has a defect: find out which.
 - Each phase ends in a release, `v0.N.0`, published by `/docs close` (CONV-137) once
   Mike has signed off each feature: Claude asks the phase plan's checks one at a time,
   on macOS and on Windows. A failure is a bug with a Priority: P0 blocks the release,
-  P1 is high but doesn't block, and P2 is deferred (CONV-138 to CONV-140).
+  P1 is high but doesn't block, and P2 is deferred (CONV-138 to CONV-140). Anything
+  else Mike notices meanwhile is filed from a second window with `/sign-off-notes`, at
+  P1 or P2 and outside the phase's milestone (CONV-141).
 - Done means (CONV-134): `pnpm check` passes; every requirement the task lists is
   implemented, and each behavioral one has a test whose name starts with its ID or an
   `ID: reason` entry under **Not tested**; no runtime dependency outside the approved
@@ -207,5 +209,5 @@ content-library     Built-in library, copied from spec/fixtures/library
 content-packs       The reference pack, copied from spec/fixtures/packs/reference
 scripts             Cross-platform Node scripts
 spec                The specification, fixtures, reference code, phases, and tasks
-.claude             The status log and the status and docs skills
+.claude             The status log, and the status, docs, and sign-off-notes skills
 ```

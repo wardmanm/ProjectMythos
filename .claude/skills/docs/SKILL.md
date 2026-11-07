@@ -96,12 +96,28 @@ confirms it.
    checks and table rows as `spec: owner: phase N sign-off checks`.
 2. **The machine.** The session's OS is the one being tested. On a Windows answer
    given from the Mac, ask which machine it was.
-3. **One check at a time.** For each cell still empty on this OS, ask with
-   AskUserQuestion: the check's name as the question, its Try and Expect in the option
-   previews, and the options Pass, Fail (Mike says what happened), and Skip. Write the
-   answer into the cell before asking the next one: `pass, <short sha of HEAD>`, or
-   `skip`. When Mike stops or the pass ends, commit the table as
+3. **One check at a time.** Before the first question, tell Mike about
+   `/sign-off-notes` (CONV-141): run in a second window open in this folder, it files
+   the bugs, changes, and features Mike notices that fail no check, at P1 or P2. Then,
+   for each cell still empty on this OS, ask with AskUserQuestion: the check's name as
+   the question, its Try and Expect in the option previews, and the options Pass, Fail
+   (Mike says what happened), and Skip. Write the answer into the cell before asking
+   the next one: `pass, <short sha of HEAD>`, or `skip`. The other window may add a
+   **Found while testing** list below the table: leave it as it is, and read the plan
+   again before each write, since that window writes to it too. When Mike stops or the
+   pass ends, commit the table, and the list with it, as
    `spec: owner: phase N sign-off, <OS>`.
+   - **After the empty cells,** ask each `skip` cell on this OS again.
+   - **Lines from the other window** may come at any time until the gate passes, even
+     as the free-text answer to the check being asked. None of them answers that check:
+     handle it, then ask the check again. After the pass has ended, commit the table
+     again.
+     - **`Try S4 again: …`:** clear that check's cell on this OS and ask it next.
+     - **`S9 will fail: …`:** keep it, and show it with S9's question when it comes up.
+     - **`Add a check: …`** (a blocker no check covers): draft a check for it from the
+       spec, with the deliverable item, Try, and Expect. Once Mike approves it, add it
+       to the plan's Sign-off checks and table as the next S-number (CONV-138), then
+       ask it like the others.
 4. **A failure.** Draft the bug: a title; the check, its Try and Expect, and what
    happened; the OS and commit; a suggested Priority with its reason (P0 blocks the
    release, P1 is high but doesn't block, P2 is deferred). Once Mike confirms the title
@@ -115,9 +131,11 @@ confirms it.
    ```
 
    The board's workflow may add the issue first, and `item-add` then fails with
-   "Content already exists": take the item id from `gh project item-list 9 --owner
-   wardmanm --format json` instead. The project id comes from `gh project view 9
-   --owner wardmanm --format json --jq .id`. Write
+   "Content already exists". Take the item id from the board instead: `gh project
+   item-list 9 --owner wardmanm --format json --limit 1000 --jq '.items[] |
+   select(.content.number == <N>) | .id'`. Without `--limit` it lists only the first
+   30 cards. If it prints nothing, run it again. The project id comes from `gh project
+   view 9 --owner wardmanm --format json --jq .id`. Write
    `fail: <what happened> (#N, P<n>)` in the cell.
 5. **A P0.** Add a fix task to the phase plan, with its file and its issue (CONV-136).
    Its pull request's body starts `Closes #<task issue>, closes #<bug>`. After it
@@ -125,11 +143,17 @@ confirms it.
 6. **Has `main` moved?** On a resume, list the commits since the sha in each `pass`
    cell, leaving out the sign-off commits themselves. If there are any, show them and
    ask Mike which checks to run again; clear the cells he names.
-7. **The gate.** Go on to the release only when no cell is empty or `skip`, each
-   `fail` names only P1 or P2 bugs, and no P0 bug is open in the milestone. Check the
-   last with `gh issue list --label bug --milestone "Phase N: <name>" --state open
-   --json number`, and each open bug's Priority in `gh project item-list 9 --owner
-   wardmanm --format json`.
+7. **The gate.** If the plan has changes not yet committed (lines the other window
+   added after the last check), commit them as `spec: owner: phase N sign-off, <OS>`.
+   Show the table, and the **Found while testing** list if there is one, and ask whether
+   the `/sign-off-notes` window still lists any open line; handle each by step 3. Show
+   any `S9 will fail` line not yet used, too. Go on to the release only when no cell is empty or `skip`, each `fail` names only P1
+   or P2 bugs, and no P0 bug is open in the milestone. Check the last with `gh issue
+   list --label bug --milestone "Phase N: <name>" --state open --json number`, and each
+   open bug's Priority with `gh project item-list 9 --owner wardmanm --format json
+   --limit 1000 --jq '.items[] | select(.content.number == <N>) | .priority'`. A bug
+   whose Priority prints `null` has none set: ask Mike for it. The list's issues are
+   never in this milestone, so they don't hold the release back.
 
 ### Retrospective
 
@@ -150,16 +174,21 @@ Once the sign-off gate passes and Mike has said `main` may be pushed:
 1. Set the root `package.json` `version` to `0.N.0`, commit on `main` as
    `release: v0.N.0`, and tag it: `git tag -a v0.N.0 -m "Phase N: <name>"`.
 2. Push `main` and the tag, then publish the release. Its notes are the
-   Retrospective, then a **Known issues** list of the milestone's open P1 bugs, one
-   line each with its number:
+   Retrospective, then a **Known issues** list of the open P1 bugs, one line each with
+   its number: the milestone's, and the P1 bugs under **Found while testing** in the
+   phase plan (CONV-137):
    `gh release create v0.N.0 --title "v0.N.0: Phase N: <name>" --notes-file <file>`.
 3. Close the milestone:
    `gh api -X PATCH repos/wardmanm/ProjectMythos/milestones/<number> -f state=closed`.
 
 Run `/status`. The next phase's plan is written when that phase is reached
 (00-overview §7). It has its Sign-off checks and an empty Sign-off table (CONV-138),
-and its first tasks fix the open P1 bugs, each task's pull request closing its bug
-(CONV-140). When its tasks are written, open one issue per task (CONV-136):
+and its first tasks fix the open P1 bugs in its milestone, each task's pull request
+closing its bug (CONV-140). The milestone also holds the open P1 changes and features
+filed during the last sign-off (CONV-141): list them for Mike, who decides which the
+phase takes on and what happens to the rest. Each one taken on is a spec amendment
+(`/docs amend`) and a task. When its tasks are written, open one issue per task
+(CONV-136):
 `gh issue create --title "<task title>" --label task --milestone "Phase N: <name>"
 --body <body>`, then `gh project item-add 9 --owner wardmanm --url <issue url>`.
 

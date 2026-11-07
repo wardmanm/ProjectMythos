@@ -251,8 +251,9 @@ ask "how does this work?", rewrite it.
   (CONV-139). At phase close, the root `package.json` version is set to `0.N.0` for
   phase N, and that commit on `main` is tagged `v0.N.0`. A GitHub release for the tag
   is published with the phase plan's **Retrospective** as its notes, followed by the
-  phase's open P1 bugs as known issues, and the phase's milestone is closed (ADR-018,
-  ADR-019).
+  phase's open P1 bugs as known issues: those in its milestone, and the P1 bugs listed
+  under its plan's **Found while testing** (CONV-141). Then the phase's milestone is
+  closed (ADR-018, ADR-019).
 - **CONV-138** Each phase plan has **Sign-off checks**, written from its deliverable
   when the plan is written: one check per feature, naming the deliverable item it
   checks, what to **Try**, and what to **Expect**. A task that changes what a feature
@@ -275,6 +276,18 @@ ask "how does this work?", rewrite it.
   run again after the merge. An open P1 becomes a task at the start of the next phase's
   plan. A P2 stays on the board until a phase takes it on. The issue is the bug's own
   record, and the Sign-off table links it (ADR-019).
+- **CONV-141** During a sign-off, the owner can file what they notice that fails no
+  check from a second Claude Code session, with `/sign-off-notes`. Each note is a bug, a
+  change to something that exists, or a new feature. It becomes a GitHub issue labeled
+  `sign-off` and either `bug` or `enhancement`, on the board with **Priority** `P1` or
+  `P2`, never `P0`. A P1 goes in the next phase's milestone, and a P2 in none, so a note
+  never holds back the release being signed off. The owner confirms each title and
+  Priority before it is posted. The phase plan lists each issue under **Found while
+  testing**, below its Sign-off table. A note that means some check's Expect did not
+  happen, or that should block the release, is not filed this way: it is a failure of
+  that check (CONV-140), or of a check added for it. When the next phase plan is
+  written, its open P1 bugs become tasks as CONV-140 says, and the owner decides which
+  open P1 changes and features it takes on (ADR-021).
 
 ## Traps
 

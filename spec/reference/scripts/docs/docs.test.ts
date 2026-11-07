@@ -173,6 +173,35 @@ describe('OVR-038: references', () => {
   });
 });
 
+describe('OVR-038: phase plans', () => {
+  const signOff = [
+    '',
+    '| Check | macOS | Windows |',
+    '|---|---|---|',
+    '| S1. Roll the dice | pass, abc1234 | |',
+    '| S2. Read the effect | fail: no effect shown (#30, P1) | |',
+    '',
+    '**Found while testing**',
+    '',
+    '- #31 Bug, P2, while on S1 (macOS): Dice tray | flickers on a phone',
+    '- #32 Feat, P1, after the last check (macOS): Roll from the keyboard',
+    '',
+  ].join('\n');
+
+  it('OVR-038: passes a plan with a Found while testing list below its Sign-off table', () => {
+    const docs = repo({ 'spec/phases/phase-1.md': `${PLAN}${signOff}` });
+    expect(checkDocs(docs)).toEqual([]);
+    expect(readyTasks(docs).map((t) => t.id)).toEqual(['P1-T01']);
+  });
+
+  it('OVR-038: reports an undefined ID in a Found while testing line', () => {
+    const line = '- #33 Change, P1, while on S2 (macOS): RUL-099 should round up\n';
+    expect(problemsIn({ 'spec/phases/phase-1.md': `${PLAN}${signOff}${line}` })).toEqual([
+      'spec/phases/phase-1.md:17: cites RUL-099, which is not defined',
+    ]);
+  });
+});
+
 describe('OVR-038: tasks', () => {
   it('OVR-038: reports a task missing from its plan, a bad Status, an unknown dependency, or a retired requirement', () => {
     const extra = task('P1-T03', { status: 'Started', deps: 'P1-T09', reqs: 'RUL-003' });

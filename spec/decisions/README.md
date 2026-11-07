@@ -26,6 +26,7 @@ context, what was decided, and what it costs. Requirements say *what*; records s
 | [ADR-018](ADR-018-github-mirrors-tasks.md) | GitHub issues mirror the tasks, and each phase is a release |
 | [ADR-019](ADR-019-owner-signs-off-each-release.md) | The owner signs off each feature before a release |
 | [ADR-020](ADR-020-native-build-tools.md) | Native build tools with prebuilt binaries |
+| [ADR-021](ADR-021-sign-off-notes.md) | What the owner notices during a sign-off is filed without leaving it |
 
 ## When to write one
 
