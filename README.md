@@ -24,7 +24,8 @@ one task at a time.
 | `pnpm lint`    | ESLint, including the package and module boundaries                                             |
 | `pnpm format`  | Formats every file Prettier owns                                                                |
 | `pnpm build`   | Builds the client                                                                               |
-| `pnpm dev`     | Server and client together (from P1-T20)                                                        |
+| `pnpm start`   | The server, serving the API and the built client on one port: `--data-dir`, `--port`            |
+| `pnpm dev`     | The server under `tsx watch` and the client under Vite, which proxies `/api`                    |
 
 ## Repository map
 

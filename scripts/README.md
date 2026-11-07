@@ -13,6 +13,16 @@ Windows and macOS (CONV-081). There are no shell scripts.
   `spec/reference/server-types/<module>/<file>` (OVR-033). A file that adds an
   implementation after its verbatim types is not listed. Each message names the file.
   Its test, `check-spec.test.ts`, runs it on small fake repositories.
+- `dev.ts`: `pnpm dev` (ARCH-006). It runs `pnpm --filter @mythos/server run dev`
+  (`tsx watch`) and `pnpm --filter @mythos/client run dev` (Vite, whose `/api` proxy
+  reaches the server) with no shell, and passes its arguments to the server.
+  - pnpm comes from `npm_execpath`: run with Node if it is a script, or as itself if it
+    is pnpm's own binary.
+  - Ctrl+C reaches both processes from the terminal, so the script only waits for them.
+    When one ends by itself, it stops the other. Signal a process once: a second
+    signal makes `tsx watch` kill the server mid-shutdown.
+  - Its test, `dev.test.ts`, checks the commands it builds and the `dev`, `build`, and
+    `start` scripts.
 - `lint-rules.test.ts`: proves that each boundary and restriction in `eslint.config.js`
   fires. It lints small code strings under fake file paths in a throwaway copy of the
   repository layout, so a change to the lint config that weakens a rule fails the tests.

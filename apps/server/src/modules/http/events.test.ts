@@ -3,13 +3,8 @@ import { ErrorResponseSchema } from '@mythos/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 import { KEEP_ALIVE_INTERVAL_MS } from '../events';
 import { MAX_UNSENT_BYTES } from './events';
-import {
-  createArrival,
-  createHttpSpace,
-  frameReader,
-  type HttpStack,
-  settledTurn,
-} from './testing';
+import { frameReader } from './sse-testing';
+import { createArrival, createHttpSpace, type HttpStack, settledTurn } from './testing';
 
 const space = createHttpSpace();
 afterEach(async () => {
