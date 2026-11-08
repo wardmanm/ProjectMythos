@@ -963,3 +963,9 @@ export type JobQueue = {
 - **A ComfyUI provider's model list is `internal_error` (PRV-091).** `createAdapter`
   throws for `comfyui` until phase 9, so `GET /settings/providers/:providerId/models` for
   one answers `internal_error`, where its status is reported unreachable.
+- **A pending restart is forgotten on reload (PRV-004).** Only `PUT /settings` answers
+  `restartRequired`; `GET /settings` does not say whether the saved config still differs
+  from the one the server started with. The settings screen shows its restart notice after
+  such a save, and loses it when the page reloads; the address, port, and data folder
+  always say they need a restart (14-ui Decisions, owner). Adding the flag to the GET
+  answer would need a contract change.

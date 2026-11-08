@@ -429,3 +429,12 @@ Per OVR-010, these exist from phase 1 even if unused:
 - **The session cookie is never `Secure` yet (ARCH-110, MED-062).** The composition root
   passes `secureCookies: false`, because the server speaks only HTTP until phase 10
   brings HTTPS. That phase passes whether the running server started with HTTPS.
+- **`PUT /settings` can change the PIN without ending sessions (ARCH-110, CON-111).**
+  The route saves whatever `server.pin` the body holds. A body can remove the PIN, flip
+  `localhostExempt`, or set a `hash` no PIN matches, which locks out every device but an
+  exempt localhost; in each case sessions go on, though every PIN change must end them
+  (Decisions). The settings screen sends the PIN from its latest `GET /settings`, never
+  from its draft, so it changes the PIN only through `PUT /settings/pin`; but a PIN set
+  from another device after that GET can be undone by its next save. A server task
+  should keep the stored `server.pin` whatever `PUT /settings` sends, or refuse a change
+  to it.
