@@ -5,6 +5,9 @@ describe('queryKeys', () => {
   it('UI-100: keys are by campaign and branch, as 14-ui §12.1 lists them', () => {
     expect(queryKeys.turns('c1', 'b1')).toEqual(['turns', 'c1', 'b1']);
     expect(queryKeys.turn('c1', 't1')).toEqual(['turn', 'c1', 't1']);
+    expect(queryKeys.turnsNewest('c1', 'b1', 50)).toEqual(['turns', 'c1', 'b1', 50]);
+    expect(queryKeys.modelCalls('c1', 't1')).toEqual(['model-calls', 'c1', 't1']);
+    expect(queryKeys.modelCall('c1', 'm1')).toEqual(['model-call', 'c1', 'm1']);
     expect(queryKeys.scene('c1', 'b1')).toEqual(['scene', 'c1', 'b1']);
     expect(queryKeys.sheet('c1', 'npc.varek')).toEqual(['sheet', 'c1', 'npc.varek']);
     expect(queryKeys.journal('c1', 'npc.varek')).toEqual(['journal', 'c1', 'npc.varek']);
@@ -16,6 +19,9 @@ describe('queryKeys', () => {
       queryKeys.campaign('c1'),
       queryKeys.turns('c1', 'b1'),
       queryKeys.turn('c1', 't1'),
+      queryKeys.turnsNewest('c1', 'b1', 50),
+      queryKeys.modelCalls('c1', 't1'),
+      queryKeys.modelCall('c1', 'm1'),
       queryKeys.scene('c1', 'b1'),
       queryKeys.sheet('c1', 'pc.wren'),
       queryKeys.journal('c1'),
@@ -27,6 +33,7 @@ describe('queryKeys', () => {
 
   it('UI-100: each prefix starts the keys of its kind', () => {
     expect(queryKeys.turns('c1', 'b1').slice(0, 2)).toEqual(campaignPrefixes.turns('c1'));
+    expect(queryKeys.turnsNewest('c1', 'b1', 50).slice(0, 3)).toEqual(queryKeys.turns('c1', 'b1'));
     expect(queryKeys.scene('c1', 'b1').slice(0, 2)).toEqual(campaignPrefixes.scene('c1'));
     expect(queryKeys.journal('c1', 'x').slice(0, 2)).toEqual(campaignPrefixes.journal('c1'));
   });
