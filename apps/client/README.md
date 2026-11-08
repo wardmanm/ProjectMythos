@@ -75,7 +75,20 @@ and tests mount `routes` in a memory router. `AppShell` is the root layout, and
     included.
 - `useSettings()` (`settings.ts`) reads `GET /settings` under `['settings']`: the
   machine config with its secrets redacted (CON-111). The library and the settings screen
-  both use it.
+  both use it. The same file holds the settings screen's other hooks:
+  - `useSaveSettings()`: `PUT /settings` with the whole config (PRV-003);
+  - `useSetPin()`: `PUT /settings/pin`;
+  - `useProviderStatuses()`: `GET /settings/providers`, under `['settings', 'providers']`;
+  - `useProviderModels(providerId, enabled)`: one provider's models, under
+    `['settings', 'providers', providerId]`;
+  - `useProbe()`: `POST /settings/profiles/:profileId/probe`, with a signal the caller
+    aborts to cancel.
+
+  The statuses and model lists sit under `['settings']`, so a save or a PIN change
+  refetches all three with one invalidation. Neither mutation waits for that refetch.
+
+- `useSession()` and `useLogin()` (`session.ts`) are the PIN screen's: `GET /session`
+  under `['session']`, and `POST /session`, which invalidates every query on success.
 
 The query client (`src/app/query-client.ts`) sends `auth_required` from any query or
 command to `/pin?next=<address>`, and on `conflict` refetches everything and shows the
@@ -128,6 +141,48 @@ classes such as `bg-surface`, `text-text-muted`, `font-narration`, or shadcn's
   Issues at `name`, `packId`, and `scenarioId` show at their fields; any others show
   above Start.
 
+## Settings (`src/features/settings/`)
+
+The settings screen (UI-088) edits machine config as one draft with one Save, which
+sends the whole config with `PUT /settings` (14-ui Decisions):
+
+- **The draft** (`settings-draft.ts`) is the config with its devices, providers, and
+  profiles keyed for the form: a saved item's key is `saved:<id>`, a new one's `new:<n>`.
+  `configFrom(draft, pin)` strips the keys and always takes `server.pin` from the latest
+  `GET /settings`, so a save never changes the PIN. Secrets stay as the placeholder unless
+  the player types a new key (CON-111).
+- **Issues** (`field-issues.ts`): `fieldIssuesOf` turns each issue's index path into a
+  key address (`providers.<key>.baseUrl`), so it stays on its item. A field shows the
+  issues at and below its address; `IssueSummary` lists them all, with where each is.
+- **Fields** (`form-fields.tsx`): `TextField`, `NumberField`, `SwitchField`, and
+  `ChoiceField`, each with its label, notes ("Default: …", "Needs a restart."), warning,
+  and issues tied to the control by `aria-describedby`. `NumberField` keeps the text as
+  typed and reports `null` for a blank; each caller says what a blank means.
+- **Sections**: providers (`provider-card.tsx`, `provider-type-fields.tsx`, with
+  `secret-field.tsx`, `headers-field.tsx`, and `health-dot.tsx`), model profiles
+  (`profile-card.tsx`, `model-picker.tsx`, `sampling-fields.tsx`, `probe-panel.tsx`),
+  roles, devices, server, Advanced (a table of paths in `advanced-fields.ts`), and the
+  PIN, which saves on its own through `PUT /settings/pin`.
+- **Defaults** shown on the screen come from parsing the contract schemas
+  (`schema-defaults.ts`), never from copies. `MIN_CONTEXT_WINDOW` (CTX-032) and the
+  first-start config (`default-config.ts`, PRV-001) are the two values repeated from the
+  server, which the client cannot import.
+- **The server reads the saved config** for probes, model lists, and health, so each
+  waits until its profile and provider are saved, and says so.
+- **A config that fails to load** shows its issues and offers **Start from default
+  settings** (`broken-config.tsx`), which saves `defaultMachineConfig()` after asking.
+
+`settings-testing.ts` holds the screen tests' helpers (`renderSettings`, `card`,
+`region`, `describedText`, `choose`).
+
+## The PIN screen (`src/features/pin/`)
+
+`/pin?next=<address>` asks for the PIN only when `GET /session` says this device needs
+one and has no session. Once `POST /session` succeeds, every query is invalidated and the
+player returns to `safeNext(next)`: the address when it stays within the app, else the
+library. `auth_failed`, `rate_limited` (with its wait from `details.retryAfterSeconds`),
+and `auth_required` each have their own words.
+
 ## Testing
 
 `src/test/setup.ts` gives every test a fake `fetch` (`answer`, `fetchCalls`), a fake
@@ -136,9 +191,10 @@ a fake `matchMedia` (`setDevicePrefersDark`), and cleans up after it.
 `renderApp(path)` renders the whole app at a URL with a memory router and returns the
 router, the query client, and a user-event session. `fixtures.ts` builds valid campaign
 views, turn views, and server events, and `settings-fixtures.ts` a valid machine config
-(`machineConfig`). `features/library/testing.ts` builds campaign summaries
-(`campaignSummary`) and pack summaries: the reference pack, a second startable pack
-(`saltmarshPack`), and a pack with issues (`brokenPack`).
+(`machineConfig`), provider statuses, a probe result, and a session state.
+`features/library/testing.ts` builds campaign summaries (`campaignSummary`) and pack
+summaries: the reference pack, a second startable pack (`saltmarshPack`), and a pack
+with issues (`brokenPack`).
 
 ## Governing spec
 

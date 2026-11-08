@@ -911,9 +911,6 @@ export type JobQueue = {
 
 ## Open
 
-- **Headers are not secrets.** An `openai-compatible` provider's `headers` are stored
-  and returned as they are; PRV-005 and CON-111 cover `apiKey` only. An API key belongs
-  in `apiKey`, and the settings screen (P1-T24) should say so beside the headers.
 - **The mock's embeddings cannot be scripted or recorded.** `embed` always returns
   deterministic placeholder vectors, whatever the mode (PRV-080, PRV-081). Retrieval
   tests that need chosen similarities arrive in phase 4, which adds scripted and fixture
@@ -940,10 +937,6 @@ export type JobQueue = {
 - **The local adapters have no `embedding` member.** Ollama and OpenAI-compatible
   servers both serve embedding models, but `embed` arrives with retrieval in phase 4;
   until then only the mock embeds (PRV-010).
-- **Anthropic profiles with thinking `off`.** Claude Opus 5.5, Sonnet 5.5, and Fable 5.1
-  cannot turn thinking off, so a profile with `thinking: 'off'` fails on them, with a
-  message that names `provider-default` (Decisions). P1-T24's settings screen should
-  suggest `provider-default` for Anthropic profiles, and P1-T15's probe shows the message.
 - **No `anthropic-workspace-id`.** Anthropic's `anthropic-workspace-id` header picks the
   workspace for a credential that can act on more than one. An `anthropic` provider has no
   field for it, so the adapter never sends it; adding one changes `ProviderConfigSchema`.
@@ -963,3 +956,12 @@ export type JobQueue = {
 - **A ComfyUI provider's model list is `internal_error` (PRV-091).** `createAdapter`
   throws for `comfyui` until phase 9, so `GET /settings/providers/:providerId/models` for
   one answers `internal_error`, where its status is reported unreachable.
+- **A pending restart is forgotten on reload (PRV-004).** Only `PUT /settings` answers
+  `restartRequired`; `GET /settings` does not say whether the saved config still differs
+  from the one the server started with. The settings screen shows its restart notice after
+  such a save, and loses it when the page reloads; the address, port, and data folder
+  always say they need a restart (14-ui Decisions, owner). Adding the flag to the GET
+  answer would need a contract change.
+- **The last save wins (PRV-003).** `PUT /settings` replaces the whole config and checks
+  nothing about what the saving device last read, so when two devices edit settings at
+  once, the later save quietly undoes the other's changes.

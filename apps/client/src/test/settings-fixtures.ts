@@ -1,8 +1,17 @@
-// Valid machine config for tests, parsed with the contract schema so it cannot drift from it.
-import { MachineConfigSchema, type MachineConfig } from '@mythos/contracts';
-import type { z } from 'zod';
+// Valid settings data for tests, parsed with the contract schemas so it cannot drift from them.
+import {
+  MachineConfigSchema,
+  ProbeResultSchema,
+  ProviderStatusSchema,
+  SessionStateSchema,
+  type MachineConfig,
+  type ProbeResult,
+} from '@mythos/contracts';
+import { z } from 'zod';
 
 type MachineConfigInput = z.input<typeof MachineConfigSchema>;
+type ProviderStatus = z.infer<typeof ProviderStatusSchema>;
+type SessionState = z.infer<typeof SessionStateSchema>;
 
 /**
  * The machine config `GET /settings` answers with: one device, one Ollama provider, and
@@ -35,4 +44,36 @@ export function machineConfig(changes: Partial<MachineConfigInput> = {}): Machin
     roles: { narrator: { profileId: 'qwen-local' } },
     ...changes,
   });
+}
+
+/** What `GET /settings/providers` answers for `machineConfig()`: Ollama is reachable. */
+export function providerStatuses(statuses?: ProviderStatus[]): ProviderStatus[] {
+  return z.array(ProviderStatusSchema).parse(
+    statuses ?? [
+      {
+        providerId: 'ollama-local',
+        health: { reachable: true, latencyMs: 12, detail: 'Ollama 0.40.14 is running' },
+      },
+    ],
+  );
+}
+
+/** A probe of `qwen-local` that found the model, with every method giving valid output. */
+export function probeResult(changes: Partial<ProbeResult> = {}): ProbeResult {
+  return ProbeResultSchema.parse({
+    profileId: 'qwen-local',
+    reachable: true,
+    modelPresent: true,
+    structuredMethods: { 'json-schema': true, 'tool-call': true, 'prompt-only': true },
+    promptTokensPerSecond: 812.4,
+    generationTokensPerSecond: 44.6,
+    emittedThinking: false,
+    suggestions: ['Keep json-schema: it gave valid output.'],
+    ...changes,
+  });
+}
+
+/** What `GET /session` answers: by default, a device that must log in and has not. */
+export function sessionState(changes: Partial<SessionState> = {}): SessionState {
+  return SessionStateSchema.parse({ pinRequired: true, authenticated: false, ...changes });
 }

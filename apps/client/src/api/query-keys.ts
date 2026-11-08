@@ -21,6 +21,12 @@ export const queryKeys = {
   journal: (campaignId: string, ...rest: string[]) => ['journal', campaignId, ...rest] as const,
   /** `MachineConfig`, with its secrets redacted (CON-111). */
   settings: () => ['settings'] as const,
+  /** `ProviderStatus[]` (PRV-091). Under `['settings']`, so a save refreshes it. */
+  providerStatuses: () => ['settings', 'providers'] as const,
+  /** `string[]`: the models one provider lists (PRV-091). Under `['settings']` too. */
+  providerModels: (providerId: string) => ['settings', 'providers', providerId] as const,
+  /** `SessionState`, for the PIN screen (ARCH-110). */
+  session: () => ['session'] as const,
 };
 
 /** The key prefixes that match every query of one kind for a campaign. */
