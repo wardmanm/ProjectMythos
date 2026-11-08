@@ -21,8 +21,8 @@ function headersFrom(rows: readonly Row[]): Record<string, string> {
 /**
  * An `openai-compatible` provider's extra headers, as name and value rows. Headers are
  * stored and shown as they are, unlike `apiKey` (PRV-005), so the field says where a key
- * belongs (05-providers Open). The rows are kept as typed, so a row being named does
- * not vanish; headers set from outside, as Discard does, replace them.
+ * belongs. The rows are kept as typed, so a row being named does not vanish; headers set
+ * from outside, as Discard does, replace them.
  */
 export function HeadersField({
   headers,

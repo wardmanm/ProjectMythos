@@ -37,7 +37,10 @@ export function contextWindowWarning(profile: ModelProfile): string | null {
   return `Below ${MIN_CONTEXT_WINDOW.toLocaleString('en-US')} tokens, prompts may not fit and turns can fail.`;
 }
 
-/** The hint for an Anthropic profile set to turn thinking off (05-providers Open). */
+/**
+ * The hint for an Anthropic profile set to turn thinking off: some models refuse it
+ * (05-providers Decisions, PRV-046).
+ */
 function thinkingWarning(
   profile: ModelProfile,
   provider: ProviderConfig | undefined,
