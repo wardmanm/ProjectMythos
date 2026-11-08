@@ -30,4 +30,9 @@ describe('queryKeys', () => {
     expect(queryKeys.scene('c1', 'b1').slice(0, 2)).toEqual(campaignPrefixes.scene('c1'));
     expect(queryKeys.journal('c1', 'x').slice(0, 2)).toEqual(campaignPrefixes.journal('c1'));
   });
+
+  it('UI-100: the machine config has one key, which belongs to no campaign', () => {
+    expect(queryKeys.settings()).toEqual(['settings']);
+    expect(isCampaignKey(queryKeys.settings(), 'settings')).toBe(false);
+  });
 });

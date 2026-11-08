@@ -58,12 +58,24 @@ and tests mount `routes` in a memory router. `AppShell` is the root layout, and
   not the server's), or `invalid-response` (a success body that fails its schema).
 - `apiFailureOf(error)` and `errorCodeOf(error)` read a failure back from anything
   thrown; `plainWords(failure)` and `wordsForCode(code)` give the words to show
-  (UI-122). Never show a code or a server message.
+  (UI-122). Never show an error's code or its `message`. Text the contracts define for
+  the player is shown as it comes: each `validation_failed` issue's message at its field
+  (`validationIssuesOf(error)`, CON-091), a provider's health `detail`, and a probe's
+  `suggestions`.
 - `queryKeys` names every key (UI-100). A campaign's keys have its ID second, which
   `resync.required` relies on. The cached data is: `['campaign', c]` a `CampaignView`,
   `['turns', c, b]` a `TurnView[]` oldest first, and `['turn', c, t]` a `TurnView`.
-- `useCampaign(campaignId)` is the first hook. Add a hook per route in a file named for
-  its area.
+- Each route has a hook, in a file named for its area:
+  - `campaigns.ts`: `useCampaign(campaignId)`; `useCampaigns()`, the library's
+    `CampaignSummary[]` under `['campaigns']` in the server's order, most recently played
+    first; `useCreateCampaign()`; and `useDeleteCampaign()`. No event stream covers the
+    library, so creating or deleting a campaign refetches `['campaigns']`, and a delete
+    settles only once the list is back. A deleted campaign's own queries are dropped.
+  - `library.ts`: `usePacks()`, every `PackSummary` under `['packs']`, packs with issues
+    included.
+- `useSettings()` (`settings.ts`) reads `GET /settings` under `['settings']`: the
+  machine config with its secrets redacted (CON-111). The library and the settings screen
+  both use it.
 
 The query client (`src/app/query-client.ts`) sends `auth_required` from any query or
 command to `/pin?next=<address>`, and on `conflict` refetches everything and shows the
@@ -98,6 +110,24 @@ classes such as `bg-surface`, `text-text-muted`, `font-narration`, or shadcn's
 `bg-primary`, never a raw color. `StoryColumn` is the story's measure-wide column
 (UI-040).
 
+## Library and new campaign (`src/features/library/`, `src/features/new-campaign/`)
+
+- **First start (PRV-001).** The library reads `useSettings()` and waits for an answer
+  fetched since it opened, never a cached one (14-ui Traps). `settingsGate(config)` in
+  `first-start.tsx` then decides:
+  - no model profile: `/` replaces its address with `/settings`;
+  - no narrator: `NarratorNotice` links to Settings, here and on the form;
+  - settings that can't be read: the library shows as usual.
+- **The library** shows `CampaignCard`s in a grid of one column on phones, two from 640 px,
+  and three from 1024 px. Each card has a content summary (`contentSummary`, CSET-023),
+  Continue, and Delete. `DeleteCampaignDialog` runs the delete and handles each outcome
+  (14-ui Decisions). `PackErrors` lists every pack with issues.
+- **The form** offers what `choices.ts` allows: packs without issues
+  (`startablePacks`), with the reference pack first (`defaultPackId`); scenarios with a
+  premade PC; and the setting's defaults. `commandFor` builds the `CreateCampaignCommand`.
+  Issues at `name`, `packId`, and `scenarioId` show at their fields; any others show
+  above Start.
+
 ## Testing
 
 `src/test/setup.ts` gives every test a fake `fetch` (`answer`, `fetchCalls`), a fake
@@ -105,7 +135,10 @@ classes such as `bg-surface`, `text-text-muted`, `font-narration`, or shadcn's
 a fake `matchMedia` (`setDevicePrefersDark`), and cleans up after it.
 `renderApp(path)` renders the whole app at a URL with a memory router and returns the
 router, the query client, and a user-event session. `fixtures.ts` builds valid campaign
-views, turn views, and server events.
+views, turn views, and server events, and `settings-fixtures.ts` a valid machine config
+(`machineConfig`). `features/library/testing.ts` builds campaign summaries
+(`campaignSummary`) and pack summaries: the reference pack, a second startable pack
+(`saltmarshPack`), and a pack with issues (`brokenPack`).
 
 ## Governing spec
 

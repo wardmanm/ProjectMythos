@@ -3,6 +3,8 @@
 // (resync.required, UI-101). GM-mode keys, which add 'gm', arrive with GM mode in phase 5.
 
 export const queryKeys = {
+  /** `PackSummary[]`, packs with issues included (UI-083, SCH-102). */
+  packs: () => ['packs'] as const,
   /** `CampaignSummary[]`, for the library. */
   campaigns: () => ['campaigns'] as const,
   /** `CampaignView`. */
@@ -17,6 +19,8 @@ export const queryKeys = {
   sheet: (campaignId: string, entityId: string) => ['sheet', campaignId, entityId] as const,
   /** The journal (phase 5); later parts of the key name the page or entity. */
   journal: (campaignId: string, ...rest: string[]) => ['journal', campaignId, ...rest] as const,
+  /** `MachineConfig`, with its secrets redacted (CON-111). */
+  settings: () => ['settings'] as const,
 };
 
 /** The key prefixes that match every query of one kind for a campaign. */
