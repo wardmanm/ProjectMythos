@@ -58,12 +58,18 @@ and tests mount `routes` in a memory router. `AppShell` is the root layout, and
   not the server's), or `invalid-response` (a success body that fails its schema).
 - `apiFailureOf(error)` and `errorCodeOf(error)` read a failure back from anything
   thrown; `plainWords(failure)` and `wordsForCode(code)` give the words to show
-  (UI-122). Never show a code or a server message.
+  (UI-122). Never show an error's code or its `message`. Text the contracts define for
+  the player is shown as it comes: each `validation_failed` issue's message at its field
+  (`validationIssuesOf(error)`, CON-091), a provider's health `detail`, and a probe's
+  `suggestions`.
 - `queryKeys` names every key (UI-100). A campaign's keys have its ID second, which
   `resync.required` relies on. The cached data is: `['campaign', c]` a `CampaignView`,
   `['turns', c, b]` a `TurnView[]` oldest first, and `['turn', c, t]` a `TurnView`.
 - `useCampaign(campaignId)` is the first hook. Add a hook per route in a file named for
   its area.
+- `useSettings()` (`settings.ts`) reads `GET /settings` under `['settings']`: the
+  machine config with its secrets redacted (CON-111). The library and the settings screen
+  both use it.
 
 The query client (`src/app/query-client.ts`) sends `auth_required` from any query or
 command to `/pin?next=<address>`, and on `conflict` refetches everything and shows the
@@ -105,7 +111,8 @@ classes such as `bg-surface`, `text-text-muted`, `font-narration`, or shadcn's
 a fake `matchMedia` (`setDevicePrefersDark`), and cleans up after it.
 `renderApp(path)` renders the whole app at a URL with a memory router and returns the
 router, the query client, and a user-event session. `fixtures.ts` builds valid campaign
-views, turn views, and server events.
+views, turn views, and server events, and `settings-fixtures.ts` a valid machine config
+(`machineConfig`).
 
 ## Governing spec
 

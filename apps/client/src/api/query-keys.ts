@@ -17,6 +17,8 @@ export const queryKeys = {
   sheet: (campaignId: string, entityId: string) => ['sheet', campaignId, entityId] as const,
   /** The journal (phase 5); later parts of the key name the page or entity. */
   journal: (campaignId: string, ...rest: string[]) => ['journal', campaignId, ...rest] as const,
+  /** `MachineConfig`, with its secrets redacted (CON-111). */
+  settings: () => ['settings'] as const,
 };
 
 /** The key prefixes that match every query of one kind for a campaign. */
