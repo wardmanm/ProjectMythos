@@ -109,10 +109,10 @@ UI-040, UI-042, UI-043, UI-050, UI-051, UI-053, UI-054, UI-059, UI-073, UI-074, 
     end." At 1440 px the inspector is a table with no sideways scroll. The check found
     one bug, now fixed and tested: a text box that grew a line pushed the story's end
     under the dock.
-  - `pnpm check` passes: the workspace has `Tests  1191 passed (1191)` (123 in the
-    client) and `spec/reference` `Tests  273 passed (273)`, and it ends with `Docs check
-    passed: 835 requirements, 25 tasks (22 done), 21 ADRs, 87 markdown files, 1564
-    citations in code.`
+  - `pnpm check` passes on the branch rebased onto `main` at 266e722 (P1-T22 and P1-T24
+    merged): the workspace has `Tests  1295 passed (1295)` and `spec/reference`
+    `Tests  273 passed (273)`, and it ends with `Docs check passed: 835 requirements, 25
+    tasks (24 done), 21 ADRs, 87 markdown files, 1701 citations in code.`
 - **Rulings:**
   - **Mike's decisions** (2026-11-07), each a 14-ui Decisions row: Q1 (a), one top bar
     with the campaign's name and date, sticky on every screen, and the play screen's h1

@@ -18,18 +18,18 @@ depends on `@mythos/contracts` only.
 
 Imports inside the client use the `@/` alias for `src/` (`tsconfig.json` paths).
 
-| Folder                 | Holds                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| `src/app/`             | The router, the providers, the query client, the layout shell, and the campaign layout  |
-| `src/features/<name>/` | One folder per screen. Phase 1's are placeholders that their screen tasks fill in place |
-| `src/api/`             | The only `fetch` caller, and the query hooks built on it (ARCH-122)                     |
-| `src/events/`          | The only `EventSource`, and what each event does to the cache (ARCH-120)                |
-| `src/theme/`           | The house theme, bundled fonts, and theme-to-CSS-variable code (UI-032)                 |
-| `src/stores/`          | Zustand stores for UI state only (ARCH-121)                                             |
-| `src/components/ui/`   | shadcn/ui's generated components. Each edit is noted at the top of its file (CONV-102)  |
-| `src/components/`      | Shared presentational components                                                        |
-| `src/test/`            | Test setup and fakes for `fetch`, `EventSource`, and `matchMedia`                       |
-| `src/lib/`             | Small hooks with no server data, such as `useMediaQuery`, `useIsPhone`, and `cn`        |
+| Folder                 | Holds                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `src/app/`             | The router, the providers, the query client, the layout shell, and the campaign layout |
+| `src/features/<name>/` | One folder per screen: its components, helpers, and tests                              |
+| `src/api/`             | The only `fetch` caller, and the query hooks built on it (ARCH-122)                    |
+| `src/events/`          | The only `EventSource`, and what each event does to the cache (ARCH-120)               |
+| `src/theme/`           | The house theme, bundled fonts, and theme-to-CSS-variable code (UI-032)                |
+| `src/stores/`          | Zustand stores for UI state only (ARCH-121)                                            |
+| `src/components/ui/`   | shadcn/ui's generated components. Each edit is noted at the top of its file (CONV-102) |
+| `src/components/`      | Shared presentational components                                                       |
+| `src/test/`            | Test setup and fakes for `fetch`, `EventSource`, and `matchMedia`                      |
+| `src/lib/`             | Small hooks with no server data, such as `useMediaQuery`, `useIsPhone`, and `cn`       |
 
 Lint enforces the `api/` and `events/` boundaries: `fetch` anywhere else in `src/`, or
 `EventSource` outside `events/`, is an error.
