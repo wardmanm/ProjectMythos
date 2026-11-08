@@ -18,17 +18,18 @@ depends on `@mythos/contracts` only.
 
 Imports inside the client use the `@/` alias for `src/` (`tsconfig.json` paths).
 
-| Folder                 | Holds                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| `src/app/`             | The router, the providers, the query client, the layout shell, and the campaign layout  |
-| `src/features/<name>/` | One folder per screen. Phase 1's are placeholders that their screen tasks fill in place |
-| `src/api/`             | The only `fetch` caller, and the query hooks built on it (ARCH-122)                     |
-| `src/events/`          | The only `EventSource`, and what each event does to the cache (ARCH-120)                |
-| `src/theme/`           | The house theme, bundled fonts, and theme-to-CSS-variable code (UI-032)                 |
-| `src/stores/`          | Zustand stores for UI state only (ARCH-121)                                             |
-| `src/components/ui/`   | shadcn/ui's generated components. Each edit is noted at the top of its file (CONV-102)  |
-| `src/components/`      | Shared presentational components                                                        |
-| `src/test/`            | Test setup and fakes for `fetch`, `EventSource`, and `matchMedia`                       |
+| Folder                 | Holds                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `src/app/`             | The router, the providers, the query client, the layout shell, and the campaign layout |
+| `src/features/<name>/` | One folder per screen: its components, helpers, and tests                              |
+| `src/api/`             | The only `fetch` caller, and the query hooks built on it (ARCH-122)                    |
+| `src/events/`          | The only `EventSource`, and what each event does to the cache (ARCH-120)               |
+| `src/theme/`           | The house theme, bundled fonts, and theme-to-CSS-variable code (UI-032)                |
+| `src/stores/`          | Zustand stores for UI state only (ARCH-121)                                            |
+| `src/components/ui/`   | shadcn/ui's generated components. Each edit is noted at the top of its file (CONV-102) |
+| `src/components/`      | Shared presentational components                                                       |
+| `src/test/`            | Test setup and fakes for `fetch`, `EventSource`, and `matchMedia`                      |
+| `src/lib/`             | Small hooks with no server data, such as `useMediaQuery`, `useIsPhone`, and `cn`       |
 
 Lint enforces the `api/` and `events/` boundaries: `fetch` anywhere else in `src/`, or
 `EventSource` outside `events/`, is an error.
@@ -38,6 +39,10 @@ Lint enforces the `api/` and `events/` boundaries: `fetch` anywhere else in `src
 `src/app/router.tsx` holds the table; `createAppRouter()` builds the browser's router,
 and tests mount `routes` in a memory router. `AppShell` is the root layout, and
 `CampaignLayout` wraps every `/c/:campaignId/…` screen and holds its event stream.
+`AppShell`'s top bar sticks to the top of every screen. On a campaign's screens it shows
+the campaign's name and the head turn's date in game (`features/play/campaign-top-bar.tsx`),
+and elsewhere the app's name (14-ui Decisions). Its content area fills the height the bar
+and the notice leave, so a screen can fill it too, as the play screen does.
 
 | Route                              | Screen       | File                                            |
 | ---------------------------------- | ------------ | ----------------------------------------------- |
@@ -89,6 +94,19 @@ and tests mount `routes` in a memory router. `AppShell` is the root layout, and
 
 - `useSession()` and `useLogin()` (`session.ts`) are the PIN screen's: `GET /session`
   under `['session']`, and `POST /session`, which invalidates every query on success.
+- `turns.ts` holds the play screen's hooks (06-turn-engine §10):
+  - `useTurns(c, b)` is a growing window of the branch's newest turns, cached at
+    `['turns', c, b, n]` as a `TurnView[]`, oldest first, under `['turns', c, b]` so the
+    events reach it (14-ui Decisions). `n` starts at `TURN_WINDOW` (50) and grows by 50
+    with `showEarlier()`; `fetchNewestTurns` reads it at most 200 at a time back from the
+    head. It returns `{ query, hasEarlier, loadingEarlier, showEarlier }`.
+  - `useTurn(c, t)` is one turn, at `['turn', c, t]`.
+  - `useSubmitAction(c)`, `useCancelTurn(c)`, and `useRetryNarration(c)` post `/actions`,
+    `…/cancel`, and a narration's `…/regenerate`. Each answers as the route does; none
+    writes the cache.
+- `model-calls.ts` holds the inspector's: `useModelCalls(c, t, status)` at
+  `['model-calls', c, t]`, fetched again whenever the turn's `status` changes, and
+  `useModelCall(c, id)` at `['model-call', c, id]`.
 
 The query client (`src/app/query-client.ts`) sends `auth_required` from any query or
 command to `/pin?next=<address>`, and on `conflict` refetches everything and shows the
@@ -106,6 +124,37 @@ its offset into every cached copy of the turn, refetching the turn when there is
 The browser resumes a dropped stream with `Last-Event-ID` on its own; when it gives up,
 the client reopens the stream after 1, 2, 5, 10, then every 30 seconds, and refetches
 the campaign once it is open.
+
+## Play (`src/features/play/`)
+
+`PlayScreen` shows the campaign's current branch. `Story` lists its turns, skipping any
+`abandoned` one still in the cache, and `TurnBlock` draws one in 14-ui §5.1's order: the
+input, the narration (`NarrationText`), the status line (`statusLine`), the failure card
+(`FailedTurn`, with Retry and Cancel turn), and an **Inspect** link. Below the story, the
+dock sticks to the bottom of the screen.
+
+- `turn-status.ts`: `statusLine`, `inputAvailability(head, sending)` with the words for
+  why input is unavailable, and `headOf(turns)`, the head the dock sends with.
+- `input-dock.tsx`: the text box, Send or Stop, and the reason line. `draft.ts` keeps the
+  draft per campaign in `localStorage` under `mythos.draft.<campaignId>`.
+- `use-turn-commands.ts`: Send and Stop. After Send, the dock says "Sending…" until the
+  new turn is listed.
+- `use-story-scroll.ts`: follows new text for a reader at the bottom, or offers "New text
+  below"; keeps a reader at the bottom there when the page or viewport resizes; keeps the
+  reader's place when earlier turns arrive above; and asks for them near the top.
+- `narration-announcer.tsx`: the polite live region, a whole sentence at a time
+  (`sentences.ts`).
+
+## Inspector (`src/features/inspector/`)
+
+`InspectorScreen` is one turn's model calls, at
+`/c/:campaignId/inspector/:turnId?call=<id>&tab=prompt|output`. The call and tab are in
+the address; with none named, the first call and the Prompt tab show. `CallList` is a
+table on wider screens and stacked rows on a phone. `CallDetail` holds the tabs:
+`PromptTab` (a `TierSection` with a `BudgetBar` per tier, then the messages) and
+`OutputTab` (the raw output, thinking, parsed output, and an `AttemptDetails` per
+attempt). `call-words.ts` has the words for roles, outcomes, durations, and tokens, and
+`RecordText` shows any record text, wrapping anywhere.
 
 ## Theme (`src/theme/`)
 
@@ -195,6 +244,17 @@ views, turn views, and server events, and `settings-fixtures.ts` a valid machine
 `features/library/testing.ts` builds campaign summaries (`campaignSummary`) and pack
 summaries: the reference pack, a second startable pack (`saltmarshPack`), and a pack
 with issues (`brokenPack`).
+
+The fake `matchMedia` also answers widths and reduced motion: each test starts on a
+1440 px desktop, and `setDeviceWidth(390)` makes it a phone, while
+`setDevicePrefersReducedMotion(true)` asks for reduced motion. The setup stubs
+`window.scrollTo`, which jsdom lacks, and clears `localStorage` after each test.
+
+Feature tests keep their own helpers beside them. `features/play/play-testing.ts` builds
+turns on the test branch (`turnAt`, `turnsFrom`), answers what the play screen asks for
+(`answerStory`), sends an event and waits for the screen (`sendEvent`), and gives a page
+that scrolls (`fakePage`). `features/inspector/inspector-testing.ts` builds model call
+records with four tiers and two attempts.
 
 ## Governing spec
 

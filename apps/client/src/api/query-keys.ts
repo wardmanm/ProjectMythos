@@ -13,6 +13,16 @@ export const queryKeys = {
   turns: (campaignId: string, branchId: string) => ['turns', campaignId, branchId] as const,
   /** `TurnView`: one turn. */
   turn: (campaignId: string, turnId: string) => ['turn', campaignId, turnId] as const,
+  /**
+   * `TurnView[]`, oldest first: the newest `count` turns on a branch, the play screen's
+   * window. It sits under `turns(campaignId, branchId)`, so the events reach it.
+   */
+  turnsNewest: (campaignId: string, branchId: string, count: number) =>
+    ['turns', campaignId, branchId, count] as const,
+  /** `ModelCallSummary[]`, oldest first: a turn's model calls, for the inspector. */
+  modelCalls: (campaignId: string, turnId: string) => ['model-calls', campaignId, turnId] as const,
+  /** `ModelCallRecord`: one model call's whole record. */
+  modelCall: (campaignId: string, callId: string) => ['model-call', campaignId, callId] as const,
   /** The scene panel's data for a branch (phase 3). */
   scene: (campaignId: string, branchId: string) => ['scene', campaignId, branchId] as const,
   /** An entity's sheet (phase 3). */

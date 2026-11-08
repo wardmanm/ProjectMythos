@@ -20,6 +20,9 @@ Element.prototype.releasePointerCapture = () => undefined;
 
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', NoResizeObserver);
+  // jsdom has no layout, so it does not scroll; the story calls this as text arrives.
+  // Scroll tests install their own page (features/play/play-testing.ts).
+  vi.stubGlobal('scrollTo', () => undefined);
   installFakeMatchMedia();
   installFakeEventSource();
   installFakeFetch();
@@ -30,6 +33,7 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
   useNoticeStore.setState({ notice: null });
+  localStorage.clear();
   document.documentElement.removeAttribute('style');
   document.documentElement.removeAttribute('class');
 });
