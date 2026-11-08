@@ -153,10 +153,10 @@ every setting, for every role, and cannot be configured, overridden, or reworded
 
 | Phase | Scope |
 |---|---|
-| 1 | The hard floor in every prompt; content settings rendered from the tone profile; automatic tightening (CSET-042) |
+| 1 | The hard floor in every prompt; content settings rendered from the tone profile; automatic tightening (CSET-042); the library summary (CSET-023) |
 | 3 | Explicit routing (CSET-043, PRV-006) |
 | 5 | The X control |
-| 8 | Campaign content settings UI, history, and the library summary |
+| 8 | Campaign content settings UI and history |
 
 - **CSET-060** Every category renders at every level, with lines and veils verbatim.
 - **CSET-061** With a minor present: sexual is off, the floor appears twice, and explicit
@@ -170,3 +170,4 @@ every setting, for every role, and cannot be configured, overridden, or reworded
 | Question | Decision | Rejected and why | Decided by |
 |---|---|---|---|
 | What repeats the floor in the task tier while a minor is involved (CSET-042)? | `appendFloorToTask(task, role, minor)` in `core`, called last on the rendered task tier, so the floor is the prompt's last text. The output-format instruction is a system message of its own, right after the leading system messages (PRV-050), so nothing follows the floor. All floor text is appended by `core`: `appendLocked` adds it to the instructions tier. | The context module appending `HARD_FLOOR` itself: the floor's rules would live in two packages. | Claude (ruling) |
+| What does the library's content summary say (CSET-023)? | One sentence: every category's level in the glossary's words, in §2's order, then how many lines and veils there are, e.g. "Violence moderate, gore fade to black, sexual content off, language moderate, disturbing themes moderate; 1 line, 2 veils". The counts are left out when both are zero, and the topics are never shown. The sentence wraps on the card and is never cut. | Listing the lines and veils: their topics can be the very content the player wants kept off the screen, and they can be long. Naming only the categories above `off`: a reader couldn't tell `off` from left out. | owner |
