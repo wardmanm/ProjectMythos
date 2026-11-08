@@ -3,6 +3,8 @@
 // (resync.required, UI-101). GM-mode keys, which add 'gm', arrive with GM mode in phase 5.
 
 export const queryKeys = {
+  /** `PackSummary[]`, packs with issues included (UI-083, SCH-102). */
+  packs: () => ['packs'] as const,
   /** `CampaignSummary[]`, for the library. */
   campaigns: () => ['campaigns'] as const,
   /** `CampaignView`. */
