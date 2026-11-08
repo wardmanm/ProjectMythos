@@ -92,10 +92,11 @@ UI-083, UI-123, CSET-023, PRV-001
   - `pnpm build` succeeds, with Vite's usual warning that the one script chunk is over
     500 kB.
 - **Rulings:**
-  - **Mike's decisions (2026-11-07)**, recorded as owner Decisions rows in the
-    `P1-T22: spec:` commit:
-    - UI-083's theme swatch is deferred to phase 8. 14-ui §15's phase-8 row lists it,
-      and a 14-ui Decisions row says why.
+  - **Mike's decision (2026-11-07)**, an owner Decisions row: UI-083's theme swatch is
+    deferred to phase 8. 14-ui §15's phase-8 row lists it, and a 14-ui Decisions row
+    says why.
+  - **The plan's rulings**, which Mike approved with the plan on 2026-11-07. They are
+    Decisions rows marked `Claude (ruling)`:
     - PRV-001's redirect lives in the library and replaces the address.
     - The delete outcomes.
     - What the phase-1 form offers. The row also says a pack whose scenarios all need
