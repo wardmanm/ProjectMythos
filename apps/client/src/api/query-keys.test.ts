@@ -35,4 +35,19 @@ describe('queryKeys', () => {
     expect(queryKeys.settings()).toEqual(['settings']);
     expect(isCampaignKey(queryKeys.settings(), 'settings')).toBe(false);
   });
+
+  it("UI-100: provider statuses and model lists sit under the machine config's key", () => {
+    expect(queryKeys.providerStatuses()).toEqual(['settings', 'providers']);
+    expect(queryKeys.providerModels('ollama-local')).toEqual([
+      'settings',
+      'providers',
+      'ollama-local',
+    ]);
+    expect(queryKeys.providerStatuses().slice(0, 1)).toEqual(queryKeys.settings());
+    expect(queryKeys.providerModels('x').slice(0, 1)).toEqual(queryKeys.settings());
+  });
+
+  it('UI-100: the session has its own key, outside the settings', () => {
+    expect(queryKeys.session()).toEqual(['session']);
+  });
 });
